@@ -51,19 +51,17 @@ If you do not have write permissions to the original repository, you will need t
 If forking is disabled and you do not have write permissions, we recommend [reaching out](#giving-feedback) to the repository owners.
 
 ### Adding git hooks
-Although this step is optional, we recommend enabling _Pre-commit_ git hooks to check that your new code is in good shape before committing.
-
-In order to ensure meeting the quality of code standards for this repository, no PR will be merged if the `tox` checks fail, so it is better to encounter failures one at a time on every commit attempt rather than having to fix them all simultaneously before merging. From the terminal, after [activating your virtual environment](/INSTALL.md#setting-up-a-python-environment), run:
+Since this repo adheres to the [conventional commits](#commits) standard we suggest enabling _Pre-commit_ git hooks to validate the format of your commit messages. From the terminal, after [activating your virtual environment](/INSTALL.md#setting-up-a-python-environment), run:
 ```
-pre-commit install
+pre-commit install -t commit-msg
 ```
 
-This tool is not a substitute of `tox`, which should still be used to run tests and ensure that lint checks pass with the appropriate versions. Instead, it should be regarded simply as a convenient device for continuously performing light-weight lint checks in an incremental fashion.
+Additionally, in order to ensure meeting the quality of code standards for this repository, no PR will be merged if the `tox` checks fail, so it is better to encounter failures one at a time on every commit attempt rather than having to fix them all simultaneously before merging. For this reason, although this step is optional, we recommend setting up `pre-commit` to check that your new code is in good shape before committing:
+```
+pre-commit install -t pre-commit
+```
 
-Additionally, `pre-commit` can be set to validate the format of commit messages according the [conventional commits](#commits) standard. To enable this functionality run:
-```
-pre-commit install commit-msg
-```
+Notice that this tool is not a substitute of `tox`, which should still be used to run tests and ensure that lint checks pass with all relevant versions. Instead, it should be regarded simply as a convenient device for continuously performing light-weight lint checks in an incremental fashion.
 
 
 ## Style guide
@@ -105,7 +103,7 @@ All source files in the repository must begin with the appropriate copyright not
 ```
 
 ### Commits
-For git commits, we adhere to the [Conventional Commits](https://www.conventionalcommits.org/) standard as defined in the following config files:
+In order to properly conform to semantical versioning and keep track of changelogs, we adhere to the [Conventional Commits](https://www.conventionalcommits.org/) standard for (git) commit messages as defined in the following config files:
 - [Gitlint](.gitlint)
 - [Commitizen](.cz.toml)
 
