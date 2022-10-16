@@ -1,7 +1,7 @@
 ---
 name: 🚀 Feature request
-about: Suggest an idea for this project 💡!
-labels: [feature]
+about: Suggest an idea for this project.
+labels: [feature, triage]
 title: ''
 assignees: ''
 ---

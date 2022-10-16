@@ -1,7 +1,7 @@
 ---
 name: 🐛 Bug report
-about: Create a report to help us improve 🤔.
-labels: [bug]
+about: Create a report to make amends.
+labels: [bug, triage]
 title: ''
 assignees: ''
 ---
@@ -27,7 +27,7 @@ assignees: ''
 
 
 ### Steps to reproduce the problem
-<!-- Give some steps that show the bug. A minimal code example with output is best. -->
+<!-- Give some steps that show the bug. A minimal, working, code example with output is best. -->
 <!-- If you are copying in code, please remember to enclose it in triple backticks, ``` [multiline code goes here] ```, so that it displays correctly. -->
 
 

@@ -1,7 +1,7 @@
 ---
-name: 💅 Enhancement request
-about: Suggest an improvement for this project 🆒!
-labels: [enhancement]
+name: ✨ Enhancement request
+about: Suggest a non-feature improvement for this project.
+labels: [enhancement, triage]
 title: ''
 assignees: ''
 ---
