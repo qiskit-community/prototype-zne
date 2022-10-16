@@ -6,7 +6,7 @@
   [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.0-6133BD)](https://github.com/Qiskit/qiskit-terra)
 <br />
   [![Build Status]()]()
-  [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-qrao?branch=main)
+  [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
   [![License](https://img.shields.io/github/license/qiskit-community/prototype-zne?label=License)](LICENSE.txt)
 
 </div>
@@ -19,14 +19,14 @@
   <h2 align="center">Zero Noise Extrapolation (ZNE)</h2>
 </p>
 <!-- QUICK LINKS -->
-<p align="center">
+<!-- <p align="center">
   <a href="https://mybinder.org/">
     <img src="https://ibm.biz/BdPq3s" alt="Launch Demo" hspace="5" vspace="10">
   </a>
   <a href="https://www.youtube.com/c/qiskit">
     <img src="https://img.shields.io/badge/watch-video-FF0000.svg?style=for-the-badge&logo=youtube" alt="Watch Video" hspace="5" vspace="10">
   </a>
-</p>
+</p> -->
 
 
 ----------------------------------------------------------------------
@@ -82,7 +82,7 @@ Check out our [landing page](https://qiskit-community.github.io/prototypes/) and
 
 ### Deprecation Policy
 
-Prototypes are meant to evolve rapidly and, as such, do not follow [Qiskit's deprecation policy](https://qiskit.org/documentation/contributing_to_qiskit.html#deprecation-policy). We may occasionally make breaking changes in order to improve the user experience. When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the new ones. Each substantial improvement, breaking change, or deprecation will be documented in [`NEWS.md`](NEWS.md).
+Prototypes are meant to evolve rapidly and, as such, do not follow [Qiskit's deprecation policy](https://qiskit.org/documentation/contributing_to_qiskit.html#deprecation-policy). We may occasionally make breaking changes in order to improve the user experience. When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the new ones. Each substantial improvement, breaking change, or deprecation will be documented in [`CHANGELOG.md`](CHANGELOG.md).
 
 
 ----------------------------------------------------------------------
