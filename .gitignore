@@ -1,0 +1,62 @@
+# MISC
+.ipynb_checkpoints
+__pycache__
+.DS_Store
+
+
+# IDEs
+.idea/
+.vscode/
+
+
+# VIRTUAL ENVIRONMENTS
+venv/
+.venv/
+## [pyenv]
+.python-version
+## [dotenv]
+.env
+## [virtualenv]
+ENV/
+
+
+# UNIT TEST / COVERAGE REPORTS
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+coverage-html/
+coverage.xml
+*,cover
+.*cache
+nosetests.xml
+.hypothesis/
+
+
+# SPHINX DOCUMENTATION
+docs/_build/
+docs/stubs/
+
+
+# DISTRIBUTION / PACKAGING
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+
+# INSTALLER LOGS
+pip-log.txt
+pip-delete-this-directory.txt

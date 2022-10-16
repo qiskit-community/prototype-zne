@@ -1,0 +1,70 @@
+sudo: false
+
+install:
+  - pip install -U pip
+  - pip install -U tox
+  - pip install toml fire
+language: python
+before_script:
+  - bash tools/travis_before_script.bash
+  - export PATH=${HOME}/.cargo/bin:$PATH
+script:
+  - tox
+notifications:
+  email:
+    recipients:
+      - pedro.rivero@ibm.com
+    on_success: change
+    on_failure: change
+
+jobs:
+  include:
+    - os: windows
+      python: "3.8"
+      env: TOXENV=py38
+    - os: windows
+      python: "3.9"
+      env: TOXENV=py39
+    - os: windows
+      python: "3.10"
+      env: TOXENV=py310
+
+    - os: osx
+      python: "3.8"
+      env: TOXENV=py38
+    - os: osx
+      python: "3.9"
+      env: TOXENV=py39
+    - os: osx
+      python: "3.10"
+      env: TOXENV=py310
+
+    - os: linux
+      python: "3.8"
+      env: TOXENV=py38
+    - os: linux
+      python: "3.9"
+      env: TOXENV=py39
+    - os: linux
+      python: "3.10"
+      env: TOXENV=py310
+
+    - os: linux
+      python: "3.10"
+      env: TOXENV=lint
+    - os: linux
+      python: "3.10"
+      env: TOXENV=coverage
+
+    - name: "Minimum version tests"
+      os: linux
+      python: "3.8"
+      env:
+        - TOXENV=py38
+        - STRATEGY=min
+    - name: "Development version tests"
+      os: linux
+      python: "3.10"
+      env:
+        - TOXENV=py310
+        - STRATEGY=dev

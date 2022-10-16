@@ -1,0 +1,19 @@
+[run]
+branch = true
+data_file = .coverage.db
+omit = .venv/*,test/*,docs/*,*/qiskit/*
+
+[paths]
+
+[report]
+fail_under = 100
+precision = 2
+sort = cover
+
+[html]
+directory = coverage-html
+
+[xml]
+
+[json]
+pretty_print = true
