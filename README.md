@@ -5,8 +5,8 @@
   [![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-informational)](https://www.python.org/)
   [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.0-6133BD)](https://github.com/Qiskit/qiskit-terra)
 <br />
-  [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/qiskit-community/prototype-zne/test?label=Build)](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml)
-  [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main&label=Coverage)
+  [![GitHub Workflow Status](https://img.shields.io/github/checks-status/qiskit-community/prototype-zne/main)](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml)
+  [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
   [![Release](https://img.shields.io/github/release/qiskit-community/prototype-zne.svg?include_prereleases&label=Release)](https://github.com/qiskit-community/prototype-zne/releases)
   [![License](https://img.shields.io/github/license/qiskit-community/prototype-zne?label=License)](LICENSE.txt)
 
