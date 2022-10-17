@@ -39,7 +39,7 @@ For an introduction and instructions to the _Estimator_ primitive, refer to the 
 For a more detailed, hands-on, explanation of the functionalities in this module consult [this tutorial](./tutorials/1-zne.ipynb).
 
 ### Compatibility
-To inject the ZNE functionality into a pre-existing `Estimator` class following the official _Estimator_ especification (i.e. Qiskit Terra's `BaseEstimator`), simply do the following:
+To inject the ZNE functionality into a pre-existing `Estimator` class following the official _Estimator_ specification (i.e. Qiskit Terra's `BaseEstimator`), simply do the following:
 ```python
 from zne import zne
 

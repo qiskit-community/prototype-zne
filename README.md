@@ -58,7 +58,7 @@
 
 ### About This Project
 
-This module builds on top of the [_Estimator_ primitive official especification](/docs/tutorials/0-estimator.ipynb), providing a highly customizable _zero noise extrapolation_ (ZNE) workflow for error mitigation on expectation value calculations. This is achieved by [injecting orchestrated ZNE capabilities](/docs/tutorials/1-zne.ipynb) into an `Estimator` class of choice in two phases:
+This module builds on top of the [_Estimator_ primitive official specification](/docs/tutorials/0-estimator.ipynb), providing a highly customizable _zero noise extrapolation_ (ZNE) workflow for error mitigation on expectation value calculations. This is achieved by [injecting orchestrated ZNE capabilities](/docs/tutorials/1-zne.ipynb) into an `Estimator` class of choice in two phases:
 
 1. [Amplifying the noise](/docs/tutorials/2-noise_amplification.ipynb) introduced by the gates of input circuits.
 2. Extrapolating the returned expectation values to the zero noise limit.
