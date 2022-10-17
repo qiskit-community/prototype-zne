@@ -14,7 +14,7 @@ from zne import __version__
 
 
 def test_version():
-    assert __version__ == "1.0.0b1"
+    assert __version__ == "1.0.0b0"
 
 
 ################################################################################

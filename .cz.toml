@@ -2,7 +2,7 @@
 name = "cz_conventional_commits"
 bump_message = "bump: version $current_version → $new_version"
 version_format = "$version"
-version = "1.0.0b1"
+version = "1.0.0b0"
 version_files = [
     ".cz.toml:version",
     "CITATION.bib:version",
@@ -10,6 +10,7 @@ version_files = [
     "test/__init__.py:__version__"
 ]
 update_changelog_on_bump = true
+annotated_tag = true
 style = [
     ["qmark", "fg:#ff9d00 bold"],
     ["question", "bold"],
