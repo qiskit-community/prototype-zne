@@ -6,7 +6,7 @@
   [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.0-6133BD)](https://github.com/Qiskit/qiskit-terra)
 <br />
   [![Build Status]()]()
-  [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
+  [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main&label=Coverage)
   [![Release](https://img.shields.io/github/release/qiskit-community/prototype-zne.svg?include_prereleases&label=Release)](https://github.com/qiskit-community/prototype-zne/releases)
   [![License](https://img.shields.io/github/license/qiskit-community/prototype-zne?label=License)](LICENSE.txt)
 
