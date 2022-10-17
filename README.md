@@ -7,6 +7,7 @@
 <br />
   [![Build Status]()]()
   [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
+  [![Release](https://img.shields.io/github/release/qiskit-community/prototype-zne.svg?include_prereleases&label=Release)](https://github.com/qiskit-community/prototype-zne/releases)
   [![License](https://img.shields.io/github/license/qiskit-community/prototype-zne?label=License)](LICENSE.txt)
 
 </div>
