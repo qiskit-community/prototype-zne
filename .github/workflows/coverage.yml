@@ -29,13 +29,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install tox coveragepy-lcov
       - name: Run coverage
-        run: tox -ecoverage
+        run: tox -e coverage
       - name: Convert to lcov
         run: coveragepy-lcov --output_file_path coveralls.info
       - name: Upload report to Coveralls
         uses: coverallsapp/github-action@master
         with:
-          # eval $(ssh-agent -s)
-          # ssh-add - <<< '${{ secrets.PRIVATE_SSH_KEY }}'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: coveralls.info
