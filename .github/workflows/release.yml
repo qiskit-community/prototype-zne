@@ -7,8 +7,8 @@ on:
 
 jobs:
   publish:
+    name: publish
     runs-on: ubuntu-latest
-    name: Publish release
     steps:
       - name: Checkout
         uses: actions/checkout@v3
