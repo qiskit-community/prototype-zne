@@ -52,7 +52,10 @@ class TestDumpEncoder:
             DumpEncoder.dump(obj, file=file_path)
             contents = open(file_path).read()
         finally:
-            remove(file_path)
+            try:
+                remove(file_path)
+            except PermissionError:
+                pass
             assert contents == expected
 
     def test_dumps(self, obj, expected):
