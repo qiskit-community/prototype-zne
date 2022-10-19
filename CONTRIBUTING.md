@@ -175,9 +175,9 @@ tox -av
 ### Custom testing
 For complete control over the developer tools you can invoke them directly after installation of the corresponding [optional dependencies bundle(s)](/INSTALL.md#optional-dependencies). Note that, unlike custom testing, invoking any `tox` environment only requires the `dev` bundle (i.e. other dependencies are handled internally by `tox`). Basic invocations according to the corresponding config files are:
 
-- [__Autoflake8__](https://pypi.org/project/autoflake8/) for style fixing:
+- [__Autoflake__](https://pypi.org/project/autoflake/) for style fixing:
     ```
-    autoflake8 [-c] [-i] [-r] <TARGET>
+    autoflake [-c] [-i] [-r] <TARGET>
     ```
 - [__Black__](https://pypi.org/project/black/) for code formatting:
     ```
