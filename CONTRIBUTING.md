@@ -112,12 +112,21 @@ These configs can be enforced through [pre-commit git hooks](#adding-git-hooks).
 
 ## GitHub issues
 
-Issues in this repository are assigned a Difficulty Class (DC) from 1 to 5. These different levels roughly correspond to:
+Issues in this repository are assigned a Difficulty Class (DC) and Priority Level (PL) from 1 to 5. 
+
+Difficulty classes roughly correspond to:
 - `DC-1` → Basic knowledge
 - `DC-2` → Application/user level knowledge
 - `DC-3` → Domain/technology specific knowledge
 - `DC-4` → Multidomain knowledge
 - `DC-5` → System-wide knowledge
+
+Priority levels, on the other hand, denote:
+- `PL-1` → Low
+- `PL-2` → Medium-low
+- `PL-3` → Medium
+- `PL-4` → Medium-high
+- `PL-5` → High
 
 
 ## Running tests
