@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-import os
+from os.path import join as join_path
 from tempfile import TemporaryDirectory
 
 from numpy import array
@@ -48,7 +48,7 @@ from zne.utils.serialization import (
 class TestDumpEncoder:
     def test_dump(self, obj, expected):
         with TemporaryDirectory() as tmpdir:
-            file_path = os.path.join(tmpdir, "zne-dump")
+            file_path = join_path(tmpdir, "zne-dump")
             DumpEncoder.dump(obj, file=file_path)
             with open(file_path) as f:
                 contents = f.read()
