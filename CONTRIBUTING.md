@@ -122,11 +122,11 @@ Difficulty classes roughly correspond to:
 - `DC-5` → System-wide knowledge
 
 Priority levels, on the other hand, denote:
-- `PL-1` → Low
-- `PL-2` → Medium-low
+- `PL-1` → High
+- `PL-2` → Medium-high
 - `PL-3` → Medium
-- `PL-4` → Medium-high
-- `PL-5` → High
+- `PL-4` → Medium-low
+- `PL-5` → Low
 
 
 ## Running tests
