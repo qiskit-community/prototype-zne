@@ -55,7 +55,7 @@ def _get_zne_strategy(self) -> ZNEStrategy:
 
 def _set_zne_strategy(self, zne_strategy: ZNEStrategy | None) -> None:
     if zne_strategy is None:
-        zne_strategy = ZNEStrategy(noise_factors=(1,))
+        zne_strategy = ZNEStrategy.noop()
     elif not isinstance(zne_strategy, ZNEStrategy):
         raise TypeError("Invalid zne_strategy object, expected ZNEStrategy.")
     self._zne_strategy = zne_strategy  # pylint: disable=protected-access
