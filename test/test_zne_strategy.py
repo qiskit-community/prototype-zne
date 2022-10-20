@@ -54,7 +54,7 @@ class TestZNEStrategy:
     ################################################################################
     def test_noop(self):
         zne_strategy = ZNEStrategy.noop()
-        assert zne_strategy.noise_factors == (1,)  # No-op condition
+        assert zne_strategy.is_noop
 
     ################################################################################
     ## INIT
@@ -235,6 +235,14 @@ class TestZNEStrategy:
     def test_performs_zne_false(self, noise_factors):
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         assert not zne_strategy.performs_zne
+
+    @mark.parametrize("noise_factors", [(1,), (2.1,), (1, 3), (2.1, 4.5)])
+    def test_is_noop(self, noise_factors):
+        zne_strategy = ZNEStrategy(noise_factors=noise_factors)
+        if tuple(noise_factors) == (1,):
+            assert zne_strategy.is_noop
+        else:
+            assert not zne_strategy.is_noop
 
     ################################################################################
     ## TRANSPILATION
