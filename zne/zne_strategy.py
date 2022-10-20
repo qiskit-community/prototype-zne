@@ -84,7 +84,7 @@ class ZNEStrategy:
     ################################################################################
     @classmethod
     def noop(cls) -> ZNEStrategy:
-        """Build a no-op ZNE strategy."""
+        """Construct a no-op ZNE strategy object."""
         return cls(noise_factors=(1,))
 
     ################################################################################
