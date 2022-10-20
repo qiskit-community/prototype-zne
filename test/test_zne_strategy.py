@@ -50,9 +50,15 @@ class TestZNEStrategy:
         return extrapolator
 
     ################################################################################
+    ## NEW
+    ################################################################################
+    def test_noop(self):
+        zne_strategy = ZNEStrategy.noop()
+        assert zne_strategy.noise_factors == (1,)  # No-op condition
+
+    ################################################################################
     ## INIT
     ################################################################################
-
     def test_defaults(self):
         DEFAULT_NOISE_AMPLIFIER = CxAmplifier()
         DEFAULT_NOISE_FACTORS = (1,)

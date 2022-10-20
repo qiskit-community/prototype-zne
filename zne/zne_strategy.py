@@ -73,11 +73,19 @@ class ZNEStrategy:
         FrozenInstanceError: On attempt to update any data field.
     """
 
-    noise_amplifier: NoiseAmplifier = CxAmplifier()
     noise_factors: Sequence[float] = (1,)
+    noise_amplifier: NoiseAmplifier = CxAmplifier()
     extrapolator: Extrapolator = LinearExtrapolator()
     transpilation_level: int | None = 1
     transpiler: PassManager | None = None
+
+    ################################################################################
+    ## NEW
+    ################################################################################
+    @classmethod
+    def noop(cls) -> ZNEStrategy:
+        """Build a no-op ZNE strategy."""
+        return cls(noise_factors=(1,))
 
     ################################################################################
     ## INIT
