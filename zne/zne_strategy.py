@@ -174,8 +174,13 @@ class ZNEStrategy:
         """Checks if zero noise extrapolation is performed."""
         return self.performs_noise_amplification and self.num_noise_factors > 1
 
+    @cached_property
+    def is_noop(self) -> bool:
+        """Checks if strategy is no-op."""
+        return not self.performs_noise_amplification and not self.performs_zne
+
     ################################################################################
-    ## TRANSPILATION
+    ## TRANSPILATION (experimental)
     ################################################################################
     def build_transpilers(self, backend: Backend) -> tuple[StagedPassManager, ...]:
         """Generate noisy transpilers from configuration data for provided backend.
