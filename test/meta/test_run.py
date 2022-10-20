@@ -36,14 +36,16 @@ class TestZNERun:
     ################################################################################
     ## TESTS
     ################################################################################
-    def test_base_run_no_zne_strategy(_self, self, run_options):
+    def test_base_run_noop_zne_strategy(_self, self, run_options):
         base_run = Mock()
         run = zne_run(base_run)
+        self.zne_strategy = ZNEStrategy(noise_factors=range(1, 4))
         _ = run(
             self,
             circuits="circuits",
             observables="observables",
             parameter_values="parameter_values",
+            zne_strategy=None,
             **run_options,
         )
         base_run.assert_called_once_with(
