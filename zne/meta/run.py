@@ -38,12 +38,14 @@ def zne_run(run: Callable) -> Callable:
         circuits: tuple[QuantumCircuit, ...],
         observables: tuple[BaseOperator | PauliSumOp, ...],
         parameter_values: tuple[tuple[float, ...], ...],
-        zne_strategy: ZNEStrategy | None = None,
+        zne_strategy: ZNEStrategy | None = ...,  # type: ignore
         **run_options,
     ) -> Job:
         # Strategy
-        if zne_strategy is None:
+        if zne_strategy is Ellipsis:
             zne_strategy = self.zne_strategy
+        elif zne_strategy is None:
+            zne_strategy = ZNEStrategy.noop()
         elif not isinstance(zne_strategy, ZNEStrategy):
             raise TypeError("Invalid zne_strategy object, expected ZNEStrategy.")
 
