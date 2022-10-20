@@ -16,8 +16,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from types import EllipsisType
-from typing import cast
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
@@ -40,7 +38,7 @@ def zne_run(run: Callable) -> Callable:
         circuits: tuple[QuantumCircuit, ...],
         observables: tuple[BaseOperator | PauliSumOp, ...],
         parameter_values: tuple[tuple[float, ...], ...],
-        zne_strategy: ZNEStrategy | None | EllipsisType = ...,
+        zne_strategy: ZNEStrategy | None = ...,  # type: ignore
         **run_options,
     ) -> Job:
         # Strategy
@@ -50,7 +48,6 @@ def zne_run(run: Callable) -> Callable:
             zne_strategy = ZNEStrategy.noop()
         elif not isinstance(zne_strategy, ZNEStrategy):
             raise TypeError("Invalid zne_strategy object, expected ZNEStrategy.")
-        zne_strategy = cast(ZNEStrategy, zne_strategy)
 
         # ZNE
         target_num_experiments: int = len(circuits)
