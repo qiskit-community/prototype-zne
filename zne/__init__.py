@@ -10,7 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Zero Noise Extrapolation (ZNE) prototype for error mitigation on the Estimator primitive."""
+"""Zero Noise Extrapolation (ZNE) prototype for error mitigation on
+the Qiskit Estimator primitive."""
 
 from .extrapolation import EXTRAPOLATOR_LIBRARY
 from .meta import ZNEJob, zne
