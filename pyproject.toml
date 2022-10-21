@@ -80,10 +80,10 @@ notebook = [
 ]
 
 [project.urls]
-"Home" = "https://github.com/qiskit-community/prototype-zne"
-"Documentation" = "https://github.com/qiskit-community/prototype-zne/tree/main/docs"
-"Repository" = "https://github.com/qiskit-community/prototype-zne"
-"Download" = "https://github.com/qiskit-community/prototype-zne"
+"Home" = "https://qiskit-community.github.io/prototypes/"
+"Documentation" = "https://github.com/qiskit-community/prototype-zne/tree/main/docs/"
+"Repository" = "https://github.com/qiskit-community/prototype-zne/"
+"Download" = "https://pypi.org/project/prototype-zne/"
 
 [tool.flit.module]
 name = "zne"
