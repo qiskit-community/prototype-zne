@@ -56,7 +56,7 @@ Although not strictly required, it can be useful to create a new *virtual enviro
 
 ## Basic PyPI installation
 
-:warning: **Currently unavailable**
+<!-- :warning: **Currently unavailable** -->
 
 The easiest way to install this package is from the PyPI public repository. This will install the latest stable version available, which will provide a higher level of robustness, although patches and updates might take longer to be available. From the terminal, use pip to install the package:
 ```
