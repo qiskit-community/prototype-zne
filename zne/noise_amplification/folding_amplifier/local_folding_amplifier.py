@@ -24,6 +24,9 @@ from ...utils.typing import isint
 from .folding_amplifier import FoldingAmplifier
 
 
+################################################################################
+## GENERAL
+################################################################################
 class LocalFoldingAmplifier(FoldingAmplifier):
     """
     Replaces gates in the circuit by said gate and its inverse alternatingly as many times as
@@ -263,3 +266,52 @@ class LocalFoldingAmplifier(FoldingAmplifier):
             raise TypeError(f"Expected int, received {type(num_foldings)} instead.")
         if num_foldings < 0:
             raise ValueError("Number of foldings must be greater than or equal to zero.")
+
+
+################################################################################
+## FACADES
+################################################################################
+class CxAmplifier(LocalFoldingAmplifier):
+    """
+    Digital noise amplifier acting on CX gates exclusively.
+
+    Replaces each CX gate locally with as many CX gates as indicated by the noise_factor.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments,duplicate-code
+        self,
+        sub_folding_option: str = "from_first",
+        random_seed: int | None = None,
+        noise_factor_relative_tolerance: float = 1e-2,
+        warn_user: bool = True,
+    ) -> None:
+        super().__init__(
+            gates_to_fold="cx",
+            sub_folding_option=sub_folding_option,
+            random_seed=random_seed,
+            noise_factor_relative_tolerance=noise_factor_relative_tolerance,
+            warn_user=warn_user,
+        )
+
+
+class TwoQubitAmplifier(LocalFoldingAmplifier):
+    """
+    Digital noise amplifier acting on two-qubit gates exclusively.
+
+    Replaces each two-qubit gate locally with as many gates as indicated by the noise_factor.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments,duplicate-code
+        self,
+        sub_folding_option: str = "from_first",
+        random_seed: int | None = None,
+        noise_factor_relative_tolerance: float = 1e-2,
+        warn_user: bool = True,
+    ) -> None:
+        super().__init__(
+            gates_to_fold=2,
+            sub_folding_option=sub_folding_option,
+            random_seed=random_seed,
+            noise_factor_relative_tolerance=noise_factor_relative_tolerance,
+            warn_user=warn_user,
+        )

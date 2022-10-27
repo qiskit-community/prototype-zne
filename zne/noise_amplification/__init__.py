@@ -13,14 +13,19 @@
 """Noise amplification library."""
 
 from ..utils import build_dict_library
-from .cx_amplifier import CxAmplifier
-from .folding_amplifier import GlobalFoldingAmplifier, LocalFoldingAmplifier
-from .noise_amplifier import CircuitNoiseAmplifier, DAGNoiseAmplifier, NoiseAmplifier
-
-NOISE_AMPLIFIER_LIBRARY: dict = build_dict_library(
+from .folding_amplifier import (
     CxAmplifier,
     GlobalFoldingAmplifier,
     LocalFoldingAmplifier,
+    TwoQubitAmplifier,
+)
+from .noise_amplifier import CircuitNoiseAmplifier, DAGNoiseAmplifier, NoiseAmplifier
+
+NOISE_AMPLIFIER_LIBRARY: dict = build_dict_library(
+    GlobalFoldingAmplifier,
+    LocalFoldingAmplifier,
+    CxAmplifier,
+    TwoQubitAmplifier,
 )
 
 __all__ = [
