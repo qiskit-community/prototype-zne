@@ -22,6 +22,9 @@ from ..types import Metadata, RegressionDatum, RegressionModel
 from .extrapolator import Extrapolator
 
 
+################################################################################
+## GENERAL
+################################################################################
 class PolynomialExtrapolator(Extrapolator):
     """Polynomial regression based extrapolator."""
 
@@ -60,3 +63,34 @@ class PolynomialExtrapolator(Extrapolator):
         fit = Polynomial.fit(x, y, deg=self.degree)
         model = lambda target: (fit(target), None)  # TODO: calculate variance of fitted
         return model, {}
+
+
+################################################################################
+## FACADES
+################################################################################
+class LinearExtrapolator(PolynomialExtrapolator):
+    """Linear extrapolator."""
+
+    def __init__(self):
+        super().__init__(degree=1)
+
+
+class QuadraticExtrapolator(PolynomialExtrapolator):
+    """Quadratic extrapolator."""
+
+    def __init__(self):
+        super().__init__(degree=2)
+
+
+class CubicExtrapolator(PolynomialExtrapolator):
+    """Cubic extrapolator."""
+
+    def __init__(self):
+        super().__init__(degree=3)
+
+
+class QuarticExtrapolator(PolynomialExtrapolator):
+    """Quartic extrapolator."""
+
+    def __init__(self):
+        super().__init__(degree=4)
