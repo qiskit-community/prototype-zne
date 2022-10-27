@@ -14,9 +14,20 @@
 
 from ..utils import build_dict_library
 from .extrapolator import Extrapolator
-from .linear_extrapolator import LinearExtrapolator
-from .polynomial_extrapolator import PolynomialExtrapolator
+from .polynomial_extrapolator import (
+    CubicExtrapolator,
+    LinearExtrapolator,
+    PolynomialExtrapolator,
+    QuadraticExtrapolator,
+    QuarticExtrapolator,
+)
 
-EXTRAPOLATOR_LIBRARY: dict = build_dict_library(LinearExtrapolator, PolynomialExtrapolator)
+EXTRAPOLATOR_LIBRARY: dict = build_dict_library(
+    PolynomialExtrapolator,
+    LinearExtrapolator,
+    QuadraticExtrapolator,
+    CubicExtrapolator,
+    QuarticExtrapolator,
+)
 
 __all__ = ["Extrapolator", *EXTRAPOLATOR_LIBRARY.keys()]
