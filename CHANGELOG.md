@@ -1,3 +1,10 @@
+## 1.0.0b2 (2022-10-27)
+
+### Feat
+
+- **extrapolation**: add quadratic, cubic, and quartic extrapolators (#18)
+- **noise_amplification**: add two-qubit noise amplifier (#19)
+
 ## 1.0.0b1 (2022-10-20)
 
 ### Feat
