@@ -15,7 +15,7 @@
 <br />
 <p align="center">
   <a href="README.md">
-    <img src="https://github.com/qiskit-community/prototype-zne/blob/1.0.0b2/docs/media/zne_cover.png?raw=true" alt="Logo" width="300">
+    <img src="https://github.com/qiskit-community/prototype-zne/blob/main/docs/media/cover.png?raw=true" alt="Logo" width="300">
   </a>
   <h2 align="center">Zero Noise Extrapolation (ZNE)</h2>
 </p>
