@@ -186,7 +186,7 @@ For complete control over the developer tools you can invoke them directly after
 
 - [__Autoflake__](https://pypi.org/project/autoflake/) for style fixing:
     ```
-    autoflake [-c] [-i] [-r] <TARGET>
+    autoflake [-c] [-i] --remove-all-unused-imports [-r] <TARGET>
     ```
 - [__Black__](https://pypi.org/project/black/) for code formatting:
     ```
