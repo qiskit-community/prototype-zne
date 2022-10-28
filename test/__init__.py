@@ -41,6 +41,7 @@ NO_REAL = [t for t in NO_INTS if type(t) != type(FLOAT) or t in (NAN, INF, MINF)
 NO_NUM = [t for t in NO_REAL if type(t) != type(COMPLEX)]
 ITERS = [t for t in TYPES if t in [STR, LST, TPL, DICT]]
 NO_ITERS = [t for t in TYPES if t not in ITERS]
+NO_ITERS_NONE = [t for t in NO_ITERS if type(t) != type(NONE)]
 
 
 ################################################################################
