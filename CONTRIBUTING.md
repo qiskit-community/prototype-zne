@@ -20,7 +20,7 @@ This guide is for those who want to extend the module or documentation. If you j
     - [Documentation](#documentation)
     - [Copyright notice](#copyright-notice)
     - [Commits](#commits)
-3. [GitHub issues](#github-issues)
+3. [GitHub issues and pull-requests](#github-issues-and-pull-requests)
 4. [Running tests](#running-tests)
     - [Bulk testing](#bulk-testing)
     - [Granular testing](#granular-testing)
@@ -110,7 +110,7 @@ In order to properly conform to semantical versioning and keep track of changelo
 These configs can be enforced through [pre-commit git hooks](#adding-git-hooks).
 
 
-## GitHub issues
+## GitHub issues and pull-requests
 
 Issues in this repository are assigned a Difficulty Class (DC) and Priority Level (PL) from 1 to 5. 
 
@@ -121,7 +121,7 @@ Difficulty classes roughly correspond to:
 - `DC-4` → Multidomain knowledge
 - `DC-5` → System-wide knowledge
 
-Priority levels, on the other hand, denote:
+Priority levels also apply to PRs, and denote:
 - `PL-1` → High
 - `PL-2` → Medium-high
 - `PL-3` → Medium
