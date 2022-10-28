@@ -178,6 +178,31 @@ class TestMagic:
         )
         assert zne_strategy != "zne_strategy"
 
+    @mark.parametrize(
+        "noise_factors, NoiseAmplifier, Extrapolator",
+        cases := list(
+            product(
+                [(1,), (1, 3), (1, 3, 5)],
+                NOISE_AMPLIFIER_LIBRARY.values(),
+                EXTRAPOLATOR_LIBRARY.values(),
+            )
+        ),
+        ids=[f"{na.name}-{nf}-{e.name}" for nf, na, e in cases],
+    )
+    def test_bool(self, noise_factors, NoiseAmplifier, Extrapolator):
+        noise_amplifier = NoiseAmplifier()
+        extrapolator = Extrapolator()
+        zne_strategy = ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        truth_value = not zne_strategy.is_noop
+        if truth_value:
+            assert zne_strategy
+        else:
+            assert not zne_strategy
+
 
 class TestConstructors:
     """Test ZNEStrategy constructors."""
@@ -359,21 +384,30 @@ class TestProperties:
         """Test if ZNEStrategy performs noise amplification."""
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         truth_value = any(nf > 1 for nf in noise_factors)
-        assert not (zne_strategy.performs_noise_amplification ^ truth_value)
+        if truth_value:
+            assert zne_strategy.performs_noise_amplification
+        else:
+            assert not zne_strategy.performs_noise_amplification
 
     @mark.parametrize("noise_factors", [(1,), (1, 3), (1.2,), (2.1, 4.5)])
     def test_performs_zne(self, noise_factors):
         """Test if ZNEStrategy performs zero noise extrapolation."""
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         truth_value = any(nf > 1 for nf in noise_factors) and len(noise_factors) > 1
-        assert not (zne_strategy.performs_zne ^ truth_value)
+        if truth_value:
+            assert zne_strategy.performs_zne
+        else:
+            assert not zne_strategy.performs_zne
 
     @mark.parametrize("noise_factors", [(1,), (1, 3), (1.2,), (2.1, 4.5)])
     def test_is_noop(self, noise_factors):
         """Test if ZNEStrategy is no-op."""
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         truth_value = tuple(noise_factors) == (1,)
-        assert not (zne_strategy.is_noop ^ truth_value)
+        if truth_value:
+            assert zne_strategy.is_noop
+        else:
+            assert not zne_strategy.is_noop
 
 
 class TestNoiseAmplification:

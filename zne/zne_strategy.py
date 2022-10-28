@@ -75,6 +75,9 @@ class ZNEStrategy:
             return False
         return all(getattr(self, attr) == getattr(__o, attr) for attr in self._DEFINING_ATTRS)
 
+    def __bool__(self) -> bool:
+        return not self.is_noop
+
     ################################################################################
     ## CONSTRUCTORS
     ################################################################################
