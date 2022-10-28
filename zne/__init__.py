@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Zero Noise Extrapolation (ZNE) prototype for error mitigation on
-the Qiskit Estimator primitive."""
+Qiskit's Estimator primitive."""
 
 from .extrapolation import EXTRAPOLATOR_LIBRARY
 from .meta import ZNEJob, zne
