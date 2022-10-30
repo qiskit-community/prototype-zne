@@ -199,7 +199,7 @@ class TestQualityDescriptor:
         descriptor = quality()
         type("Dummy", (), {attr: descriptor})
         assert descriptor.name == attr
-        assert descriptor.private_name == "_" + attr
+        assert descriptor.private_name == "__quality_" + attr
 
     def test_get(self):
         """Test `quality` descriptor `__get__` logic."""

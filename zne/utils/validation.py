@@ -25,8 +25,9 @@ class quality:  # pylint: disable=invalid-name
     """Quality attribute similar to property but geared towards custom validation.
 
     Args:
-        fval: function to be used for validating an attribute value on __set__
-        feff: function to be used for perfomring side-effects on __set__ (e.g. erasing cache)
+        fval: function to be used for validating an attribute value on `__set__`
+        feff: function to be used for performing side-effects on `__set__` and
+            `__delete__` (e.g. erasing cache)
         default: value to assume if set to `...`
         null: value to assume if set to `None`
     """
@@ -102,7 +103,7 @@ class quality:  # pylint: disable=invalid-name
     ################################################################################
     def __set_name__(self, owner: type, name: str) -> None:
         self.name = name
-        self.private_name = "_" + name
+        self.private_name = "__quality_" + name
 
     def __get__(self, obj: object, objtype: type = None) -> Any:
         if obj is None:
