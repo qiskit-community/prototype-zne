@@ -42,10 +42,12 @@ class quality:  # pylint: disable=invalid-name
         default: Any = UNSET,
         null: Any = UNSET,
     ) -> None:
-        self.fval = fval
-        self.feff = feff
-        self._default = default
-        self._null = null
+        self.fval: Callable[[Any, Any], Any] | None = fval
+        self.feff: Callable[[Any], None] | None = feff
+        self._default: Any = default
+        self._null: Any = null
+        self.name: str | None = None
+        self.private_name: str | None = None
 
     def __call__(
         self,
@@ -57,10 +59,10 @@ class quality:  # pylint: disable=invalid-name
     ) -> quality:
         """Returns a copy of the quality with updated attributes."""
         return self.__class__(
-            fval=self.fval if fval is UNSET else fval,  # type: ignore
-            feff=self.feff if feff is UNSET else feff,  # type: ignore
-            default=self.default if default is UNSET else default,
-            null=self.null if null is UNSET else null,
+            fval=fval or self.fval,  # type: ignore
+            feff=feff or self.feff,  # type: ignore
+            default=default or self.default,
+            null=null or self.null,
         )
 
     def __copy__(self) -> quality:
@@ -101,8 +103,8 @@ class quality:  # pylint: disable=invalid-name
     ## DESCRIPTOR PROTOCOL
     ################################################################################
     def __set_name__(self, owner: type, name: str) -> None:
-        self.name = name  # pylint: disable=attribute-defined-outside-init
-        self.private_name = f"_{name}"  # pylint: disable=attribute-defined-outside-init
+        self.name = name
+        self.private_name = "_" + name
 
     def __get__(self, obj: object, objtype: type = None) -> Any:
         if obj is None:
@@ -152,10 +154,10 @@ class quality:  # pylint: disable=invalid-name
     ################################################################################
     def _apply_defaults(self, value: Any) -> Any:
         """Apply defaults to user input value."""
-        default = self.null if self.default is UNSET else self.default
-        null = default if self.null is UNSET else self.null
+        default = self.default or self.null
+        null = self.null or self.default
         if value is UNSET:
-            value = None if default is UNSET else default
+            value = default or None
         elif value is Ellipsis and default is not UNSET:
             value = default
         elif value is None and null is not UNSET:
