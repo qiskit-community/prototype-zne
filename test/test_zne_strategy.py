@@ -20,11 +20,9 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.random import random_circuit
 from qiskit.primitives import EstimatorResult
 
-from zne.extrapolation import EXTRAPOLATOR_LIBRARY, Extrapolator, LinearExtrapolator
-from zne.noise_amplification import NOISE_AMPLIFIER_LIBRARY, NoiseAmplifier
-from zne.noise_amplification.folding_amplifier.local_folding_amplifier import (
-    TwoQubitAmplifier,
-)
+from zne.extrapolation import Extrapolator, LinearExtrapolator
+from zne.noise_amplification import NoiseAmplifier
+from zne.noise_amplification.folding_amplifier import TwoQubitAmplifier
 from zne.zne_strategy import ZNEStrategy
 
 from . import NO_ITERS_NONE, NO_NONE
@@ -75,28 +73,19 @@ class TestInit:
         assert ZNEStrategy().extrapolator == LinearExtrapolator()
 
     @mark.parametrize(
-        "noise_factors, NoiseAmplifier, Extrapolator",
-        cases := list(
-            product(
-                [(1,), (1, 3), (1, 3, 5)],
-                NOISE_AMPLIFIER_LIBRARY.values(),
-                EXTRAPOLATOR_LIBRARY.values(),
-            )
-        ),
-        ids=[f"{na.name}-{nf}-{e.name}" for nf, na, e in cases],
+        "noise_factors",
+        [(1,), (1, 3), (1, 3, 5)],
     )
     def test_custom(
         self,
         noise_factors,
-        NoiseAmplifier,
-        Extrapolator,
     ):
         """Test custom configuration.
 
         Proper inputs can be assumed since validation is tested separately.
         """
-        noise_amplifier = NoiseAmplifier()
-        extrapolator = Extrapolator()
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
         zne_strategy = ZNEStrategy(
             noise_factors=noise_factors,
             noise_amplifier=noise_amplifier,
@@ -107,24 +96,17 @@ class TestInit:
         assert zne_strategy.extrapolator is extrapolator
 
 
+@mark.parametrize(
+    "noise_factors",
+    [(1,), (1, 3), (1, 3, 5)],
+)
 class TestMagic:
     """Test generic ZNEStrategy magic methods."""
 
-    @mark.parametrize(
-        "noise_factors, NoiseAmplifier, Extrapolator",
-        cases := list(
-            product(
-                [(1,), (1, 3), (1, 3, 5)],
-                NOISE_AMPLIFIER_LIBRARY.values(),
-                EXTRAPOLATOR_LIBRARY.values(),
-            )
-        ),
-        ids=[f"{na.name}-{nf}-{e.name}" for nf, na, e in cases],
-    )
-    def test_repr(self, noise_factors, NoiseAmplifier, Extrapolator):
+    def test_repr(self, noise_factors):
         """Test ZNEStrategy.__repr__() magic method."""
-        noise_amplifier = NoiseAmplifier()
-        extrapolator = Extrapolator()
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
         zne_strategy = ZNEStrategy(
             noise_factors=noise_factors,
             noise_amplifier=noise_amplifier,
@@ -136,21 +118,10 @@ class TestMagic:
         expected += f"extrapolator={repr(extrapolator)})"
         assert repr(zne_strategy) == expected
 
-    @mark.parametrize(
-        "noise_factors, NoiseAmplifier, Extrapolator",
-        cases := list(
-            product(
-                [(1,), (1, 3), (1, 3, 5)],
-                NOISE_AMPLIFIER_LIBRARY.values(),
-                EXTRAPOLATOR_LIBRARY.values(),
-            )
-        ),
-        ids=[f"{na.name}-{nf}-{e.name}" for nf, na, e in cases],
-    )
-    def test_eq(self, noise_factors, NoiseAmplifier, Extrapolator):
+    def test_eq(self, noise_factors):
         """Test ZNEStrategy.__eq__() magic method."""
-        noise_amplifier = NoiseAmplifier()
-        extrapolator = Extrapolator()
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
         zne_strategy = ZNEStrategy(
             noise_factors=noise_factors,
             noise_amplifier=noise_amplifier,
@@ -178,30 +149,16 @@ class TestMagic:
         )
         assert zne_strategy != "zne_strategy"
 
-    @mark.parametrize(
-        "noise_factors, NoiseAmplifier, Extrapolator",
-        cases := list(
-            product(
-                [(1,), (1, 3), (1, 3, 5)],
-                NOISE_AMPLIFIER_LIBRARY.values(),
-                EXTRAPOLATOR_LIBRARY.values(),
-            )
-        ),
-        ids=[f"{na.name}-{nf}-{e.name}" for nf, na, e in cases],
-    )
-    def test_bool(self, noise_factors, NoiseAmplifier, Extrapolator):
-        noise_amplifier = NoiseAmplifier()
-        extrapolator = Extrapolator()
+    def test_bool(self, noise_factors):
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
         zne_strategy = ZNEStrategy(
             noise_factors=noise_factors,
             noise_amplifier=noise_amplifier,
             extrapolator=extrapolator,
         )
         truth_value = not zne_strategy.is_noop
-        if truth_value:
-            assert zne_strategy
-        else:
-            assert not zne_strategy
+        assert bool(zne_strategy) is truth_value
 
 
 class TestConstructors:
@@ -323,17 +280,6 @@ class TestNoiseAmplifier:
         assert zne_strategy.noise_amplifier == TwoQubitAmplifier()
 
     @mark.parametrize(
-        "NoiseAmplifier",
-        cases := NOISE_AMPLIFIER_LIBRARY.values(),
-        ids=[f"{na.name}" for na in cases],
-    )
-    def test_property(self, NoiseAmplifier):
-        noise_amplifier = NoiseAmplifier()
-        zne_strategy = ZNEStrategy()
-        zne_strategy.noise_amplifier = noise_amplifier
-        assert zne_strategy.noise_amplifier is noise_amplifier
-
-    @mark.parametrize(
         "noise_amplifier",
         cases := NO_NONE,
         ids=[f"{type(c)}" for c in cases],
@@ -352,17 +298,6 @@ class TestExtrapolator:
         zne_strategy = ZNEStrategy()
         zne_strategy.extrapolator = None
         assert zne_strategy.extrapolator == LinearExtrapolator()
-
-    @mark.parametrize(
-        "Extrapolator",
-        cases := EXTRAPOLATOR_LIBRARY.values(),
-        ids=[f"{e.name}" for e in cases],
-    )
-    def test_property(self, Extrapolator):
-        extrapolator = Extrapolator()
-        zne_strategy = ZNEStrategy()
-        zne_strategy.extrapolator = extrapolator
-        assert zne_strategy.extrapolator is extrapolator
 
     @mark.parametrize(
         "extrapolator",
