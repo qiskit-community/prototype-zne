@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from copy import copy, deepcopy
 from typing import Any
 from unittest.mock import Mock
 
@@ -97,6 +98,51 @@ class TestQualityCall:
         assert q is not qq
         for key in kwargs:
             assert getattr(qq, key) == kwargs.get(key)
+
+
+class TestQualityCopy:
+    """Test `quality` descriptor copy logic."""
+
+    def test_copy(self):
+        fval = Mock()
+        feff = Mock()
+        default = EqualCopies("default")
+        null = EqualCopies("null")
+        descriptor = quality(fval, feff, default=default, null=null)
+        duplicate = copy(descriptor)
+        assert descriptor.fval is duplicate.fval
+        assert descriptor.feff is duplicate.feff
+        assert descriptor.default == duplicate.default
+        assert descriptor.null == duplicate.null
+
+    def test_deepcopy(self):
+        fval = EqualCopies("fval")
+        feff = EqualCopies("feff")
+        default = EqualCopies("default")
+        null = EqualCopies("null")
+        descriptor = quality(fval, feff, default=default, null=null)
+        duplicate = deepcopy(descriptor, memo := {})
+
+        assert descriptor.fval is not duplicate.fval
+        assert descriptor.fval == duplicate.fval
+        assert descriptor.feff is not duplicate.feff
+        assert descriptor.feff == duplicate.feff
+        assert descriptor.default is not duplicate.default
+        assert descriptor.default == duplicate.default
+        assert descriptor.null is not duplicate.null
+        assert descriptor.null == duplicate.null
+
+        memo_values = [fval, feff, default, null]
+        memo_values += [v.__dict__ for v in memo_values]
+        for value in memo.values():
+            if isinstance(value, quality):
+                assert value is duplicate
+            elif isinstance(value, list):
+                assert descriptor in value
+                for v in memo_values:
+                    assert v in value
+            else:
+                assert value in memo_values
 
 
 @mark.parametrize("property", ["default", "null"])

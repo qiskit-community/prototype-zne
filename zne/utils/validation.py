@@ -63,6 +63,21 @@ class quality:  # pylint: disable=invalid-name
             null=self.null if null is UNSET else null,
         )
 
+    def __copy__(self) -> quality:
+        return self.__class__(
+            fval=self.fval,
+            feff=self.feff,
+            default=self.default,
+            null=self.null,
+        )
+
+    def __deepcopy__(self, memo: dict) -> quality:
+        fval = deepcopy(self.fval, memo)
+        feff = deepcopy(self.feff, memo)
+        default = deepcopy(self._default, memo)
+        null = deepcopy(self._null, memo)
+        return self.__class__(fval, feff, default=default, null=null)
+
     ################################################################################
     ## PROPERTIES
     ################################################################################
