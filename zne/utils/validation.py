@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from typing import Any
 
 from .unset import UNSET, UnsetType
@@ -30,7 +31,7 @@ class quality:  # pylint: disable=invalid-name
         null: value to assume if set to `None`
     """
 
-    __slots__ = "fval", "feff", "default", "null", "name", "private_name"
+    __slots__ = "fval", "feff", "_default", "_null", "name", "private_name"
 
     # TODO: update doc to fval's like property does for fget
     def __init__(
@@ -43,8 +44,8 @@ class quality:  # pylint: disable=invalid-name
     ) -> None:
         self.fval = fval
         self.feff = feff
-        self.default = default
-        self.null = null
+        self._default = default
+        self._null = null
 
     def __call__(
         self,
@@ -61,6 +62,25 @@ class quality:  # pylint: disable=invalid-name
             default=self.default if default is UNSET else default,
             null=self.null if null is UNSET else null,
         )
+
+    ################################################################################
+    ## PROPERTIES
+    ################################################################################
+    @property
+    def default(self) -> Any:
+        """Default value for the managed attribute to be used for `...`.
+
+        Enforced immutable to avoid side-effects.
+        """
+        return deepcopy(self._default)
+
+    @property
+    def null(self) -> Any:
+        """Null value for the managed attribute to be used for `None`.
+
+        Enforced immutable to avoid side-effects.
+        """
+        return deepcopy(self._null)
 
     ################################################################################
     ## DESCRIPTOR PROTOCOL

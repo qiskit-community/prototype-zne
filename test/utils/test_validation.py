@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from typing import Any
 from unittest.mock import Mock
 
 from pytest import mark, raises
@@ -18,6 +19,24 @@ from zne.utils.unset import UNSET
 from zne.utils.validation import quality
 
 
+################################################################################
+## AUXILIARY
+################################################################################
+class EqualCopies:
+    """Auxiliary wrapper class to check that deepcopies are equal."""
+
+    def __init__(self, value: Any = None) -> None:
+        self.value = value
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, self.__class__):
+            return False
+        return self.value == __o.value
+
+
+################################################################################
+## TESTS
+################################################################################
 class TestQualityInit:
     """Test `quality` descriptor init."""
 
@@ -31,13 +50,13 @@ class TestQualityInit:
     def test_custom(self):
         fval = Mock()
         feff = Mock()
-        default = Mock()
-        null = Mock()
+        default = EqualCopies("default")
+        null = EqualCopies("null")
         q = quality(fval, feff, default=default, null=null)
         assert q.fval is fval
         assert q.feff is feff
-        assert q.default is default
-        assert q.null is null
+        assert q.default == default
+        assert q.null == null
 
     def test_keyword_only(self):
         with raises(TypeError):
@@ -52,26 +71,52 @@ class TestQualityCall:
         [
             ("fval",),
             ("feff",),
-            ("default",),
-            ("null",),
             ("fval", "feff"),
-            ("fval", "default"),
-            ("feff", "null"),
-            ("default", "null"),
-            ("fval", "feff", "null"),
-            ("fval", "feff", "default", "null"),
         ],
     )
-    def test_update(self, keys):
+    def test_mutable(self, keys):
         q = quality()
         kwargs = {k: Mock() for k in keys}
-        q = q(**kwargs)
+        qq = q(**kwargs)
+        assert q is not qq
         for key in kwargs:
-            assert getattr(q, key) is kwargs.get(key)
+            assert getattr(qq, key) is kwargs.get(key)
+
+    @mark.parametrize(
+        "keys",
+        [
+            ("default",),
+            ("null",),
+            ("default", "null"),
+        ],
+    )
+    def test_immutable(self, keys):
+        q = quality()
+        kwargs = {k: EqualCopies(k) for k in keys}
+        qq = q(**kwargs)
+        assert q is not qq
+        for key in kwargs:
+            assert getattr(qq, key) == kwargs.get(key)
+
+
+@mark.parametrize("property", ["default", "null"])
+class TestQualityProperties:
+    """Test `quality` descriptor properties."""
+
+    def test_immutable(self, property):
+        descriptor = quality()
+        with raises(AttributeError):
+            setattr(descriptor, property, ...)
+
+    def test_copy(self, property):
+        p = EqualCopies(property)
+        descriptor = quality(**{property: p})
+        assert getattr(descriptor, property) is not p
+        assert getattr(descriptor, property) == p
 
 
 class TestQualityDescriptor:
-    """Test `quality` descriptor protocol."""
+    """Test `quality` descriptor protocol (exept for `__set__`)."""
 
     @mark.parametrize("attr", ["attr", "name", "foo", "bar"])
     def test_set_name(self, attr):
@@ -85,82 +130,17 @@ class TestQualityDescriptor:
         Dummy = type("Dummy", (), {"q": descriptor})
         assert Dummy.q is descriptor
 
-    @mark.parametrize(
-        "kwargs",
-        [
-            {"default": UNSET, "null": UNSET},
-            {"default": Mock(), "null": UNSET},
-            {"default": UNSET, "null": Mock()},
-            {"default": Mock(), "null": Mock()},
-        ],
-    )
-    def test_unset(self, kwargs):
-        default = kwargs.get("default")
-        null = kwargs.get("null")
-        descriptor = quality(**kwargs)
+    def test_delete(self):
+        descriptor = quality()
         Dummy = type("Dummy", (), {"q": descriptor})
         d = Dummy()
-        expected = None if default is UNSET and null is UNSET else default or null
-        assert d.q is expected
-        assert d.q is getattr(d, descriptor.private_name)
-
-    @mark.parametrize(
-        "kwargs",
-        [
-            {"default": UNSET, "null": UNSET},
-            {"default": Mock(), "null": UNSET},
-            {"default": UNSET, "null": Mock()},
-            {"default": Mock(), "null": Mock()},
-        ],
-    )
-    def test_none(self, kwargs):
-        default = kwargs.get("default")
-        null = kwargs.get("null")
-        descriptor = quality(**kwargs)
-        Dummy = type("Dummy", (), {"q": descriptor})
-        d = Dummy()
-        d.q = None
-        expected = None if default is UNSET and null is UNSET else null or default
-        assert d.q is expected
-        assert d.q is getattr(d, descriptor.private_name)
-
-    @mark.parametrize(
-        "kwargs",
-        [
-            {"default": UNSET, "null": UNSET},
-            {"default": Mock(), "null": UNSET},
-            {"default": UNSET, "null": Mock()},
-            {"default": Mock(), "null": Mock()},
-        ],
-    )
-    def test_ellipsis(self, kwargs):
-        default = kwargs.get("default")
-        null = kwargs.get("null")
-        descriptor = quality(**kwargs)
-        Dummy = type("Dummy", (), {"q": descriptor})
-        d = Dummy()
-        d.q = ...
-        expected = ... if default is UNSET and null is UNSET else default or null
-        assert d.q is expected
-        assert d.q is getattr(d, descriptor.private_name)
-
-    @mark.parametrize(
-        "kwargs",
-        [
-            {"default": UNSET, "null": UNSET},
-            {"default": Mock(), "null": UNSET},
-            {"default": UNSET, "null": Mock()},
-            {"default": Mock(), "null": Mock()},
-        ],
-    )
-    def test_set(self, kwargs):
-        descriptor = quality(**kwargs)
-        Dummy = type("Dummy", (), {"q": descriptor})
-        d = Dummy()
+        assert not hasattr(d, descriptor.private_name)
+        del d.q  # Does not raise error
         q = Mock()
         d.q = q
-        assert d.q is q
-        assert d.q is getattr(d, descriptor.private_name)
+        assert getattr(d, descriptor.private_name) is q
+        del d.q
+        assert not hasattr(d, descriptor.private_name)
 
     def test_fval(self):
         fval = Mock()
@@ -183,17 +163,59 @@ class TestQualityDescriptor:
         del d.q
         feff.assert_called_once_with(d)
 
-    def test_delete(self):
-        descriptor = quality()
+
+@mark.parametrize(
+    "kwargs",
+    [
+        {"default": UNSET, "null": UNSET},
+        {"default": EqualCopies("default"), "null": UNSET},
+        {"default": UNSET, "null": EqualCopies("null")},
+        {"default": EqualCopies("default"), "null": EqualCopies("null")},
+    ],
+)
+class TestQualityDescriptorSet:
+    """Test `quality` descriptor `__set__` logic."""
+
+    def test_unset(self, kwargs):
+        default = kwargs.get("default")
+        null = kwargs.get("null")
+        descriptor = quality(**kwargs)
         Dummy = type("Dummy", (), {"q": descriptor})
         d = Dummy()
-        assert not hasattr(d, descriptor.private_name)
-        del d.q  # Does not raise error
+        expected = None if default is UNSET and null is UNSET else default or null
+        assert d.q == expected
+        assert d.q == getattr(d, descriptor.private_name)
+
+    def test_none(self, kwargs):
+        default = kwargs.get("default")
+        null = kwargs.get("null")
+        descriptor = quality(**kwargs)
+        Dummy = type("Dummy", (), {"q": descriptor})
+        d = Dummy()
+        d.q = None
+        expected = None if default is UNSET and null is UNSET else null or default
+        assert d.q == expected
+        assert d.q == getattr(d, descriptor.private_name)
+
+    def test_ellipsis(self, kwargs):
+        default = kwargs.get("default")
+        null = kwargs.get("null")
+        descriptor = quality(**kwargs)
+        Dummy = type("Dummy", (), {"q": descriptor})
+        d = Dummy()
+        d.q = ...
+        expected = ... if default is UNSET and null is UNSET else default or null
+        assert d.q == expected
+        assert d.q == getattr(d, descriptor.private_name)
+
+    def test_set(self, kwargs):
+        descriptor = quality(**kwargs)
+        Dummy = type("Dummy", (), {"q": descriptor})
+        d = Dummy()
         q = Mock()
         d.q = q
-        assert getattr(d, descriptor.private_name) is q
-        del d.q
-        assert not hasattr(d, descriptor.private_name)
+        assert d.q is q
+        assert d.q is getattr(d, descriptor.private_name)
 
 
 class TestQualityDecorators:
