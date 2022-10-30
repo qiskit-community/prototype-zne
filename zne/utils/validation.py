@@ -14,131 +14,115 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence, Set
-from typing import Any, Tuple, Union
+from collections.abc import Callable
+from typing import Any
 
-IsInstanceTypes = Union[type, Tuple[Union[type, tuple], ...]]
+from .unset import UNSET, UnsetType
 
 
-################################################################################
-## VALIDATION
-################################################################################
-def validate_object_type(
-    obj: object,
-    class_or_tuple: IsInstanceTypes,
-    *,
-    default: Any = Ellipsis,
-) -> Any:
-    """Validate type with same interface as ``isinstance``.
+class quality:  # pylint: disable=invalid-name
+    """Quality attribute similar to property but geared towards custom validation.
 
     Args:
-        obj: The object to validate
-        class_or_tuple: A type, tuple of types, or Union to validate against.
-        default: If provided and ``obj`` is None return this instead (validated).
-
-    Returns:
-        The validated object or default.
-
-    Raises:
-        TypeError: If ``obj`` is not of a type specified in ``class_or_tuple``.
-        TypeError: If ``class_or_tuple`` is incompatible with ``isinstance``.
+        fval: function to be used for validating an attribute value on __set__
+        feff: function to be used for perfomring side-effects on __set__ (e.g. erasing cache)
+        default: value to assume if set to `...`
+        null: value to assume if set to `None`
     """
-    if default is not ... and obj is None:  # Ellipsis avoids infinite recurssion
-        return validate_object_type(default, class_or_tuple)
-    try:
-        if not isinstance(obj, class_or_tuple):
-            raise TypeError(f"Expected {class_or_tuple} but got {type(obj)} instead.")
-    except TypeError as error:
-        raise TypeError("Invalid types provided: incompatible with ``isinstance``.") from error
-    else:
-        return obj
 
+    __slots__ = "fval", "feff", "default", "null", "name", "private_name"
 
-def validate_sequence(  # pylint: disable=too-many-arguments
-    seq: Sequence,
-    element_types: IsInstanceTypes = object,
-    *,
-    standard_type: type | None = None,
-    cast_single: bool = False,
-    allow_set: bool = False,
-    default: Any = Ellipsis,
-) -> Sequence:
-    """Validate sequence and (optioanlly) the type of its elements.
+    # TODO: update doc to fval's like property does for fget
+    def __init__(
+        self,
+        fval: Callable[[Any, Any], Any] | None = None,
+        feff: Callable[[Any], None] | None = None,
+        *,
+        default: Any = UNSET,
+        null: Any = UNSET,
+    ) -> None:
+        self.fval = fval
+        self.feff = feff
+        self.default = default
+        self.null = null
 
-    Args:
-        seq: A sequence object ot validate.
-        element_types: A type, tuple of types, or Union for the elements in the sequence.
-        standard_type: A callable to cast the returned sequence to a standard type, or None.
-        cast_single: If ``True``, allows single element input (casted to tuple).
-        allow_set: If ``True``, ``Set`` objects will be allowed as sequences.
-        default: If provided and ``seq`` is ``None`` return this instead (validated).
-            Ellipsis (i.e. ``...``) disables the functinoality.
-
-    Returns:
-        The validated (casted) sequence or default.
-
-    Raises:
-        ValueError: If ``standard_type`` input fails to cast the return value's type.
-    """
-    ## DEFAULT
-    if default is not ... and seq is None:  # Ellipsis avoids infinite recurssion
-        return validate_sequence(
-            default,
-            element_types,
-            standard_type=standard_type,
-            cast_single=cast_single,
-            allow_set=allow_set,
+    def __call__(
+        self,
+        fval: Callable[[Any, Any], Any] | None | UnsetType = UNSET,
+        feff: Callable[[Any], None] | None | UnsetType = UNSET,
+        *,
+        default: Any = UNSET,
+        null: Any = UNSET,
+    ) -> quality:
+        """Returns a copy of the quality with updated attributes."""
+        return self.__class__(
+            fval=self.fval if fval is UNSET else fval,  # type: ignore
+            feff=self.feff if feff is UNSET else feff,  # type: ignore
+            default=self.default if default is UNSET else default,
+            null=self.null if null is UNSET else null,
         )
 
-    ## ALLOW SET
-    SequenceType: IsInstanceTypes = (Sequence, Set) if allow_set else Sequence
+    ################################################################################
+    ## DESCRIPTOR PROTOCOL
+    ################################################################################
+    def __set_name__(self, owner: type, name: str) -> None:
+        self.name = name  # pylint: disable=attribute-defined-outside-init
+        self.private_name = f"_{name}"  # pylint: disable=attribute-defined-outside-init
 
-    ## CAST SINGLE
-    element_types = _validate_isinstance_types(element_types)
-    if cast_single and isinstance(seq, element_types):
-        # TODO: handle arbitrarily deep recursive sequences gracefully (now up to depth two)
-        if not isinstance(seq, SequenceType) or any(not isinstance(e, element_types) for e in seq):
-            seq = (seq,)
+    def __get__(self, obj: object, objtype: type = None) -> Any:
+        if obj is None:
+            return self
+        if hasattr(obj, self.private_name):
+            return getattr(obj, self.private_name)
+        setattr(obj, self.name, UNSET)
+        return getattr(obj, self.name)
 
-    ## VALIDATION
-    validate_object_type(seq, SequenceType)
-    for element in seq:
-        validate_object_type(element, element_types)
+    def __set__(self, obj: object, value: Any) -> None:
+        value = self._apply_defaults(value)
+        if self.fval is not None:
+            value = self.fval(obj, value)
+        setattr(obj, self.private_name, value)
+        if self.feff is not None:
+            self.feff(obj)
 
-    ## STANDARD TYPE
-    if standard_type is not None:
-        try:
-            seq = standard_type(seq)
-            return validate_sequence(seq, element_types, allow_set=allow_set)
-        except (TypeError, ValueError) as error:
-            raise ValueError(
-                "Incompatible `standard_type` input, type casting cannot be performed."
-            ) from error
+    def __delete__(self, obj: object) -> None:
+        if hasattr(obj, self.private_name):
+            delattr(obj, self.private_name)
+        if self.feff is not None:
+            self.feff(obj)
 
-    ## RETURN
-    return seq
+    ################################################################################
+    ## DECORATORS
+    ################################################################################
+    def validator(self, fval: Callable[[Any, Any], Any] | None) -> quality:
+        """Descriptor to obtain a copy of the quality with a different validator."""
+        return self.__class__(
+            fval=fval,
+            feff=self.feff,
+            default=self.default,
+            null=self.null,
+        )
 
+    def side_effect(self, feff: Callable[[Any], None] | None) -> quality:
+        """Descriptor to obtain a copy of the quality with a different side effect."""
+        return self.__class__(
+            fval=self.fval,
+            feff=feff,
+            default=self.default,
+            null=self.null,
+        )
 
-################################################################################
-## AUXILIARY
-################################################################################
-def _validate_isinstance_types(types: IsInstanceTypes) -> tuple:
-    """Validate that types are a valid second argument for ``isinstance`` call.
-
-    Args:
-        types: To validate.
-
-    Returns:
-        The input types if validated in tuple form.
-
-    Raises:
-        TypeError: If types are invalid.
-    """
-    try:
-        isinstance(None, types)
-    except TypeError as error:
-        raise TypeError("Invalid types provided: incompatible with ``isinstance``.") from error
-    else:
-        if not isinstance(types, tuple):
-            types = (types,)
-        return types
+    ################################################################################
+    ## AUXILIARY
+    ################################################################################
+    def _apply_defaults(self, value: Any) -> Any:
+        """Apply defaults to user input value."""
+        default = self.null if self.default is UNSET else self.default
+        null = default if self.null is UNSET else self.null
+        if value is UNSET:
+            value = None if default is UNSET else default
+        elif value is Ellipsis and default is not UNSET:
+            value = default
+        elif value is None and null is not UNSET:
+            value = null
+        return value
