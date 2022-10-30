@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from copy import copy, deepcopy
+
 from zne.utils.unset import UNSET, UnsetType
 
 
@@ -30,3 +32,12 @@ class TestUnsetType:
         """Test equality."""
         assert UnsetType() == UnsetType()
         assert UNSET == UnsetType()
+
+    def test_copy(self):
+        """Test copy."""
+        assert copy(UNSET) is UNSET
+
+    def test_deepcopy(self):
+        """Test deepcopy."""
+        assert deepcopy(UNSET, memo := {}) is UNSET
+        assert not memo

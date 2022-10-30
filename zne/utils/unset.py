@@ -33,5 +33,11 @@ class UnsetType:
     def __eq__(self, __o: Any) -> bool:
         return self is __o
 
+    def __copy__(self) -> UnsetType:
+        return self
+
+    def __deepcopy__(self, memo: dict) -> UnsetType:
+        return self
+
 
 UNSET = UnsetType()
