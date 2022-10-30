@@ -58,27 +58,36 @@ class quality:  # pylint: disable=invalid-name
         null: Any = UNSET,
     ) -> quality:
         """Returns a copy of the quality with updated attributes."""
-        return self.__class__(
+        copy = self.__class__(
             fval=fval or self.fval,  # type: ignore
             feff=feff or self.feff,  # type: ignore
             default=default or self.default,
             null=null or self.null,
         )
+        copy.name = self.name
+        copy.private_name = self.private_name
+        return copy
 
     def __copy__(self) -> quality:
-        return self.__class__(
+        copy = self.__class__(
             fval=self.fval,
             feff=self.feff,
             default=self.default,
             null=self.null,
         )
+        copy.name = self.name
+        copy.private_name = self.private_name
+        return copy
 
     def __deepcopy__(self, memo: dict) -> quality:
         fval = deepcopy(self.fval, memo)
         feff = deepcopy(self.feff, memo)
         default = deepcopy(self._default, memo)
         null = deepcopy(self._null, memo)
-        return self.__class__(fval, feff, default=default, null=null)
+        copy = self.__class__(fval, feff, default=default, null=null)
+        copy.name = self.name
+        copy.private_name = self.private_name
+        return copy
 
     ################################################################################
     ## PROPERTIES
@@ -133,21 +142,27 @@ class quality:  # pylint: disable=invalid-name
     ################################################################################
     def validator(self, fval: Callable[[Any, Any], Any] | None) -> quality:
         """Descriptor to obtain a copy of the quality with a different validator."""
-        return self.__class__(
+        copy = self.__class__(
             fval=fval,
             feff=self.feff,
             default=self.default,
             null=self.null,
         )
+        copy.name = self.name
+        copy.private_name = self.private_name
+        return copy
 
     def side_effect(self, feff: Callable[[Any], None] | None) -> quality:
         """Descriptor to obtain a copy of the quality with a different side effect."""
-        return self.__class__(
+        copy = self.__class__(
             fval=self.fval,
             feff=feff,
             default=self.default,
             null=self.null,
         )
+        copy.name = self.name
+        copy.private_name = self.private_name
+        return copy
 
     ################################################################################
     ## AUXILIARY

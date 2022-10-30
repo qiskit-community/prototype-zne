@@ -85,8 +85,8 @@ class TestQualityCall:
         kwargs = {k: Mock() for k in keys}
         qq = q(**kwargs)
         assert q is not qq
-        for key in kwargs:
-            assert getattr(qq, key) is kwargs.get(key)
+        for key, value in kwargs.items():
+            assert getattr(qq, key) is value
 
     @mark.parametrize(
         "keys",
@@ -101,8 +101,26 @@ class TestQualityCall:
         kwargs = {k: EqualCopies(k) for k in keys}
         qq = q(**kwargs)
         assert q is not qq
-        for key in kwargs:
-            assert getattr(qq, key) == kwargs.get(key)
+        for key, value in kwargs.items():
+            assert getattr(qq, key) == value
+
+    @mark.parametrize(
+        "keys",
+        [
+            ("name",),
+            ("private_name",),
+            ("name", "private_name"),
+        ],
+    )
+    def test_name(self, keys):
+        kwargs = {k: EqualCopies(k) for k in keys}
+        q = quality()
+        for key, value in kwargs.items():
+            setattr(q, key, value)
+        qq = q()
+        assert q is not qq
+        for key, value in kwargs.items():
+            assert getattr(qq, key) == value
 
 
 class TestQualityCopy:
@@ -120,6 +138,8 @@ class TestQualityCopy:
         assert descriptor.feff is duplicate.feff
         assert descriptor.default == duplicate.default
         assert descriptor.null == duplicate.null
+        assert descriptor.name == duplicate.name
+        assert descriptor.private_name == duplicate.private_name
 
     def test_deepcopy(self):
         fval = EqualCopies("fval")
@@ -138,6 +158,8 @@ class TestQualityCopy:
         assert descriptor.default == duplicate.default
         assert descriptor.null is not duplicate.null
         assert descriptor.null == duplicate.null
+        assert descriptor.name == duplicate.name
+        assert descriptor.private_name == duplicate.private_name
 
         memo_values = [fval, feff, default, null]
         memo_values += [v.__dict__ for v in memo_values]
@@ -285,14 +307,26 @@ class TestQualityDecorators:
         """Test validator decorator."""
         q = quality()
         fval = Mock()
-        assert q.fval is not fval
-        q = q.validator(fval)
-        assert q.fval is fval
+        qq = q.validator(fval)
+        assert qq is not q
+        assert qq.fval is fval
+        assert qq.fval is not q.fval
+        assert qq.feff is q.feff
+        assert qq.default == q.default
+        assert qq.null == q.null
+        assert qq.name == q.name
+        assert qq.private_name == q.private_name
 
     def test_side_effect(self):
         """Test side effect decorator."""
         q = quality()
         feff = Mock()
-        assert q.feff is not feff
-        q = q.side_effect(feff)
-        assert q.feff is feff
+        qq = q.side_effect(feff)
+        assert qq is not q
+        assert qq.fval is q.fval
+        assert qq.feff is feff
+        assert qq.feff is not q.feff
+        assert qq.default == q.default
+        assert qq.null == q.null
+        assert qq.name == q.name
+        assert qq.private_name == q.private_name
