@@ -87,6 +87,7 @@ class TestQualityCall:
         assert q is not qq
         for key, value in kwargs.items():
             assert getattr(qq, key) is value
+            assert getattr(q, key) is not value
 
     @mark.parametrize(
         "keys",
@@ -103,35 +104,29 @@ class TestQualityCall:
         assert q is not qq
         for key, value in kwargs.items():
             assert getattr(qq, key) == value
+            assert getattr(q, key) != value
 
-    @mark.parametrize(
-        "keys",
-        [
-            ("name",),
-            ("private_name",),
-            ("name", "private_name"),
-        ],
-    )
-    def test_name(self, keys):
-        kwargs = {k: EqualCopies(k) for k in keys}
+    @mark.parametrize("name", [None, "attr", "name", "foo", "bar"])
+    def test_name(self, name):
         q = quality()
-        for key, value in kwargs.items():
-            setattr(q, key, value)
+        q._name = name
         qq = q()
         assert q is not qq
-        for key, value in kwargs.items():
-            assert getattr(qq, key) == value
+        assert qq.name == q.name
+        assert qq.private_name == q.private_name
 
 
+@mark.parametrize("name", [None, "attr", "name", "foo", "bar"])
 class TestQualityCopy:
     """Test `quality` descriptor copy logic."""
 
-    def test_copy(self):
+    def test_copy(self, name):
         fval = Mock()
         feff = Mock()
         default = EqualCopies("default")
         null = EqualCopies("null")
         descriptor = quality(fval, feff, default=default, null=null)
+        descriptor._name = name
         duplicate = copy(descriptor)
         assert descriptor is not duplicate
         assert descriptor.fval is duplicate.fval
@@ -141,12 +136,13 @@ class TestQualityCopy:
         assert descriptor.name == duplicate.name
         assert descriptor.private_name == duplicate.private_name
 
-    def test_deepcopy(self):
+    def test_deepcopy(self, name):
         fval = EqualCopies("fval")
         feff = EqualCopies("feff")
         default = EqualCopies("default")
         null = EqualCopies("null")
         descriptor = quality(fval, feff, default=default, null=null)
+        descriptor._name = name
         duplicate = deepcopy(descriptor, memo := {})
 
         assert descriptor is not duplicate
@@ -174,15 +170,16 @@ class TestQualityCopy:
                 assert value in memo_values
 
 
-@mark.parametrize("property", ["default", "null"])
 class TestQualityProperties:
     """Test `quality` descriptor properties."""
 
+    @mark.parametrize("property", ["default", "null", "name", "private_name"])
     def test_immutable(self, property):
         descriptor = quality()
         with raises(AttributeError):
             setattr(descriptor, property, ...)
 
+    @mark.parametrize("property", ["default", "null"])
     def test_copy(self, property):
         p = EqualCopies(property)
         descriptor = quality(**{property: p})
@@ -193,13 +190,13 @@ class TestQualityProperties:
 class TestQualityDescriptor:
     """Test `quality` descriptor protocol."""
 
-    @mark.parametrize("attr", ["attr", "name", "foo", "bar"])
+    @mark.parametrize("attr", [None, "attr", "name", "foo", "bar"])
     def test_set_name(self, attr):
         """Test `quality` descriptor `__set_name__` logic."""
         descriptor = quality()
         type("Dummy", (), {attr: descriptor})
         assert descriptor.name == attr
-        assert descriptor.private_name == "__quality_" + attr
+        assert descriptor.private_name == attr if attr is None else "__quality_" + attr
 
     def test_get(self):
         """Test `quality` descriptor `__get__` logic."""

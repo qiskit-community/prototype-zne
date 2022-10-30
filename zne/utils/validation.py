@@ -32,7 +32,7 @@ class quality:  # pylint: disable=invalid-name
         null: value to assume if set to `None`
     """
 
-    __slots__ = "fval", "feff", "_default", "_null", "name", "private_name"
+    __slots__ = "fval", "feff", "_default", "_null", "_name"
 
     # TODO: update doc to fval's like property does for fget
     def __init__(
@@ -47,8 +47,7 @@ class quality:  # pylint: disable=invalid-name
         self.feff: Callable[[Any], None] | None = feff
         self._default: Any = default
         self._null: Any = null
-        self.name: str | None = None
-        self.private_name: str | None = None
+        self._name: str | None = None
 
     def __call__(
         self,
@@ -65,8 +64,7 @@ class quality:  # pylint: disable=invalid-name
             default=default or self.default,
             null=null or self.null,
         )
-        copy.name = self.name
-        copy.private_name = self.private_name
+        copy._name = self.name
         return copy
 
     def __copy__(self) -> quality:
@@ -98,12 +96,23 @@ class quality:  # pylint: disable=invalid-name
         """
         return deepcopy(self._null)
 
+    @property
+    def name(self) -> str:
+        """Name for attr in managed instance as provided by `__set_name__`."""
+        return self._name
+
+    @property
+    def private_name(self) -> str:
+        """Private name to store attr value at in managed instance."""
+        if self.name is None:
+            return None
+        return "__quality_" + self.name
+
     ################################################################################
     ## DESCRIPTOR PROTOCOL
     ################################################################################
     def __set_name__(self, owner: type, name: str) -> None:
-        self.name = name
-        self.private_name = "__quality_" + name
+        self._name = name
 
     def __get__(self, obj: object, objtype: type = None) -> Any:
         if obj is None:
