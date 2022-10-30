@@ -28,6 +28,7 @@ from .noise_amplification import NoiseAmplifier, TwoQubitAmplifier
 from .types import EstimatorResultData, Metadata, RegressionDatum, ZNECache, ZNECacheKey
 from .utils.grouping import from_common_key, group_elements_gen, merge_dicts
 from .utils.typing import isreal
+from .utils.validation import quality
 
 
 class ZNEStrategy:
@@ -60,7 +61,7 @@ class ZNEStrategy:
         noise_amplifier: NoiseAmplifier | None = None,
         extrapolator: Extrapolator | None = None,
     ) -> None:
-        self.noise_factors = noise_factors  # type: ignore
+        self.noise_factors = noise_factors
         self.noise_amplifier = noise_amplifier
         self.extrapolator = extrapolator
 
@@ -89,77 +90,12 @@ class ZNEStrategy:
     ################################################################################
     ## PROPERTIES
     ################################################################################
-    @property
-    def noise_factors(self) -> tuple[float, ...]:
-        """Noise factors for ZNE."""
-        try:
-            return self._noise_factors
-        except AttributeError:
-            self.noise_factors = None
-            return self.noise_factors
+    @quality(default=(1,))
+    def noise_factors(self, noise_factors: Sequence[float]) -> tuple[float, ...]:
+        """Noise factors for ZNE.
 
-    @noise_factors.setter
-    def noise_factors(self, noise_factors: Sequence[float] | None) -> None:
-        if noise_factors is None:
-            noise_factors = (1,)
-        self._noise_factors = self.validate_noise_factors(noise_factors)
-
-    @property
-    def noise_amplifier(self) -> NoiseAmplifier:
-        """Noise amplifier strategy for ZNE."""
-        try:
-            return self._noise_amplifier
-        except AttributeError:
-            self.noise_amplifier = None
-            return self.noise_amplifier
-
-    @noise_amplifier.setter
-    def noise_amplifier(self, noise_amplifier: NoiseAmplifier) -> None:
-        if noise_amplifier is None:
-            noise_amplifier = TwoQubitAmplifier()  # TODO: no-op amplifier
-        self._noise_amplifier = self.validate_noise_amplifier(noise_amplifier)
-
-    @property
-    def extrapolator(self) -> Extrapolator:
-        """Extrapoaltor strategy for ZNE."""
-        try:
-            return self._extrapolator
-        except AttributeError:
-            self.extrapolator = None
-            return self.extrapolator
-
-    @extrapolator.setter
-    def extrapolator(self, extrapolator: Extrapolator) -> None:
-        if extrapolator is None:
-            extrapolator = LinearExtrapolator()  # TODO: no-op extrapolator
-        self._extrapolator = self.validate_extrapolator(extrapolator)
-
-    @property
-    def num_noise_factors(self) -> int:
-        """Number of noise factors."""
-        return len(self.noise_factors)
-
-    @property
-    def performs_noise_amplification(self) -> bool:
-        """Checks if noise amplification is performed."""
-        return any(nf > 1 for nf in self.noise_factors)
-
-    @property
-    def performs_zne(self) -> bool:
-        """Checks if zero noise extrapolation is performed."""
-        return self.performs_noise_amplification and self.num_noise_factors > 1
-
-    @property
-    def is_noop(self) -> bool:
-        """Checks if strategy is no-op."""
-        return not self.performs_noise_amplification and not self.performs_zne
-
-    ################################################################################
-    ## VALIDATION  # TODO: `validate_property` descriptor
-    ################################################################################
-    @staticmethod
-    def validate_noise_factors(noise_factors: Sequence[float]) -> tuple[float, ...]:
-        """Validate noise factors."""
+        Validation logic defined as required by `quality`.
+        """
         if not isinstance(noise_factors, Sequence):
             raise TypeError(
                 f"Expected `Sequence` noise factors, received `{type(noise_factors)}` instead."
@@ -184,23 +120,49 @@ class ZNEStrategy:
 
         return noise_factors
 
-    @staticmethod
-    def validate_noise_amplifier(noise_amplifier: NoiseAmplifier) -> NoiseAmplifier:
-        """Validate noise amplifier."""
+    @quality(default=TwoQubitAmplifier())
+    def noise_amplifier(self, noise_amplifier: NoiseAmplifier) -> NoiseAmplifier:
+        """Noise amplifier strategy for ZNE.
+
+        Validation logic defined as required by `quality`.
+        """
         if not isinstance(noise_amplifier, NoiseAmplifier):
             raise TypeError(
                 f"Expected `NoiseAmplifier` object, received `{type(noise_amplifier)}` instead."
             )
         return noise_amplifier
 
-    @staticmethod
-    def validate_extrapolator(extrapolator) -> Extrapolator:
-        """Validate extrapolator."""
+    @quality(default=LinearExtrapolator())
+    def extrapolator(self, extrapolator: Extrapolator) -> Extrapolator:
+        """Extrapoaltor strategy for ZNE.
+
+        Validation logic defined as required by `quality`.
+        """
         if not isinstance(extrapolator, Extrapolator):
             raise TypeError(
                 f"Expected `Extrapolator` object, received `{type(extrapolator)}` instead."
             )
         return extrapolator
+
+    @property
+    def num_noise_factors(self) -> int:
+        """Number of noise factors."""
+        return len(self.noise_factors)
+
+    @property
+    def performs_noise_amplification(self) -> bool:
+        """Checks if noise amplification is performed."""
+        return any(nf > 1 for nf in self.noise_factors)
+
+    @property
+    def performs_zne(self) -> bool:
+        """Checks if zero noise extrapolation is performed."""
+        return self.performs_noise_amplification and self.num_noise_factors > 1
+
+    @property
+    def is_noop(self) -> bool:
+        """Checks if strategy is no-op."""
+        return not self.performs_noise_amplification and not self.performs_zne
 
     ################################################################################
     ## NOISE AMPLIFICATION
