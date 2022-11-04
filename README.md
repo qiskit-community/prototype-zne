@@ -3,7 +3,7 @@
 
   ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-informational)
   [![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-informational)](https://www.python.org/)
-  [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.0-6133BD)](https://github.com/Qiskit/qiskit-terra)
+  [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.2-6133BD)](https://github.com/Qiskit/qiskit-terra)
 <br />
   [![Tests](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml/badge.svg)](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml)
   [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
