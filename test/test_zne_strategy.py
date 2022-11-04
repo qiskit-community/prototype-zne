@@ -12,127 +12,181 @@
 
 from collections.abc import Sequence
 from itertools import count, product
-from test import TYPES
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from numpy import array
 from pytest import fixture, mark, raises, warns
 from qiskit import QuantumCircuit
 from qiskit.circuit.random import random_circuit
 from qiskit.primitives import EstimatorResult
-from qiskit.providers import Backend
-from qiskit.transpiler import PassManager, StagedPassManager
 
-from zne.extrapolation import EXTRAPOLATOR_LIBRARY, Extrapolator, LinearExtrapolator
-from zne.noise_amplification import NOISE_AMPLIFIER_LIBRARY, CxAmplifier, NoiseAmplifier
-from zne.utils.typing import isreal
-from zne.zne_strategy import NOISE_AMPLIFICATION_STAGE, ZNEStrategy
+from zne.extrapolation import Extrapolator, LinearExtrapolator
+from zne.noise_amplification import NoiseAmplifier
+from zne.noise_amplification.folding_amplifier import TwoQubitAmplifier
+from zne.zne_strategy import ZNEStrategy
+
+from . import NO_ITERS_NONE, NO_NONE
 
 
-class TestZNEStrategy:
-    ################################################################################
-    ## FIXTURE
-    ################################################################################
-    @fixture(scope="function")
-    def amplifier_mock(self):
-        amplifier = Mock(NoiseAmplifier)
-        amplifier.amplify_circuit_noise.side_effect = count()
-        return amplifier
+################################################################################
+## FIXTURES
+################################################################################
+@fixture(scope="function")
+def amplifier_mock():
+    """NoiseAmplifier mock object."""
+    amplifier = Mock(NoiseAmplifier)
+    amplifier.amplify_circuit_noise.side_effect = count()
+    return amplifier
 
-    @fixture(scope="function")
-    def extrapolator_mock(self):
-        def infer(target, data):
-            _, y, _ = zip(*data)
-            return 1, 0, {}
 
+@fixture(scope="function")
+def extrapolator_mock():
+    """Extrapolator mock object."""
+
+    def infer(target, data):
+        _, y, _ = zip(*data)
+        return 1, 0, {}
+
+    extrapolator = Mock(Extrapolator)
+    extrapolator.infer.side_effect = infer
+    return extrapolator
+
+
+################################################################################
+## TESTS
+################################################################################
+def test_definition():
+    assert ZNEStrategy._DEFINING_ATTRS == (
+        "noise_factors",
+        "noise_amplifier",
+        "extrapolator",
+    )
+
+
+class TestInit:
+    """Test ZNEStrategy initialization logic."""
+
+    def test_defaults(self):
+        """Test default configuration."""
+        assert ZNEStrategy().noise_amplifier == TwoQubitAmplifier()
+        assert ZNEStrategy().noise_factors == (1,)
+        assert ZNEStrategy().extrapolator == LinearExtrapolator()
+
+    @mark.parametrize(
+        "noise_factors",
+        [(1,), (1, 3), (1, 3, 5)],
+    )
+    def test_custom(
+        self,
+        noise_factors,
+    ):
+        """Test custom configuration.
+
+        Proper inputs can be assumed since validation is tested separately.
+        """
+        noise_amplifier = Mock(NoiseAmplifier)
         extrapolator = Mock(Extrapolator)
-        extrapolator.infer.side_effect = infer
-        return extrapolator
+        zne_strategy = ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        assert zne_strategy.noise_factors == noise_factors
+        assert zne_strategy.noise_amplifier is noise_amplifier
+        assert zne_strategy.extrapolator is extrapolator
 
-    ################################################################################
-    ## NEW
-    ################################################################################
+
+@mark.parametrize(
+    "noise_factors",
+    [(1,), (1, 3), (1, 3, 5)],
+)
+class TestMagic:
+    """Test generic ZNEStrategy magic methods."""
+
+    def test_repr(self, noise_factors):
+        """Test ZNEStrategy.__repr__() magic method."""
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
+        zne_strategy = ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        expected = "ZNEStrategy("
+        expected += f"noise_factors={repr(noise_factors)}, "
+        expected += f"noise_amplifier={repr(noise_amplifier)}, "
+        expected += f"extrapolator={repr(extrapolator)})"
+        assert repr(zne_strategy) == expected
+
+    def test_eq(self, noise_factors):
+        """Test ZNEStrategy.__eq__() magic method."""
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
+        zne_strategy = ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        assert zne_strategy == ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        assert zne_strategy != ZNEStrategy(
+            noise_factors=(*noise_factors, 707),
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        assert zne_strategy != ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=Mock(NoiseAmplifier),
+            extrapolator=extrapolator,
+        )
+        assert zne_strategy != ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=Mock(Extrapolator),
+        )
+        assert zne_strategy != "zne_strategy"
+
+    def test_bool(self, noise_factors):
+        noise_amplifier = Mock(NoiseAmplifier)
+        extrapolator = Mock(Extrapolator)
+        zne_strategy = ZNEStrategy(
+            noise_factors=noise_factors,
+            noise_amplifier=noise_amplifier,
+            extrapolator=extrapolator,
+        )
+        truth_value = not zne_strategy.is_noop
+        assert bool(zne_strategy) is truth_value
+
+
+class TestConstructors:
+    """Test ZNEStrategy constructors."""
+
     def test_noop(self):
         zne_strategy = ZNEStrategy.noop()
         assert zne_strategy.is_noop
 
-    ################################################################################
-    ## INIT
-    ################################################################################
-    def test_defaults(self):
-        DEFAULT_NOISE_AMPLIFIER = CxAmplifier()
-        DEFAULT_NOISE_FACTORS = (1,)
-        DEFAULT_EXTRAPOLATOR = LinearExtrapolator()
-        DEFAULT_TRANSPILER_LEVEL = 1
-        DEFAULT_TRANSPILER = None
+
+class TestNoiseFactors:
+    """Test ZNEStrategy `noise_factors` property."""
+
+    def test_default(self):
         zne_strategy = ZNEStrategy()
-        assert zne_strategy.noise_amplifier == DEFAULT_NOISE_AMPLIFIER
-        assert zne_strategy.noise_factors == DEFAULT_NOISE_FACTORS
-        assert zne_strategy.extrapolator == DEFAULT_EXTRAPOLATOR
-        assert zne_strategy.transpilation_level == DEFAULT_TRANSPILER_LEVEL
-        assert zne_strategy.transpiler == DEFAULT_TRANSPILER
+        zne_strategy.noise_factors = None
+        assert zne_strategy.noise_factors == (1,)
 
     @mark.parametrize(
-        "NoiseAmplifier, noise_factors, Extrapolator, transpilation_level, transpiler",
-        cases := list(
-            product(
-                NOISE_AMPLIFIER_LIBRARY.values(),
-                [(1,), (1, 3), (1, 3, 5)],
-                EXTRAPOLATOR_LIBRARY.values(),
-                [None, 0, 1, 2, 3],
-                [None, StagedPassManager()],
-            )
-        ),
-        ids=[f"{na.name}-{nf}-{e.name}" for na, nf, e, _, _ in cases],
+        "noise_factors",
+        cases := [(1,), (3,), (1, 3), (1, 3, 5), [1, 3, 5], [1.2, 3, 5.4]],
+        ids=[f"{nf}" for nf in cases],
     )
-    def test_zne_strategy(
-        self, NoiseAmplifier, noise_factors, Extrapolator, transpilation_level, transpiler
-    ):
-        noise_amplifier = NoiseAmplifier()
-        extrapolator = Extrapolator()
-        zne_strategy = ZNEStrategy(
-            noise_amplifier=noise_amplifier,
-            noise_factors=noise_factors,
-            extrapolator=extrapolator,
-            transpilation_level=transpilation_level,
-            transpiler=transpiler,
-        )
-        assert zne_strategy.noise_amplifier is noise_amplifier
-        assert zne_strategy.noise_factors == noise_factors
-        assert zne_strategy.extrapolator is extrapolator
-        assert zne_strategy.transpilation_level == transpilation_level
-        assert zne_strategy.transpiler is transpiler
-
-    @mark.parametrize("obj", TYPES, ids=[str(type(t).__name__) for t in TYPES])
-    def test_type_error(self, obj):
-        with raises(TypeError):
-            _ = ZNEStrategy(noise_amplifier=obj)
-        with raises(TypeError):
-            _ = ZNEStrategy(extrapolator=obj)
-        if not isinstance(obj, Sequence):
-            with raises(TypeError):
-                _ = ZNEStrategy(noise_factors=obj)
-        if not isinstance(obj, (int, type(None))):
-            with raises(TypeError):
-                _ = ZNEStrategy(transpilation_level=obj)
-        if obj is not None:
-            with raises(TypeError):
-                _ = ZNEStrategy(transpiler=obj)
-
-    @mark.parametrize(
-        "noise_factors, expected",
-        cases := list(
-            zip(
-                [(1,), (3,), (1, 3), (1, 3, 5), [1, 3, 5], [1.2, 3, 5.4]],
-                [(1,), (3,), (1, 3), (1, 3, 5), (1, 3, 5), (1.2, 3, 5.4)],
-            )
-        ),
-        ids=[f"{nf}" for nf, _ in cases],
-    )
-    def test_noise_factors(self, noise_factors, expected):
-        zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        assert zne_strategy.noise_factors == expected
-        assert zne_strategy.num_noise_factors == len(expected)
+    def test_dispatch(self, noise_factors):
+        """Test proper noise factors of different types."""
+        zne_strategy = ZNEStrategy()
+        zne_strategy.noise_factors = noise_factors
+        assert zne_strategy.noise_factors == tuple(noise_factors)
 
     @mark.parametrize(
         "noise_factors, expected",
@@ -144,11 +198,12 @@ class TestZNEStrategy:
         ),
         ids=[f"{nf}" for nf, _ in cases],
     )
-    def test_noise_factors_sort(self, noise_factors, expected):
+    def test_sort(self, noise_factors, expected):
+        """Test unsorted noise factors."""
+        zne_strategy = ZNEStrategy()
         with warns(UserWarning):
-            zne_strategy = ZNEStrategy(noise_factors=noise_factors)
+            zne_strategy.noise_factors = noise_factors
         assert zne_strategy.noise_factors == expected
-        assert zne_strategy.num_noise_factors == len(expected)
 
     @mark.parametrize(
         "noise_factors, expected",
@@ -160,291 +215,139 @@ class TestZNEStrategy:
         ),
         ids=[f"{nf}" for nf, _ in cases],
     )
-    def test_noise_factors_duplicates(self, noise_factors, expected):
+    def test_duplicates(self, noise_factors, expected):
+        """Test duplicate noise factors."""
+        zne_strategy = ZNEStrategy()
         with warns(UserWarning):
-            zne_strategy = ZNEStrategy(noise_factors=noise_factors)
+            zne_strategy.noise_factors = noise_factors
         assert zne_strategy.noise_factors == expected
-        assert zne_strategy.num_noise_factors == len(expected)
+
+    @mark.parametrize(
+        "noise_factors",
+        cases := NO_ITERS_NONE,
+        ids=[f"{type(c)}" for c in cases],
+    )
+    def test_sequence(self, noise_factors):
+        """Test type error is raised if noise factors are not Sequence."""
+        zne_strategy = ZNEStrategy()
+        with raises(TypeError):
+            zne_strategy.noise_factors = noise_factors
 
     @mark.parametrize(
         "noise_factors",
         cases := [(), []],
         ids=[f"{type(c)}" for c in cases],
     )
-    def test_noise_factors_empty_error(self, noise_factors):
+    def test_empty(self, noise_factors):
+        """Test value error is raised for empty lists of noise factors."""
+        zne_strategy = ZNEStrategy()
         with raises(ValueError):
-            _ = ZNEStrategy(noise_factors=noise_factors)
+            zne_strategy.noise_factors = noise_factors
 
     @mark.parametrize(
         "noise_factors",
         cases := ["1", True, False, float("NaN"), [1, 3, "5"]],
         ids=[f"{type(c)}" for c in cases],
     )
-    def test_noise_factors_real_type_error(self, noise_factors):
+    def test_real(self, noise_factors):
+        """Test type error is raised if noise factors are not real numbers."""
         if not isinstance(noise_factors, Sequence):
             noise_factors = [noise_factors]
+        zne_strategy = ZNEStrategy()
         with raises(TypeError):
-            _ = ZNEStrategy(noise_factors=noise_factors)
+            zne_strategy.noise_factors = noise_factors
 
     @mark.parametrize(
         "noise_factors",
-        cases := [0, 0.9999, -1, -0.5],
+        cases := [0, 0.9999, -1, -0.5, (1, 0), (0.9, 1.2)],
         ids=[f"{c}" for c in cases],
     )
-    def test_noise_factors_value_error(self, noise_factors):
+    def test_geq_one(self, noise_factors):
+        """Test value error is raised if any noise factor is less than one."""
         if not isinstance(noise_factors, Sequence):
             noise_factors = [noise_factors]
+        zne_strategy = ZNEStrategy()
         with raises(ValueError):
-            _ = ZNEStrategy(noise_factors=noise_factors)
+            zne_strategy.noise_factors = noise_factors
 
-    def test_validate_transpiler(self):
-        # None
-        zne_strategy = ZNEStrategy(transpiler=None)
-        assert zne_strategy.transpiler is None
 
-        # StagedPassManager
-        transpiler = StagedPassManager()
-        zne_strategy = ZNEStrategy(transpiler=transpiler)
-        assert zne_strategy.transpiler is transpiler
+class TestNoiseAmplifier:
+    """Test ZNEStrategy `noise_amplifier` property."""
 
-        # PassManager
-        transpiler = PassManager()
-        zne_strategy = ZNEStrategy(transpiler=transpiler)
-        assert zne_strategy.transpiler.stages == ("transpilation",)
-        assert zne_strategy.transpiler.transpilation is transpiler
+    def test_default(self):
+        zne_strategy = ZNEStrategy()
+        zne_strategy.noise_amplifier = None
+        assert zne_strategy.noise_amplifier == TwoQubitAmplifier()
 
-    ################################################################################
-    ## PROPERTIES
-    ################################################################################
-    @mark.parametrize("noise_factors", [(1, 3), (1.2,), (2.1, 4.5)])
-    def test_performs_noise_amplification_true(self, noise_factors):
+    @mark.parametrize(
+        "noise_amplifier",
+        cases := NO_NONE,
+        ids=[f"{type(c)}" for c in cases],
+    )
+    def test_type_error(self, noise_amplifier):
+        """Test type error is raised if not `NoiseAmplifier`."""
+        zne_strategy = ZNEStrategy()
+        with raises(TypeError):
+            zne_strategy.noise_amplifier = noise_amplifier
+
+
+class TestExtrapolator:
+    """Test ZNEStrategy `extrapolator` property."""
+
+    def test_default(self):
+        zne_strategy = ZNEStrategy()
+        zne_strategy.extrapolator = None
+        assert zne_strategy.extrapolator == LinearExtrapolator()
+
+    @mark.parametrize(
+        "extrapolator",
+        cases := NO_NONE,
+        ids=[f"{type(c)}" for c in cases],
+    )
+    def test_type_error(self, extrapolator):
+        """Test type error is raised if not `NoiseAmplifier`."""
+        zne_strategy = ZNEStrategy()
+        with raises(TypeError):
+            zne_strategy.extrapolator = extrapolator
+
+
+class TestProperties:
+    """Test generic ZNEStrategy properties."""
+
+    @mark.parametrize("noise_factors", [(1,), (1, 3), (1.2,), (2.1, 4.5)])
+    def test_performs_noise_amplification(self, noise_factors):
+        """Test if ZNEStrategy performs noise amplification."""
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        assert zne_strategy.performs_noise_amplification
+        truth_value = any(nf > 1 for nf in noise_factors)
+        if truth_value:
+            assert zne_strategy.performs_noise_amplification
+        else:
+            assert not zne_strategy.performs_noise_amplification
 
-    @mark.parametrize("noise_factors", [(1,), [1]])
-    def test_performs_noise_amplification_false(self, noise_factors):
+    @mark.parametrize("noise_factors", [(1,), (1, 3), (1.2,), (2.1, 4.5)])
+    def test_performs_zne(self, noise_factors):
+        """Test if ZNEStrategy performs zero noise extrapolation."""
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        assert not zne_strategy.performs_noise_amplification
+        truth_value = any(nf > 1 for nf in noise_factors) and len(noise_factors) > 1
+        if truth_value:
+            assert zne_strategy.performs_zne
+        else:
+            assert not zne_strategy.performs_zne
 
-    @mark.parametrize("noise_factors", [(1, 3), (1.2, 2.4)])
-    def test_performs_zne_true(self, noise_factors):
-        zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        assert zne_strategy.performs_zne
-
-    @mark.parametrize("noise_factors", [(1,), (2.1,)])
-    def test_performs_zne_false(self, noise_factors):
-        zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        assert not zne_strategy.performs_zne
-
-    @mark.parametrize("noise_factors", [(1,), (2.1,), (1, 3), (2.1, 4.5)])
+    @mark.parametrize("noise_factors", [(1,), (1, 3), (1.2,), (2.1, 4.5)])
     def test_is_noop(self, noise_factors):
+        """Test if ZNEStrategy is no-op."""
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        if tuple(noise_factors) == (1,):
+        truth_value = tuple(noise_factors) == (1,)
+        if truth_value:
             assert zne_strategy.is_noop
         else:
             assert not zne_strategy.is_noop
 
-    ################################################################################
-    ## TRANSPILATION
-    ################################################################################
-    @staticmethod
-    def test_noise_amplification_stage_name():
-        assert NOISE_AMPLIFICATION_STAGE == "noise_amplification"
 
-    @mark.parametrize(
-        "noise_factors",
-        cases := [(1,), (3,), (1, 3), (1, 3, 5)],
-        ids=[f"{nf}" for nf in cases],
-    )
-    def test_build_transpilers(self, noise_factors):
-        backend = Backend()
-        zne_strategy = ZNEStrategy(noise_factors=noise_factors)
+class TestNoiseAmplification:
+    """Test ZNEStrategy noise amplification logic."""
 
-        target_generate = (
-            "build_noisy_transpiler"
-            if zne_strategy.performs_noise_amplification
-            else "build_noiseless_transpiler"
-        )
-
-        def side_effect(*args):
-            if zne_strategy.performs_noise_amplification:
-                _, nf = args
-                return f"TRANSPILER<{nf}>"
-            return "TRANSPILER<1>"
-
-        mock_generate = Mock(side_effect=side_effect)
-        setattr(zne_strategy, target_generate, mock_generate)
-        transpilers = zne_strategy.build_transpilers(backend)
-        for nf in zne_strategy.noise_factors:
-            if zne_strategy.performs_noise_amplification:
-                mock_generate.assert_any_call(backend, nf)
-            else:
-                mock_generate.assert_any_call(backend)
-            assert side_effect(backend, nf) in transpilers
-        assert len(transpilers) == zne_strategy.num_noise_factors
-        assert mock_generate.call_count == zne_strategy.num_noise_factors
-
-    @mark.parametrize(
-        "noise_factor",
-        cases := [1, 3, 5, 2.4, 1.2],
-        ids=[f"{c}" for c in cases],
-    )
-    def test_build_noisy_transpiler(self, noise_factor):
-        backend = Backend()
-        zne_strategy = ZNEStrategy()
-
-        noise_amplifier = Mock()
-        noise_amplifier.build_pass_manager = Mock(
-            return_value=(noise_amplification := f"NOISE-AMPLIFICATION<{noise_factor}>")
-        )
-        zne_strategy.noise_amplifier = noise_amplifier
-
-        mock_generate = Mock(return_value=(transpiler := Mock()))
-        zne_strategy.build_noiseless_transpiler = mock_generate
-
-        zne_strategy.build_noisy_transpiler(backend, noise_factor)
-
-        mock_generate.assert_called_once_with(backend)
-        noise_amplifier.build_pass_manager.assert_called_once_with(noise_factor)
-        assert getattr(transpiler, NOISE_AMPLIFICATION_STAGE) == noise_amplification
-
-    @mark.parametrize("obj", TYPES, ids=[str(type(t).__name__) for t in TYPES])
-    def test_build_noisy_transpiler_type_error(self, obj):
-        zne_strategy = ZNEStrategy()
-        if not isreal(obj):
-            with raises(TypeError):
-                _ = zne_strategy.build_noisy_transpiler(Backend(), obj)
-
-    def test_build_noiseless_transpiler(self):
-        return_value = "<NOISLESS-TRANSPILER>"
-
-        # Transpiler with noise_amplification stage
-        transpiler = StagedPassManager([NOISE_AMPLIFICATION_STAGE])
-        zne_strategy = ZNEStrategy(transpiler=transpiler)
-        mock_clear = Mock(return_value=return_value)
-        zne_strategy._clear_noise_amplification_stage = mock_clear
-        result = zne_strategy.build_noiseless_transpiler(Backend())
-        mock_clear.assert_called_once_with(transpiler, warn_user=True)
-        assert result == return_value
-
-        # No transpiler
-        transpiler = StagedPassManager()
-        zne_strategy = ZNEStrategy(transpiler=transpiler)
-        mock_insert = Mock(return_value=return_value)
-        zne_strategy._insert_void_noise_amplification_stage = mock_insert
-        result = zne_strategy.build_noiseless_transpiler(Backend())
-        mock_insert.assert_called_once_with(transpiler)
-        assert result == return_value
-
-    @mark.parametrize(
-        "transpilation_level", cases := [None, 0, 1, 2, 3], ids=[f"{c}" for c in cases]
-    )
-    def test_build_default_transpiler(self, transpilation_level):
-        backend = Backend()
-        zne_strategy = ZNEStrategy(transpilation_level=transpilation_level)
-
-        return_value = f"TRANSPILER-{transpilation_level}"
-        with patch(
-            "zne.zne_strategy.generate_preset_pass_manager", return_value=return_value
-        ) as mock_generate:
-            transpiler = zne_strategy.build_default_transpiler(backend)
-        if transpilation_level is None:
-            assert isinstance(transpiler, StagedPassManager)
-            assert len(transpiler.passes()) == 0
-        else:
-            mock_generate.assert_called_once_with(transpilation_level, backend=backend)
-            assert transpiler == return_value
-
-    @mark.parametrize("obj", TYPES, ids=[str(type(t).__name__) for t in TYPES])
-    def test_build_default_transpiler_type_error(self, obj):
-        zne_strategy = ZNEStrategy()
-        with raises(TypeError):
-            zne_strategy.build_default_transpiler(obj)
-
-    def test_clear_noise_amplification_stage(self):
-        stages = {NOISE_AMPLIFICATION_STAGE: PassManager()}
-
-        # None
-        spm = StagedPassManager([NOISE_AMPLIFICATION_STAGE])
-        clear_spm = ZNEStrategy._clear_noise_amplification_stage(spm)
-        for stage in spm.stages:
-            if stage != NOISE_AMPLIFICATION_STAGE:
-                assert getattr(clear_spm, stage) is getattr(spm, stage)
-        assert clear_spm is not spm
-        assert getattr(clear_spm, NOISE_AMPLIFICATION_STAGE) is None
-
-        # Not None
-        spm = StagedPassManager(stages, **stages)
-        clear_spm = ZNEStrategy._clear_noise_amplification_stage(spm)
-        for stage in spm.stages:
-            if stage != NOISE_AMPLIFICATION_STAGE:
-                assert getattr(clear_spm, stage) is getattr(spm, stage)
-        assert clear_spm is not spm
-        assert getattr(clear_spm, NOISE_AMPLIFICATION_STAGE) is None
-        assert getattr(spm, NOISE_AMPLIFICATION_STAGE) is not None
-
-    def test_clear_noise_amplification_stage_user_warning(self):
-        stages = {NOISE_AMPLIFICATION_STAGE: PassManager()}
-        spm = StagedPassManager(stages, **stages)
-        with warns(UserWarning):
-            _ = ZNEStrategy._clear_noise_amplification_stage(spm, warn_user=True)
-
-    def test_clear_noise_amplification_stage_value_error(self):
-        spm = StagedPassManager()
-        with raises(ValueError):
-            _ = ZNEStrategy._clear_noise_amplification_stage(spm)
-
-    def test_insert_void_noise_amplification_stage(self):
-        stages = {
-            "alpha": PassManager(),
-            "beta": PassManager(),
-            "gamma": PassManager(),
-            "scheduling": PassManager(),
-            "omega": PassManager(),
-        }
-        spm = StagedPassManager(stages, **stages)
-        noise_spm = ZNEStrategy()._insert_void_noise_amplification_stage(spm)
-        assert NOISE_AMPLIFICATION_STAGE in noise_spm.stages
-        for stage in set(noise_spm.stages):
-            assert getattr(noise_spm, stage) is getattr(spm, stage, None)
-
-    def test_insert_void_noise_amplification_stage_value_error(self):
-        spm = StagedPassManager([NOISE_AMPLIFICATION_STAGE])
-        with raises(ValueError):
-            _ = ZNEStrategy()._insert_void_noise_amplification_stage(spm)
-
-    @mark.parametrize(
-        "stages, expected",
-        cases := tuple(
-            zip(
-                [
-                    (),
-                    ("alpha",),
-                    ("alpha", "omega"),
-                    ("alpha", "scheduling"),
-                    ("scheduling",),
-                    ("scheduling", "omega"),
-                    ("scheduling", "scheduling"),
-                ],
-                [
-                    (NOISE_AMPLIFICATION_STAGE,),
-                    ("alpha", NOISE_AMPLIFICATION_STAGE),
-                    ("alpha", "omega", NOISE_AMPLIFICATION_STAGE),
-                    ("alpha", NOISE_AMPLIFICATION_STAGE, "scheduling"),
-                    (NOISE_AMPLIFICATION_STAGE, "scheduling"),
-                    (NOISE_AMPLIFICATION_STAGE, "scheduling", "omega"),
-                    (NOISE_AMPLIFICATION_STAGE, "scheduling", "scheduling"),
-                ],
-            )
-        ),
-        ids=[i for i, _ in enumerate(cases)],
-    )
-    def test_build_noisy_stages(self, stages, expected):
-        assert expected == ZNEStrategy._build_noisy_stages(stages)
-
-    ################################################################################
-    ## NOISE AMPLIFICATION
-    ################################################################################
     def test_amplify_circuit_noise(self, amplifier_mock):
         noise_factors = (1, 2, 3)
         zne_strategy = ZNEStrategy(noise_factors=noise_factors, noise_amplifier=amplifier_mock)
@@ -533,9 +436,10 @@ class TestZNEStrategy:
         zne_strategy = ZNEStrategy(noise_factors=[n for n in range(1, num_noise_factors + 1)])
         assert zne_strategy.map_to_noisy_circuits(arg) == expected
 
-    ################################################################################
-    ## EXTRAPOLATION
-    ################################################################################
+
+class TestExtrapolation:
+    """Test ZNEStrategy extrapolation logic."""
+
     @mark.parametrize(
         "noise_factors, values, variances, num_results, extrapolate_return",
         [
@@ -549,7 +453,7 @@ class TestZNEStrategy:
         self, noise_factors, values, variances, num_results, extrapolate_return
     ):
         pred, meta = extrapolate_return
-        extrapolator = Mock()
+        extrapolator = Mock(Extrapolator)
         extrapolator.extrapolate_zero = Mock(return_value=tuple(extrapolate_return))
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         zne_strategy.extrapolator = extrapolator
