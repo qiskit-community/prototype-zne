@@ -1,3 +1,14 @@
+## 1.0.0rc0 (2022-11-04)
+
+### Feat
+
+- **validation**: add quality descriptor (#21)
+- **utils**: add unset singleton (#22)
+
+### Refactor
+
+- **zne_strategy**: discontinue frozen dataclass (#20)
+
 ## 1.0.0b2 (2022-10-27)
 
 ### Feat
