@@ -2,7 +2,7 @@
 
 To follow along, make sure that your local environment is compatible with the package:
 - Supported operating system (Linux, macOS, or Windows).
-- Supported Python version (3.8 – 3.10).
+- Supported Python version (3.8 – 3.11).
 - (Optional) We recommend updating `pip` to its latest version:
     ```
     pip install -U pip

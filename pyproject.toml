@@ -36,12 +36,13 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dynamic = ["version", "description"]
 requires-python = ">=3.8"
 dependencies = [
-    "qiskit-terra >= 0.22.0",
+    "qiskit-terra >= 0.22.2",
 ]
 
 [project.optional-dependencies]
@@ -73,7 +74,7 @@ docs = [
 notebook = [
     "jupyter >= 1.0.0",
     "notebook >= 6.4.12",
-    "qiskit-terra[visualization] >= 0.22.0",
+    "qiskit-terra[visualization] >= 0.22.2",
     "qiskit-aer >= 0.11.0",
     "nbqa >= 1.3.1",
     "treon >= 0.1.3",
