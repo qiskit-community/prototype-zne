@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug report
-about: Create a report to make amends.
+about: Report defects to make amends.
 labels: [bug, triage]
 title: ''
 assignees: ''
