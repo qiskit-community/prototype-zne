@@ -24,7 +24,7 @@ keywords = [
 readme = "README.md"
 license = {file = "LICENSE.txt"}
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
