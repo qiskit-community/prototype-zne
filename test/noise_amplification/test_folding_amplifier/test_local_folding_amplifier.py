@@ -23,17 +23,20 @@ from qiskit.circuit.random import random_circuit
 from qiskit.quantum_info.operators import Operator
 from qiskit.transpiler.passes import RemoveBarriers
 
-from zne.noise_amplification import LocalFoldingAmplifier
+from zne.noise_amplification import (
+    CxAmplifier,
+    LocalFoldingAmplifier,
+    TwoQubitAmplifier,
+)
 
 MOCK_TARGET_PATH = (
     "zne.noise_amplification.folding_amplifier.local_folding_amplifier.LocalFoldingAmplifier"
 )
 
+
 ################################################################################
 ## MODULE FIXTURES
 ################################################################################
-
-
 @fixture(scope="module")
 def noise_amplifier():
     return LocalFoldingAmplifier()
@@ -64,8 +67,6 @@ def patch_amplifier_with_multiple_mocks(**kwargs):
 ################################################################################
 ## INIT TESTS
 ################################################################################
-
-
 def test_init_default_kwargs(patch_amplifier_with_mock):
     with patch_amplifier_with_mock(method_name="._set_gates_to_fold") as mock:
         LocalFoldingAmplifier()
@@ -81,8 +82,6 @@ def test_init_custom_kwargs(patch_amplifier_with_mock):
 ################################################################################
 ## PROPERTIES and SETTER TESTS
 ################################################################################
-
-
 @mark.parametrize("gates_to_fold", cases := [1, 2, 3], ids=[f"{c}" for c in cases])
 def test_set_gates_to_fold_int(gates_to_fold):
     noise_amplifier = LocalFoldingAmplifier()
@@ -151,8 +150,6 @@ def test_validate_gates_to_fold_warning(gates_to_fold):
 ################################################################################
 ## PUBLIC METHODS TESTS
 ################################################################################
-
-
 def test_amplify_circuit_noise(
     patch_amplifier_with_multiple_mocks, noise_amplifier, get_random_circuit, circuit, noise_factor
 ):
@@ -184,8 +181,6 @@ def test_amplify_circuit_noise(
 ################################################################################
 ## PRIVATE METHODS TESTS
 ################################################################################
-
-
 @mark.parametrize(
     "foldings, mask, expected",
     cases := [
@@ -419,8 +414,6 @@ class TestParametrizedCircuits:
 ################################################################################
 ## INTEGRATION TESTS
 ################################################################################
-
-
 @mark.parametrize(
     "circuit, noise_factor, gates_to_fold, sub_folding_option",
     cases := tuple(
@@ -458,3 +451,21 @@ class TestIntegration:
         closest_noise_factor = 2 * num_foldings / num_gates_to_fold + 1
         assert num_instructions_folded / num_gates_to_fold == approx(closest_noise_factor)
         assert Operator(noisy_circuit).equiv(Operator(circuit))
+
+
+################################################################################
+## FACADES
+################################################################################
+class TestFacades:
+    @mark.parametrize(
+        "cls, configs",
+        [
+            (CxAmplifier, {"gates_to_fold": "cx"}),
+            (TwoQubitAmplifier, {"gates_to_fold": 2}),
+        ],
+    )
+    def test_two_qubit_amplifier(self, cls, configs):
+        amplifier = cls()
+        assert isinstance(amplifier, LocalFoldingAmplifier)
+        for key, value in configs.items():
+            assert getattr(amplifier, key) == frozenset([value])
