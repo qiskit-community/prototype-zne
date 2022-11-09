@@ -354,25 +354,13 @@ class TestNoiseAmplification:
         circuit = QuantumCircuit(2)
         assert zne_strategy.amplify_circuit_noise(circuit, 1) == 0
         amplifier_mock.amplify_circuit_noise.assert_called_once_with(circuit, 1)
-        assert zne_strategy.amplify_circuit_noise(circuit, 1) == 0  # Check cache
         amplifier_mock.amplify_circuit_noise.reset_mock()
         assert zne_strategy.amplify_circuit_noise(circuit, 1.2) == 1
         amplifier_mock.amplify_circuit_noise.assert_called_once_with(circuit, 1.2)
-        assert zne_strategy.amplify_circuit_noise(circuit, 1.2) == 1  # Check cache
         circuit.h(0)
         amplifier_mock.amplify_circuit_noise.reset_mock()
         assert zne_strategy.amplify_circuit_noise(circuit, 2.4) == 2
         amplifier_mock.amplify_circuit_noise.assert_called_once_with(circuit, 2.4)
-        assert zne_strategy.amplify_circuit_noise(circuit, 2.4) == 2  # Check cache
-        # Overflow cache
-        CACHE_MAXSIZE = 256
-        for nf in range(CACHE_MAXSIZE):
-            expected = nf + 3
-            assert zne_strategy.amplify_circuit_noise(circuit, nf) == expected
-            if expected < CACHE_MAXSIZE:  # Check CACHE_MAXSIZE is correct
-                assert zne_strategy.amplify_circuit_noise(circuit, nf) == expected
-        assert zne_strategy.amplify_circuit_noise(circuit, nf) == CACHE_MAXSIZE + 3
-        assert zne_strategy.amplify_circuit_noise(circuit, nf) == CACHE_MAXSIZE + 3 + 1
 
     @mark.parametrize(
         "circuits, noise_factors",
