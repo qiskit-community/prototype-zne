@@ -15,9 +15,18 @@ from math import isclose
 
 from pytest import mark, raises
 
-from zne.extrapolation import PolynomialExtrapolator
+from zne.extrapolation import (
+    CubicExtrapolator,
+    LinearExtrapolator,
+    PolynomialExtrapolator,
+    QuadraticExtrapolator,
+    QuarticExtrapolator,
+)
 
 
+################################################################################
+## AUXILIARY
+################################################################################
 def fit_regression_model_test_parameters(max_degree):
     for degree in range(1, max_degree + 1):  # All degrees up to max
         for d in range(1, degree + 1):  # All curves of degree less than or equal
@@ -28,6 +37,9 @@ def fit_regression_model_test_parameters(max_degree):
                     yield (degree, tuple(data), target, poly(target))
 
 
+################################################################################
+## EXTRPOLATORS
+################################################################################
 class TestPolynomialExtrapolator:
 
     ################################################################################
@@ -65,3 +77,23 @@ class TestPolynomialExtrapolator:
         assert isclose(prediction, expected, abs_tol=1e-4, rel_tol=1e-4)
         assert variance is None
         assert metadata == {}
+
+
+################################################################################
+## FACADES
+################################################################################
+class TestFacades:
+    @mark.parametrize(
+        "cls, configs",
+        [
+            (LinearExtrapolator, {"degree": 1}),
+            (QuadraticExtrapolator, {"degree": 2}),
+            (CubicExtrapolator, {"degree": 3}),
+            (QuarticExtrapolator, {"degree": 4}),
+        ],
+    )
+    def test_two_qubit_amplifier(self, cls, configs):
+        extrapolator = cls()
+        assert isinstance(extrapolator, PolynomialExtrapolator)
+        for key, value in configs.items():
+            assert getattr(extrapolator, key) == value
