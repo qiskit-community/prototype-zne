@@ -153,7 +153,7 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         noisy_circuit = circuit.copy_empty_like()
         for operation, num_foldings in zip(circuit, foldings):
             noisy_circuit = self._append_folded(noisy_circuit, operation, num_foldings)
-        return noisy_circuit
+        return self._insert_barriers(noisy_circuit)
 
     def _build_foldings_per_gate(self, circuit: QuantumCircuit, noise_factor: float) -> list[int]:
         """Returns number of foldings for each gate in the circuit.
@@ -181,9 +181,9 @@ class LocalFoldingAmplifier(FoldingAmplifier):
             True if instruction should be folded, False otherwise.
         """
         instruction, qargs, _ = operation
-        num_qubits = len(qargs)
-        if instruction.name == "barrier":
+        if instruction.name in {"barrier", "measure"}:
             return False
+        num_qubits = len(qargs)
         return (
             (self._gates_to_fold is None)
             or (num_qubits in self._gates_to_fold)
@@ -244,10 +244,8 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         self._validate_num_foldings(num_foldings)
         instruction, qargs, cargs = operation
         noisy_circuit.append(instruction, qargs, cargs)
-        noisy_circuit.barrier(qargs)
         if num_foldings > 0:
             noisy_circuit.append(instruction.inverse(), qargs, cargs)
-            noisy_circuit.barrier(qargs)
             noisy_circuit = self._append_folded(noisy_circuit, operation, num_foldings - 1)
         return noisy_circuit
 

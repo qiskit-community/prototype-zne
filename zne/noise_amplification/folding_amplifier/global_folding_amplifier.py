@@ -19,8 +19,7 @@ from .folding_amplifier import FoldingAmplifier
 
 
 class GlobalFoldingAmplifier(FoldingAmplifier):
-    """
-    Alternatingly composes the circuit and its inverse as many times as indicated by the
+    """Alternatingly composes the circuit and its inverse as many times as indicated by the
     ``noise_factor``.
 
     If ``noise_factor`` is not an odd integer, a sub part of the full circle is folded such that the
@@ -48,7 +47,7 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
         noisy_circuit = circuit.copy_empty_like()
         noisy_circuit = self._apply_full_folding(noisy_circuit, circuit, num_full_foldings)
         noisy_circuit = self._apply_sub_folding(noisy_circuit, circuit, num_sub_foldings)
-        return noisy_circuit
+        return self._insert_barriers(noisy_circuit)
 
     def _apply_full_folding(
         self, noisy_circuit: QuantumCircuit, original_circuit: QuantumCircuit, num_foldings: int
@@ -69,7 +68,6 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
                 noisy_circuit.compose(original_circuit, inplace=True)
             else:
                 noisy_circuit.compose(original_circuit.inverse(), inplace=True)
-            noisy_circuit.barrier()
         return noisy_circuit
 
     def _apply_sub_folding(
@@ -89,9 +87,7 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
             return noisy_circuit
         sub_circuit: QuantumCircuit = self._get_sub_folding(original_circuit, num_foldings)
         noisy_circuit.compose(sub_circuit.inverse(), inplace=True)
-        noisy_circuit.barrier()
         noisy_circuit.compose(sub_circuit, inplace=True)
-        noisy_circuit.barrier()
         return noisy_circuit
 
     def _get_sub_folding(self, circuit: QuantumCircuit, size: int) -> QuantumCircuit:
