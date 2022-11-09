@@ -21,10 +21,11 @@ from warnings import warn
 from numpy import array
 from qiskit import QuantumCircuit
 from qiskit.primitives import EstimatorResult
+from qiskit.primitives.utils import _circuit_key
 
 from .extrapolation import Extrapolator, LinearExtrapolator
 from .noise_amplification import NoiseAmplifier, TwoQubitAmplifier
-from .types import EstimatorResultData, Metadata, RegressionDatum
+from .types import EstimatorResultData, Metadata, RegressionDatum, ZNECache, ZNECacheKey
 from .utils.grouping import from_common_key, group_elements_gen, merge_dicts
 from .utils.typing import isreal
 from .utils.validation import quality
@@ -167,7 +168,7 @@ class ZNEStrategy:
     ## NOISE AMPLIFICATION
     ################################################################################
     def amplify_circuit_noise(self, circuit: QuantumCircuit, noise_factor: float) -> QuantumCircuit:
-        """Noise amplification from :class:`~.noise_amplification.NoiseAmplifier`.
+        """Cached noise amplification from :class:`~.noise_amplification.NoiseAmplifier`.
 
         Args:
             circuit: The original quantum circuit.
@@ -176,8 +177,19 @@ class ZNEStrategy:
         Returns:
             The noise amplified quantum circuit
         """
-        # TODO: caching
-        return self.noise_amplifier.amplify_circuit_noise(circuit, noise_factor)
+        # TODO: cached method when QuantumCircuit.__hash__ is implemented
+        if not hasattr(self, "_zne_cache"):
+            self._zne_cache: ZNECache = {}  # pylint: disable=attribute-defined-outside-init
+        CACHE_MAXSIZE = 256  # pylint: disable=invalid-name
+        zne_cache: ZNECache = self._zne_cache
+        cache_key: ZNECacheKey = (_circuit_key(circuit), noise_factor)
+        noisy_circuit: QuantumCircuit = zne_cache.get(cache_key, None)
+        if noisy_circuit is None:
+            noisy_circuit = self.noise_amplifier.amplify_circuit_noise(circuit, noise_factor)
+            # TODO: implement LRU (least recently used) functionality
+            if len(zne_cache) < CACHE_MAXSIZE:
+                zne_cache.update({cache_key: noisy_circuit})
+        return noisy_circuit
 
     # TODO: decouple indexing logic depending on this method
     # TODO: add validation
