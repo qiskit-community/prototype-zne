@@ -1,3 +1,10 @@
+## 1.0.0 (2022-11-08)
+
+### Fix
+
+- **zne_strategy**: remove caching since mutable (#29)
+- **global_folding_amplifier**: add barriers between all gates (#28)
+
 ## 1.0.0rc0 (2022-11-04)
 
 ### Feat
