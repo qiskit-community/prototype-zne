@@ -101,6 +101,7 @@ Importantly, *[Qiskit IBM Runtime](https://qiskit.org/documentation/partners/qis
 
 - __Mario Motta__: for scientific insight and guidance.
 - __Julien Gacon__: for providing a util function that maps gate names to the corresponding gate classes and for general discussions.
+- __Derek Wang__: for suggesting new features and stress-testing the tool.
 
 ----------------------------------------------------------------------
 
