@@ -33,6 +33,9 @@ class UnsetType:
     def __eq__(self, __o: Any) -> bool:
         return self is __o
 
+    def __repr__(self) -> str:
+        return "UNSET"
+
     def __copy__(self) -> UnsetType:
         return self
 
