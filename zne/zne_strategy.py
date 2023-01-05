@@ -24,7 +24,7 @@ from qiskit.primitives import EstimatorResult
 
 from .extrapolation import Extrapolator, LinearExtrapolator
 from .noise_amplification import NoiseAmplifier, TwoQubitAmplifier
-from .types import EstimatorResultData, Metadata, RegressionDatum
+from .types import EstimatorResultData, Metadata, RegressionDatum  # noqa: F401
 from .utils.grouping import from_common_key, group_elements_gen, merge_dicts
 from .utils.typing import isreal
 from .utils.validation import quality
