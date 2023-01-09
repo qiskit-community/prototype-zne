@@ -33,6 +33,11 @@ class TestUnsetType:
         assert UnsetType() == UnsetType()
         assert UNSET == UnsetType()
 
+    def test_repr(sefl):
+        """Test string representation."""
+        assert str(UNSET) == "UNSET"
+        assert repr(UNSET) == "UNSET"
+
     def test_copy(self):
         """Test copy."""
         assert copy(UNSET) is UNSET
