@@ -15,6 +15,7 @@ from unittest.mock import Mock
 from pytest import mark, raises
 
 from zne.utils.strategy import (
+    _BaseStrategy,
     _closest_common_ancestor,
     _FrozenStrategy,
     _infer_init_namespace,
@@ -22,7 +23,6 @@ from zne.utils.strategy import (
     _is_facade,
     _pack_init_args,
     _shared_strategy_ancestor,
-    _Strategy,
     strategy,
 )
 
@@ -58,8 +58,8 @@ def strategy_ancestry():
     """
     # TODO: _FrozenStrategy
     NonStrategy = type("NonStrategy", (), {})
-    cls = type("cls", (_Strategy,), {})
-    clz = type("clz", (_Strategy,), {})
+    cls = type("cls", (_BaseStrategy,), {})
+    clz = type("clz", (_BaseStrategy,), {})
     A = type("A", (cls,), {})
     B = type("B", (cls,), {})
     AA = type("AA", (A,), {})
@@ -81,8 +81,8 @@ def strategy_facades():
         a facade of the latter.
     """
     NonStrategy = type("NonStrategy", (), {"__init__": lambda self, a, b: None})
-    cls = type("cls", (_Strategy,), {"__init__": lambda self, a, b: None})
-    clz = type("clz", (_Strategy,), {"__init__": lambda self, a, b: None})
+    cls = type("cls", (_BaseStrategy,), {"__init__": lambda self, a, b: None})
+    clz = type("clz", (_BaseStrategy,), {"__init__": lambda self, a, b: None})
     subcls = type("subcls", (cls,), {"__init__": lambda self, a, b: None})
     c_setting = type("c_setting", (cls,), {"__init__": lambda self, a, b, c: None})
     c_arg = type("c_arg", (cls,), {"__init__": lambda self, a, b, _c: None})
@@ -123,12 +123,12 @@ class TestClassDecorator:
         decorator = strategy(cls)
         assert not isinstance(decorator, strategy)
         assert issubclass(decorator, cls)
-        assert issubclass(decorator, _Strategy)
+        assert issubclass(decorator, _BaseStrategy)
         assert not issubclass(decorator, _FrozenStrategy)
         decorator = strategy(cls, frozen=True)
         assert not isinstance(decorator, strategy)
         assert issubclass(decorator, cls)
-        assert issubclass(decorator, _Strategy)
+        assert issubclass(decorator, _BaseStrategy)
         assert issubclass(decorator, _FrozenStrategy)
 
     def test_init(self):
@@ -147,12 +147,12 @@ class TestClassDecorator:
         cls = type("cls", (), {})
         strategy_class = decorator(cls)
         assert issubclass(strategy_class, cls)
-        assert issubclass(strategy_class, _Strategy)
+        assert issubclass(strategy_class, _BaseStrategy)
         assert not issubclass(strategy_class, _FrozenStrategy)
         assert strategy_class.__init__ is not object.__init__
         strategy_class = decorator(cls, frozen=True)
         assert issubclass(strategy_class, cls)
-        assert issubclass(strategy_class, _Strategy)
+        assert issubclass(strategy_class, _BaseStrategy)
         assert issubclass(strategy_class, _FrozenStrategy)
         assert strategy_class.__init__ is not object.__init__
         ## OVERRIDING MODULE
@@ -322,7 +322,7 @@ class TestStrategy:
     @mark.parametrize("cls_name", ["cls", "Class", "Klass"])
     def test_init_subclass(self, cls_name, init, namespace, settings):
         """Test subclassing logic."""
-        cls = type(cls_name, (_Strategy,), {"__init__": init})
+        cls = type(cls_name, (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         assert hasattr(cls, "NAME")
@@ -338,7 +338,7 @@ class TestStrategy:
 
     def test_new(self, init, namespace, settings):
         """Test constructor logic."""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         assert hasattr(obj, "_original_args")
@@ -346,7 +346,7 @@ class TestStrategy:
 
     def test_getattr(self, init, namespace, settings):
         """Test getattr."""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         for n, attr in enumerate(namespace):
@@ -358,7 +358,7 @@ class TestStrategy:
     def test_super_getattr(self, init, namespace, settings):
         """Test extending getattr."""
         _super = type("super", (), {"__getattr__": lambda self, attr: attr})
-        cls = type("cls", (_Strategy, _super), {"__init__": init})
+        cls = type("cls", (_BaseStrategy, _super), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         for attr in ("non_attr", "error"):
@@ -368,7 +368,7 @@ class TestStrategy:
 
     def test_repr(self, init, namespace, settings):
         """Test string representation."""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         cls_name = cls.__name__
@@ -381,7 +381,7 @@ class TestStrategy:
 
         Note: checks reflexivity, symmetry, and transitivity.
         """
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         copy = cls(**kwargs)
@@ -394,7 +394,7 @@ class TestStrategy:
 
     def test_settings(self, init, namespace, settings):
         """Test settings property."""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         assert obj.settings == {n: i for i, n in enumerate(namespace) if n in settings}
@@ -405,7 +405,7 @@ class TestStrategy:
 
     def test_init_args(self, init, namespace, settings):
         """Test init_args property."""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         assert obj.init_args == {n: i for i, n in enumerate(namespace)}
@@ -416,7 +416,7 @@ class TestStrategy:
 
     def test_original_args(self, init, namespace, settings):
         """Test original_args property"""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         assert obj.original_args == obj._original_args == kwargs
@@ -424,7 +424,7 @@ class TestStrategy:
 
     def test_replicate(self, init, namespace, settings):
         """Test replicate method."""
-        cls = type("cls", (_Strategy,), {"__init__": init})
+        cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         updates_list = (
@@ -452,14 +452,14 @@ class TestStrategyNonParametric:
 
         Class-legend: {
             N: {},
-            _Strategy: {
+            _BaseStrategy: {
                 clz: {},
                 cls: {A: {}, B: {BB: {}}, C: {}, _C: {}}
             }
         }
         """
-        cls = type("cls", (_Strategy,), {"__init__": lambda self, a, b: None})
-        clz = type("clz", (_Strategy,), {"__init__": lambda self, a, b: None})
+        cls = type("cls", (_BaseStrategy,), {"__init__": lambda self, a, b: None})
+        clz = type("clz", (_BaseStrategy,), {"__init__": lambda self, a, b: None})
         A = type("A", (cls,), {"__init__": lambda self, a: None, "b": "b"})
         B = type("B", (cls,), {"__init__": lambda self, b: None, "a": "a"})
         BB = type("BB", (B,), {"__init__": lambda self, b: None, "a": "a"})

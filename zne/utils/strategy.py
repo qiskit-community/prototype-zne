@@ -100,7 +100,7 @@ class strategy:  # pylint: disable=invalid-name
     as is standard in decorators.
 
     Args:
-        frozen: Whether to inherit from ``_Strategy`` or ``_FrozenStrategy``.
+        frozen: Whether to inherit from ``_BaseStrategy`` or ``_FrozenStrategy``.
 
     Example:
         >>> @strategy
@@ -108,7 +108,7 @@ class strategy:  # pylint: disable=invalid-name
         >>>     def __init__(self, a, b, _c=None):
         >>>         pass
         >>> cls.mro()
-        [__main__.cls, zne.utils.strategy._Strategy, __main__.cls, object]
+        [__main__.cls, zne.utils.strategy._BaseStrategy, __main__.cls, object]
 
         >>> @strategy(frozen=True)
         >>> class cls:
@@ -117,7 +117,7 @@ class strategy:  # pylint: disable=invalid-name
         >>> cls.mro()
         [__main__.cls,
         zne.utils.strategy._FrozenStrategy,
-        zne.utils.strategy._Strategy,
+        zne.utils.strategy._BaseStrategy,
         __main__.cls,
         object]
     """
@@ -147,7 +147,7 @@ class strategy:  # pylint: disable=invalid-name
     def __call__(self, /, target: type, *, frozen: bool | None = None, **__) -> type:
         """Decorate target class."""
         frozen = self.frozen if frozen is None else frozen
-        BaseStrategy = _FrozenStrategy if frozen else _Strategy
+        BaseStrategy = _FrozenStrategy if frozen else _BaseStrategy
         overriding_attrs = {
             attr: value
             for attr in self.OVERRIDING_NAMESPACE
@@ -227,7 +227,7 @@ def _closest_common_ancestor(*args) -> type:
 def _shared_strategy_ancestor(*strategies) -> type | None:
     """Return closest common strategy ancestor or None."""
     shared: type = _closest_common_ancestor(*strategies)
-    if shared in (None, *_BASE_STRATEGY_CLASSES) or not issubclass(shared, _Strategy):
+    if shared in (None, *_BASE_STRATEGY_CLASSES) or not issubclass(shared, _BaseStrategy):
         return None
     return shared
 
@@ -239,7 +239,7 @@ def _is_facade(strategy: Any, ancestor: type) -> bool:  # pylint: disable=redefi
     """
     if not isinstance(strategy, type):
         strategy = type(strategy)
-    if not (issubclass(strategy, ancestor) and issubclass(ancestor, _Strategy)):
+    if not (issubclass(strategy, ancestor) and issubclass(ancestor, _BaseStrategy)):
         return False  # Note: subclassing is transitive (A -> B -> C then A -> C)
     filtered_mro = list(filter(lambda cls: issubclass(cls, ancestor), strategy.mro()))
     for cls, parent in zip(filtered_mro, filtered_mro[1:]):
@@ -251,8 +251,8 @@ def _is_facade(strategy: Any, ancestor: type) -> bool:  # pylint: disable=redefi
 ################################################################################
 ## BASE STRATEGY CLASSES
 ################################################################################
-class _Strategy:
-    """Stretegy class.
+class _BaseStrategy:
+    """Base stretegy class.
 
     Note: this class is not meant to be instantiated or inherited directly.
     """
@@ -268,7 +268,7 @@ class _Strategy:
         cls.INIT_NAMESPACE = classconstant(_infer_init_namespace(cls))
         cls.SETTINGS_NAMESPACE = classconstant(_infer_settings_namespace(cls))
 
-    def __new__(cls, *args, **kwargs) -> _Strategy:
+    def __new__(cls, *args, **kwargs) -> _BaseStrategy:
         # Note: logic added to `__new__` to avoid making `super().__init__` mandatory
         self = super().__new__(cls)
         self._original_args = _pack_init_args(self, *args, **kwargs)  # type: ignore
@@ -317,7 +317,7 @@ class _Strategy:
         original_args = getattr(self, "_original_args", {})
         return deepcopy(original_args)
 
-    def replicate(self, **kwargs) -> _Strategy:
+    def replicate(self, **kwargs) -> _BaseStrategy:
         """Build a replica of the current strategy altering the specified settings."""
         init_args = deepcopy(self.init_args)
         init_args.update(kwargs)
@@ -325,11 +325,11 @@ class _Strategy:
 
 
 # TODO
-class _FrozenStrategy(_Strategy):
-    """Frozen (immutable) strategy class.
+class _FrozenStrategy(_BaseStrategy):
+    """Frozen (immutable) base strategy class.
 
     Note: this class is not meant to be instantiated or inherited directly.
     """
 
 
-_BASE_STRATEGY_CLASSES = {_Strategy, _FrozenStrategy}
+_BASE_STRATEGY_CLASSES = {_BaseStrategy, _FrozenStrategy}
