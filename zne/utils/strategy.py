@@ -153,9 +153,6 @@ class strategy:  # pylint: disable=invalid-name
             for attr in self.OVERRIDING_NAMESPACE
             if (value := target.__dict__.get(attr, UNSET)) is not UNSET
         }
-        print(target.__dict__)
-        print(overriding_attrs)
-        print()
         return type(target.__name__, (BaseStrategy, target), overriding_attrs)
 
     @property
