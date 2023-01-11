@@ -20,22 +20,24 @@ for the strategy, where arguments whose name begins with a leading ``_`` are exc
 from the settings namespace. Although not currently enforced, it is strongly suggested
 for these excluded arguments to be optional (i.e. developers should provide defaults).
 
-Construction-time arguments (including defaults) are referred to as 'init args', and
-are not subject to any namespace exclussions: they are merely a reflection of the values
-of all arguments passed to ``__init__`` when instantiating the given strategy object.
+Init's arguments are referred to as 'init args', and are not subject to any namespace
+exclusions. Similarly, construction-time init args (including defaults) are referred to
+as 'original args': they are merely a reflection of the values of all arguments passed
+to ``__init__`` when instantiating the given strategy object.
 
 Strategy classes include the following specific mehods and fields:
     01. ``__init_subclass__``: to handle subclassing.
-    02. ``__new__``: to save the init args (i.e. initial settings) at construction-time.
-    03. ``__getattr__``: allows retrieving init args via ``getattr`` (i.e. virtual attrs).
+    02. ``__new__``: to save the original args at construction-time.
+    03. ``__getattr__``: to retrieve original args via ``getattr`` (i.e. virtual attrs).
     04. ``__repr__``: a string representation of the strategy instance.
     05. ``__eq__``: to compare strategy instances.
     06. ``NAME``: the name of the strategy (i.e. class name).
     07. ``INIT_NAMESPACE``: a tuple of the strategy's settings names.
     08. ``SETTINGS_NAMESPACE``: a tuple of the strategy's settings names.
     09. ``settings``: a dictionary of settings and their corresponding values/states.
-    10. ``init_args``: a copy of the construction-time init args.
-    11. ``replicate``: to build replicas of any strategy instance with updated settings.
+    10. ``init_args``: a dictionary of init arguments and their corresponding values/states.
+    11. ``original_args``: a copy of the construction-time init args.
+    12. ``replicate``: to build replicas of any strategy instance with updated settings.
 
 Out of these, {01, 02, 03} extend those found in the decorated class, and {04, 05}
 can be overriden; all others should be left unmodified.
@@ -206,8 +208,7 @@ def _is_facade(strategy: Any, ancestor: type) -> bool:  # pylint: disable=redefi
 class _Strategy:
     """Stretegy class.
 
-    Note: this class is not meant to be instantiated or inherited directly,
-    it has to be applied through the ``strategy`` class decorator.
+    Note: this class is not meant to be instantiated or inherited directly.
     """
 
     # TODO: subscriptable classconstant types (e.g. `classconstant[str]`)
@@ -224,15 +225,15 @@ class _Strategy:
     def __new__(cls, *args, **kwargs) -> _Strategy:
         # Note: logic added to `__new__` to avoid making `super().__init__` mandatory
         self = super().__new__(cls)
-        self._init_args = _pack_init_args(self, *args, **kwargs)  # type: ignore
+        self._original_args = _pack_init_args(self, *args, **kwargs)  # type: ignore
         return self
 
     def __getattr__(self, name: str) -> Any:
         try:
             return super().__getattr__(name)  # type: ignore
         except (AttributeError, TypeError):
-            init_args = getattr(self, "_init_args", {})
-            attr = init_args.get(name, UNSET)
+            original_args = getattr(self, "_original_args", {})
+            attr = original_args.get(name, UNSET)
         if attr is UNSET:
             raise AttributeError(f"'{type(self)}' object has no attribute '{name}'")
         return deepcopy(attr)
@@ -258,13 +259,18 @@ class _Strategy:
 
     @property
     def init_args(self) -> dict[str, Any]:
-        """A copy of init args."""
-        init_args = getattr(self, "_init_args", {})
-        return deepcopy(init_args)
+        """Strategy init args."""
+        return {key: getattr(self, key) for key in self.INIT_NAMESPACE}
+
+    @property
+    def original_args(self) -> dict[str, Any]:
+        """A copy of original args."""
+        original_args = getattr(self, "_original_args", {})
+        return deepcopy(original_args)
 
     def replicate(self, **kwargs) -> _Strategy:
         """Build a replica of the current strategy altering the specified settings."""
-        init_args = {key: deepcopy(getattr(self, key)) for key in self.INIT_NAMESPACE}
+        init_args = deepcopy(self.init_args)
         init_args.update(kwargs)
         return type(self)(**init_args)
 
@@ -273,6 +279,5 @@ class _Strategy:
 class _FrozenStrategy(_Strategy):
     """Frozen (immutable) strategy class.
 
-    Note: this class is not meant to be instantiated or inherited directly,
-    it has to be applied through the ``strategy`` class decorator.
+    Note: this class is not meant to be instantiated or inherited directly.
     """

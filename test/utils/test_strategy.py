@@ -328,8 +328,8 @@ class TestStrategy:
         cls = type("cls", (_Strategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
-        assert hasattr(obj, "_init_args")
-        assert obj._init_args == kwargs
+        assert hasattr(obj, "_original_args")
+        assert obj._original_args == kwargs
 
     def test_getattr(self, init, namespace, settings):
         """Test getattr."""
@@ -384,19 +384,30 @@ class TestStrategy:
         cls = type("cls", (_Strategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
-        assert obj.settings == {s: n for n, s in enumerate(namespace) if s in settings}
-        for s in settings:
-            setattr(obj, s, s)
-            assert obj.settings.get(s) == getattr(obj, s)
-        assert obj.settings == {s: s for s in settings}
+        assert obj.settings == {n: i for i, n in enumerate(namespace) if n in settings}
+        for n in settings:
+            setattr(obj, n, n)
+            assert obj.settings.get(n) == getattr(obj, n)
+        assert obj.settings == {n: n for n in settings}
 
     def test_init_args(self, init, namespace, settings):
-        """Test init_args property"""
+        """Test init_args property."""
         cls = type("cls", (_Strategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
-        assert obj.init_args == obj._init_args == kwargs
-        assert obj.init_args is not obj._init_args
+        assert obj.init_args == {n: i for i, n in enumerate(namespace)}
+        for n in namespace:
+            setattr(obj, n, n)
+            assert obj.init_args.get(n) == getattr(obj, n)
+        assert obj.init_args == {n: n for n in namespace}
+
+    def test_original_args(self, init, namespace, settings):
+        """Test original_args property"""
+        cls = type("cls", (_Strategy,), {"__init__": init})
+        kwargs = {name: i for i, name in enumerate(namespace)}
+        obj = cls(**kwargs)
+        assert obj.original_args == obj._original_args == kwargs
+        assert obj.original_args is not obj._original_args
 
     def test_replicate(self, init, namespace, settings):
         """Test replicate method."""
@@ -413,8 +424,8 @@ class TestStrategy:
             replica = obj.replicate(**updates)
             assert type(replica) is type(obj)
             assert replica is not obj
-            (init_args := obj.init_args).update(**updates)
-            assert init_args == replica.init_args
+            (init_args := obj.original_args).update(**updates)
+            assert init_args == replica.original_args
 
 
 class TestStrategyNonParametric:
