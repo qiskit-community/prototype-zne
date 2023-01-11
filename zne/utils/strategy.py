@@ -39,8 +39,8 @@ Strategy classes include the following specific mehods and fields:
     11. ``original_args``: a copy of the construction-time init args.
     12. ``replicate``: to build replicas of any strategy instance with updated settings.
 
-Out of these, {01, 02, 03} extend those found in the decorated class, and {04, 05}
-can be overriden; all others should be left unmodified.
+Out of these, {01, 02, 03} can extend and be extended, and {04, 05} can be overriden;
+all others should be left unmodified.
 
 Classes inheriting from a :class:`strategy` class, are strategy classes
 themselves as well; with settings either inherited or provided by a new
@@ -84,7 +84,41 @@ from .unset import UNSET
 ## CLASS DECORATOR
 ################################################################################
 class strategy:  # pylint: disable=invalid-name
-    """Strategy class decorator."""
+    """Strategy class decorator.
+
+    Applies a strategy base class and its corresponding methods to the decorated class.
+
+    This is done by dynmically subclassing from both the correspoding strategy base class
+    (i.e. mutable or frozen), and the pre-decorated class as declared by the developer.
+    The base strategy class will have precedence in the resulting class' mro; therefor,
+    the resulting strategy class will extend the ``__init_subclass__``, ``__new__``, and
+    ``__getattr__`` methods from the pre-decorated class. Also, in order to allow
+    redefinition of the base strategy class' ``__repr__`` and ``__eq__`` methods, if found
+    in the pre-decorated class, they will be bridged to the resulting class; efectively
+    overriding the defaults.
+
+    Args:
+        frozen: Whether to inherit from ``_Strategy`` or ``_FrozenStrategy``.
+
+    Example:
+        >>> @strategy
+        >>> class cls:
+        >>>     def __init__(self, a, b, _c=None):
+        >>>         pass
+        >>> cls.mro()
+        [zne.utils.strategy.cls, zne.utils.strategy._Strategy, __main__.cls, object]
+
+        >>> @strategy(frozen=True)
+        >>> class cls:
+        >>>     def __init__(self, a, b, _c=None):
+        >>>         pass
+        >>> cls.mro()
+        [zne.utils.strategy.cls,
+        zne.utils.strategy._FrozenStrategy,
+        zne.utils.strategy._Strategy,
+        __main__.cls,
+        object]
+    """
 
     __slots__ = ("_frozen",)
 
