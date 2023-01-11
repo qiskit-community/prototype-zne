@@ -72,6 +72,7 @@ as keyword arguments. This is specially useful when dealing with frozen
 
 from __future__ import annotations
 
+from abc import ABC
 from copy import deepcopy
 from inspect import signature
 from typing import Any
@@ -122,7 +123,7 @@ class strategy:  # pylint: disable=invalid-name
         object]
     """
 
-    __slots__ = ("_frozen",)
+    __slots__ = ("_frozen",)  # TODO: add `abstract` option
 
     OVERRIDING_NAMESPACE = (
         "__module__",
@@ -249,7 +250,7 @@ def _is_facade(strategy: Any, ancestor: type) -> bool:  # pylint: disable=redefi
 ## BASE STRATEGY CLASSES
 ################################################################################
 class _BaseStrategy:
-    """Base stretegy class.
+    """Strategy base class.
 
     Note: this class is not meant to be instantiated or inherited directly.
     """
@@ -322,11 +323,27 @@ class _BaseStrategy:
 
 
 # TODO
-class _FrozenStrategy(_BaseStrategy):
-    """Frozen (immutable) base strategy class.
+class _BaseStrategyABC(_BaseStrategy, ABC):
+    """Strategy abstract base class.
 
     Note: this class is not meant to be instantiated or inherited directly.
     """
 
 
-_BASE_STRATEGY_CLASSES = {_BaseStrategy, _FrozenStrategy}
+# TODO
+class _FrozenStrategy(_BaseStrategy):
+    """Frozen (immutable) strategy base class.
+
+    Note: this class is not meant to be instantiated or inherited directly.
+    """
+
+
+# TODO
+class _FrozenStrategyABC(_FrozenStrategy, ABC):
+    """Frozen (immutable) strategy abstract base class.
+
+    Note: this class is not meant to be instantiated or inherited directly.
+    """
+
+
+_BASE_STRATEGY_CLASSES = {_BaseStrategy, _BaseStrategyABC, _FrozenStrategy, _FrozenStrategyABC}
