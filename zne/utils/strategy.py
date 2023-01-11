@@ -92,10 +92,12 @@ class strategy:  # pylint: disable=invalid-name
     (i.e. mutable or frozen), and the pre-decorated class as declared by the developer.
     The base strategy class will have precedence in the resulting class' mro; therefor,
     the resulting strategy class will extend the ``__init_subclass__``, ``__new__``, and
-    ``__getattr__`` methods from the pre-decorated class. Also, in order to allow
-    redefinition of the base strategy class' ``__repr__`` and ``__eq__`` methods, if found
-    in the pre-decorated class, they will be bridged to the resulting class; efectively
-    overriding the defaults.
+    ``__getattr__`` methods from the pre-decorated class. Additionally, in order to allow
+    redefinition of the base strategy class' ``__init__`` (dummy), ``__repr__`` and ``__eq__``
+    methods, if found in the pre-decorated class, they will be bridged to the resulting class;
+    efectively overriding the defaults. Similarly, ``__module__``, ``__name__``,
+    ``__annotations__``, and ``__doc__``, will also be bridged from the pre-decorated class
+    as is standard in decorators.
 
     Args:
         frozen: Whether to inherit from ``_Strategy`` or ``_FrozenStrategy``.
@@ -106,14 +108,14 @@ class strategy:  # pylint: disable=invalid-name
         >>>     def __init__(self, a, b, _c=None):
         >>>         pass
         >>> cls.mro()
-        [zne.utils.strategy.cls, zne.utils.strategy._Strategy, __main__.cls, object]
+        [__main__.cls, zne.utils.strategy._Strategy, __main__.cls, object]
 
         >>> @strategy(frozen=True)
         >>> class cls:
         >>>     def __init__(self, a, b, _c=None):
         >>>         pass
         >>> cls.mro()
-        [zne.utils.strategy.cls,
+        [__main__.cls,
         zne.utils.strategy._FrozenStrategy,
         zne.utils.strategy._Strategy,
         __main__.cls,
@@ -121,6 +123,15 @@ class strategy:  # pylint: disable=invalid-name
     """
 
     __slots__ = ("_frozen",)
+
+    OVERRIDING_NAMESPACE = (
+        "__module__",
+        "__annotations__",
+        "__doc__",
+        "__init__",
+        "__repr__",
+        "__eq__",
+    )
 
     def __new__(cls, /, target: type | None = None, **kwargs) -> type | strategy:  # type: ignore
         """Return a decorated class or a strategy object capable of decorating."""
@@ -139,11 +150,12 @@ class strategy:  # pylint: disable=invalid-name
         BaseStrategy = _FrozenStrategy if frozen else _Strategy
         overriding_attrs = {
             attr: value
-            for attr in ("__repr__", "__eq__")
+            for attr in self.OVERRIDING_NAMESPACE
             if (value := target.__dict__.get(attr, UNSET)) is not UNSET
         }
-        if target.__init__ is object.__init__:  # type: ignore
-            overriding_attrs.update({"__init__": lambda self: None})
+        print(target.__dict__)
+        print(overriding_attrs)
+        print()
         return type(target.__name__, (BaseStrategy, target), overriding_attrs)
 
     @property
@@ -261,6 +273,9 @@ class _Strategy:
         self = super().__new__(cls)
         self._original_args = _pack_init_args(self, *args, **kwargs)  # type: ignore
         return self
+
+    def __init__(self) -> None:
+        pass  # Note: dummy, to avoid `*(*kw)args` from `object.__init__`
 
     def __getattr__(self, name: str) -> Any:
         try:

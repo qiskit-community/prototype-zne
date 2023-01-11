@@ -155,6 +155,18 @@ class TestClassDecorator:
         assert issubclass(strategy_class, _Strategy)
         assert issubclass(strategy_class, _FrozenStrategy)
         assert strategy_class.__init__ is not object.__init__
+        ## OVERRIDING MODULE
+        module = "MODULE"
+        cls = type("cls", (), {"__module__": module})
+        assert decorator(cls).__module__ is module
+        # OVERRIDING ANNOTATIONS
+        annotations = {"annotation": ...}
+        cls = type("cls", (), {"__annotations__": annotations})
+        assert decorator(cls).__annotations__ is annotations
+        ## OVERRIDING DOC
+        doc = "DOCSTRING"
+        cls = type("cls", (), {"__doc__": doc})
+        assert decorator(cls).__doc__ is doc
         ## OVERRIDING INIT
         init = lambda self: None
         cls = type("cls", (), {"__init__": init})
@@ -239,6 +251,7 @@ def test_infer_init_namesapce(init, namespace):
 @mark.parametrize(
     "init, settings",
     [
+        (object.__init__, ()),
         (lambda self: None, ()),
         (lambda self, a: None, ("a",)),
         (lambda self, _a: None, ()),
