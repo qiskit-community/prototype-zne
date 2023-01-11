@@ -181,7 +181,7 @@ def _closest_common_ancestor(*args) -> type:
 def _shared_strategy_ancestor(*strategies) -> type | None:
     """Return closest common strategy ancestor or None."""
     shared: type = _closest_common_ancestor(*strategies)
-    if shared in (None, _Strategy, _FrozenStrategy) or not issubclass(shared, _Strategy):
+    if shared in (None, *_BASE_STRATEGY_CLASSES) or not issubclass(shared, _Strategy):
         return None
     return shared
 
@@ -203,7 +203,7 @@ def _is_facade(strategy: Any, ancestor: type) -> bool:  # pylint: disable=redefi
 
 
 ################################################################################
-## STRATEGY CLASSES
+## BASE STRATEGY CLASSES
 ################################################################################
 class _Strategy:
     """Stretegy class.
@@ -281,3 +281,6 @@ class _FrozenStrategy(_Strategy):
 
     Note: this class is not meant to be instantiated or inherited directly.
     """
+
+
+_BASE_STRATEGY_CLASSES = {_Strategy, _FrozenStrategy}
