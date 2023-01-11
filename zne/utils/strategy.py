@@ -57,7 +57,7 @@ removing said settings from the settings namespace as explained before, or addin
 dummy property that retrieves their state (i.e. getter).
 
 Oftentimes, developers will need their strategies to be immutable after instantiation.
-To this end, the :class:`~zne.utils.strategy.strategy` decorator class accepts and
+To this end, the :class:`~zne.utils.strategy.strategy` decorator class accepts an
 optional keyword argument ``frozen`` which, if set to ``True`` (default ``False``),
 will forbid all ``setattr`` calls, and automatically return deepcopies of mutable
 settings. In this scenario, settings will still be declared through the class'
@@ -66,7 +66,7 @@ hold the appropriate docstring, or used for validation among other things.
 
 Replicas of any strategy instance can be produced by calling their
 :method:`~zne.utils.strategy.strategy.replicate` method with updated settings
-as keyword arguments. This is specially useful when dealing with frozen
+as keyword arguments. This is especially useful when dealing with frozen
 (i.e. immutable) strategies.
 """
 
@@ -89,16 +89,16 @@ class strategy:  # pylint: disable=invalid-name
 
     Applies a strategy base class and its corresponding methods to the decorated class.
 
-    This is done by dynmically subclassing from both the correspoding strategy base class
+    This is done by dynamically subclassing from both the corresponding strategy base class
     (i.e. mutable or frozen), and the pre-decorated class as declared by the developer.
-    The base strategy class will have precedence in the resulting class' mro; therefor,
+    The base strategy class will have precedence in the resulting class' mro; therefore,
     the resulting strategy class will extend the ``__init_subclass__``, ``__new__``, and
     ``__getattr__`` methods from the pre-decorated class. Additionally, in order to allow
     redefinition of the base strategy class' ``__init__`` (dummy), ``__repr__`` and ``__eq__``
-    methods, if found in the pre-decorated class, they will be bridged to the resulting class;
-    efectively overriding the defaults. Similarly, ``__module__``, ``__name__``,
-    ``__annotations__``, and ``__doc__``, will also be bridged from the pre-decorated class
-    as is standard in decorators.
+    methods, if these are found in the pre-decorated class' dictionary, they will be bridged
+    to the resulting class; effectively overriding the defaults. Similarly, ``__module__``,
+    ``__name__``, ``__annotations__``, and ``__doc__``, will also be bridged from the
+    pre-decorated class as is standard in decorators.
 
     Args:
         frozen: Whether to inherit from ``_BaseStrategy`` or ``_FrozenStrategy``.
