@@ -301,22 +301,23 @@ def test_shared_strategy_ancestor(cls_A, cls_B, ancestor):
 ## STRATEGY CLASSES
 ################################################################################
 @mark.parametrize(
-    "init, namespace, settings",
+    "init, namespace",
     [
-        (lambda self: None, (), ()),
-        (lambda self, foo: None, ("foo",), ("foo",)),
-        (lambda self, _bar: None, ("_bar",), ()),
-        (lambda self, foo, _bar: None, ("foo", "_bar"), ("foo",)),
-        (lambda self, foo, bar: None, ("foo", "bar"), ("foo", "bar")),
-        (lambda self, _foo, _bar: None, ("_foo", "_bar"), ()),
+        (lambda self: None, ()),
+        (lambda self, foo: None, ("foo",)),
+        (lambda self, _bar: None, ("_bar",)),
+        (lambda self, foo, _bar: None, ("foo", "_bar")),
+        (lambda self, foo, bar: None, ("foo", "bar")),
+        (lambda self, _foo, _bar: None, ("_foo", "_bar")),
     ],
 )
 class TestStrategy:
     """Test Strategy class."""
 
     @mark.parametrize("cls_name", ["cls", "Class", "Klass"])
-    def test_init_subclass(self, cls_name, init, namespace, settings):
+    def test_init_subclass(self, cls_name, init, namespace):
         """Test subclassing logic."""
+        settings = tuple(n for n in namespace if not n.startswith("_"))
         cls = type(cls_name, (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
@@ -331,7 +332,7 @@ class TestStrategy:
         assert cls.SETTINGS_NAMESPACE is obj.SETTINGS_NAMESPACE
         assert cls.SETTINGS_NAMESPACE == tuple(settings)
 
-    def test_new(self, init, namespace, settings):
+    def test_new(self, init, namespace):
         """Test constructor logic."""
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
@@ -339,7 +340,7 @@ class TestStrategy:
         assert hasattr(obj, "_original_args")
         assert obj._original_args == kwargs
 
-    def test_getattr(self, init, namespace, settings):
+    def test_getattr(self, init, namespace):
         """Test getattr."""
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
@@ -350,7 +351,7 @@ class TestStrategy:
             with raises(AttributeError):
                 getattr(obj, attr)
 
-    def test_super_getattr(self, init, namespace, settings):
+    def test_super_getattr(self, init, namespace):
         """Test extending getattr."""
         _super = type("super", (), {"__getattr__": lambda self, attr: attr})
         cls = type("cls", (_BaseStrategy, _super), {"__init__": init})
@@ -361,8 +362,9 @@ class TestStrategy:
         for _, attr in enumerate(namespace):
             assert getattr(obj, attr) == attr
 
-    def test_repr(self, init, namespace, settings):
+    def test_repr(self, init, namespace):
         """Test string representation."""
+        settings = tuple(n for n in namespace if not n.startswith("_"))
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
@@ -371,11 +373,12 @@ class TestStrategy:
         str_repr = f"{cls_name}({settings_str})" if settings_str else cls_name
         assert str(obj) == repr(obj) == str_repr
 
-    def test_eq(self, init, namespace, settings):
+    def test_eq(self, init, namespace):
         """Test basic equality (same class, different settings).
 
         Note: checks reflexivity, symmetry, and transitivity.
         """
+        settings = tuple(n for n in namespace if not n.startswith("_"))
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
@@ -387,9 +390,10 @@ class TestStrategy:
             kwargs = {name: i + 1 for i, name in enumerate(namespace)}
             assert cls(**kwargs) != obj
 
-    def test_settings(self, init, namespace, settings):
+    def test_settings(self, init, namespace):
         """Test settings property."""
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
+        settings = tuple(n for n in namespace if not n.startswith("_"))
         kwargs = {name: i for i, name in enumerate(namespace)}
         obj = cls(**kwargs)
         assert obj.settings == {n: i for i, n in enumerate(namespace) if n in settings}
@@ -398,7 +402,7 @@ class TestStrategy:
             assert obj.settings.get(n) == getattr(obj, n)
         assert obj.settings == {n: n for n in settings}
 
-    def test_init_args(self, init, namespace, settings):
+    def test_init_args(self, init, namespace):
         """Test init_args property."""
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
@@ -409,7 +413,7 @@ class TestStrategy:
             assert obj.init_args.get(n) == getattr(obj, n)
         assert obj.init_args == {n: n for n in namespace}
 
-    def test_original_args(self, init, namespace, settings):
+    def test_original_args(self, init, namespace):
         """Test original_args property"""
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
@@ -417,7 +421,7 @@ class TestStrategy:
         assert obj.original_args == obj._original_args == kwargs
         assert obj.original_args is not obj._original_args
 
-    def test_replicate(self, init, namespace, settings):
+    def test_replicate(self, init, namespace):
         """Test replicate method."""
         cls = type("cls", (_BaseStrategy,), {"__init__": init})
         kwargs = {name: i for i, name in enumerate(namespace)}
