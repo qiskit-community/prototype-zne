@@ -154,6 +154,10 @@ class TestClassDecorator:
         assert issubclass(strategy_class, _BaseStrategy)
         assert issubclass(strategy_class, _FrozenStrategy)
         assert strategy_class.__init__ is not object.__init__
+        ## NAME
+        name = "NAME"
+        cls = type(name, (), {})
+        assert decorator(cls).__name__ is name
         ## OVERRIDING MODULE
         module = "MODULE"
         cls = type("cls", (), {"__module__": module})
