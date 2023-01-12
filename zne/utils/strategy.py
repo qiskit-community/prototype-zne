@@ -37,7 +37,8 @@ Strategy classes include the following specific mehods and fields:
     09. ``settings``: a dictionary of settings and their corresponding values/states.
     10. ``init_args``: a dictionary of init arguments and their corresponding values/states.
     11. ``original_args``: a copy of the construction-time init args.
-    12. ``replicate``: to build replicas of any strategy instance with updated settings.
+    12. ``is_facade``: to check is current class is a facade of a given ancestor.
+    13. ``replicate``: to build replicas of any strategy instance with updated settings.
 
 Out of these, {01, 02, 03} can extend and be extended, and {04, 05} can be overriden;
 all others should be left unmodified.
@@ -134,7 +135,7 @@ class strategy:  # pylint: disable=invalid-name
         "__eq__",
     )
 
-    def __new__(cls, /, target: type | None = None, **kwargs) -> type | strategy:  # type: ignore
+    def __new__(cls, /, target: type = None, **kwargs) -> type | strategy:  # type: ignore
         """Return a decorated class or a strategy object capable of decorating."""
         self = super().__new__(cls)
         if target is None:
@@ -222,28 +223,12 @@ def _closest_common_ancestor(*args) -> type:
     return None  # Note: safeguard, `object` always shared (never called)  # pragma: no cover
 
 
-def _shared_strategy_ancestor(*strategies) -> type | None:
+def _shared_strategy_ancestor(*strategies) -> type:
     """Return closest common strategy ancestor or None."""
     shared: type = _closest_common_ancestor(*strategies)
     if shared in (None, *_BASE_STRATEGY_CLASSES) or not issubclass(shared, _BaseStrategy):
         return None
     return shared
-
-
-def _is_facade(strategy: Any, ancestor: type) -> bool:  # pylint: disable=redefined-outer-name
-    """Checks if the input strategy is a facade of the given ancestor class.
-
-    Note: Facades must be subclasses.
-    """
-    if not isinstance(strategy, type):
-        strategy = type(strategy)
-    if not (issubclass(strategy, ancestor) and issubclass(ancestor, _BaseStrategy)):
-        return False  # Note: subclassing is transitive (A -> B -> C then A -> C)
-    filtered_mro = list(filter(lambda cls: issubclass(cls, ancestor), strategy.mro()))
-    for cls, parent in zip(filtered_mro, filtered_mro[1:]):
-        if set(cls.SETTINGS_NAMESPACE) - set(parent.SETTINGS_NAMESPACE):
-            return False
-    return True
 
 
 ################################################################################
@@ -291,10 +276,10 @@ class _BaseStrategy:
         return f"{strategy_name}({settings_str})" if settings_str else strategy_name
 
     def __eq__(self, other: object) -> bool:
-        shared: type | None = _shared_strategy_ancestor(self, other)
-        if shared is None or not _is_facade(self, shared) or not _is_facade(other, shared):
+        cls: type = _shared_strategy_ancestor(self, other)
+        if cls is None or not self.is_facade(cls) or not other.is_facade(cls):  # type: ignore
             return False
-        SHARED_NAMESPACE = shared.SETTINGS_NAMESPACE  # type: ignore # pylint: disable=invalid-name
+        SHARED_NAMESPACE = cls.SETTINGS_NAMESPACE  # type: ignore # pylint: disable=invalid-name
         self_settings = {name: getattr(self, name, UNSET) for name in SHARED_NAMESPACE}
         other_settings = {name: getattr(other, name, UNSET) for name in SHARED_NAMESPACE}
         return self_settings == other_settings
@@ -314,6 +299,19 @@ class _BaseStrategy:
         """A copy of original args."""
         original_args = getattr(self, "_original_args", {})
         return deepcopy(original_args)
+
+    @classmethod
+    def is_facade(cls, ancestor: Any) -> bool:
+        """Checks if the strategy class is a facade subclass of the given ancestor."""
+        if not isinstance(ancestor, type):
+            ancestor = type(ancestor)
+        if not (issubclass(cls, ancestor) and issubclass(ancestor, _BaseStrategy)):
+            return False  # Note: subclassing is transitive (A -> B -> C then A -> C)
+        filtered_mro = list(filter(lambda cls: issubclass(cls, ancestor), cls.mro()))
+        for facade, parent in zip(filtered_mro, filtered_mro[1:]):
+            if set(facade.SETTINGS_NAMESPACE) - set(parent.SETTINGS_NAMESPACE):  # type: ignore
+                return False
+        return True
 
     def replicate(self, **kwargs) -> _BaseStrategy:
         """Build a replica of the current strategy altering the specified settings."""
@@ -346,4 +344,9 @@ class _FrozenStrategyABC(_FrozenStrategy, ABC):
     """
 
 
-_BASE_STRATEGY_CLASSES = {_BaseStrategy, _BaseStrategyABC, _FrozenStrategy, _FrozenStrategyABC}
+_BASE_STRATEGY_CLASSES: set[type] = {
+    _BaseStrategy,
+    _BaseStrategyABC,
+    _FrozenStrategy,
+    _FrozenStrategyABC,
+}

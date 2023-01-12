@@ -20,7 +20,6 @@ from zne.utils.strategy import (
     _FrozenStrategy,
     _infer_init_namespace,
     _infer_settings_namespace,
-    _is_facade,
     _pack_init_args,
     _shared_strategy_ancestor,
     strategy,
@@ -94,7 +93,7 @@ def strategy_facades():
     AB = type("AB", (A,), {"__init__": lambda self, a, b: None})
     ABA = type("ABA", (AB,), {"__init__": lambda self, a: None})
     CA = type("AA", (C,), {"__init__": lambda self: None})
-    yield NonStrategy, cls, False  # Non-strategy
+    yield cls, NonStrategy, False  # Non-strategy
     yield clz, cls, False  # Different strategies
     yield cls, cls, True  # Self facade
     yield subcls, cls, True  # Same settings facade
@@ -294,14 +293,6 @@ def test_shared_strategy_ancestor(cls_A, cls_B, ancestor):
     assert _shared_strategy_ancestor(cls_B(), cls_A()) is ancestor
 
 
-@mark.parametrize("cls, ancestor, expected", [*strategy_facades()])
-def test_is_facade(cls, ancestor, expected):
-    """Test strategy facade detection."""
-    assert _is_facade(cls, ancestor) is expected
-    if expected:  # Inverted is False
-        assert _is_facade(ancestor, cls) is (cls is ancestor)
-
-
 ################################################################################
 ## STRATEGY CLASSES
 ################################################################################
@@ -479,3 +470,19 @@ class TestStrategyNonParametric:
         assert cls("a", "b") == _C("_c") == cls("a", "b")  # Excluded extra setting
         assert cls("a", "b") == BB("b") == cls("a", "b")  # Sub-subclass
         assert BB("b") == _C("_c") == BB("b")  # Furthest (transitivity)
+
+    @mark.parametrize("cls, ancestor, expected", [*strategy_facades()])
+    def test_is_facade(self, cls, ancestor, expected):
+        """Test strategy facade detection."""
+        obj = cls(**{k: k for k in _infer_init_namespace(cls)})
+        ancestor_obj = ancestor(**{k: k for k in _infer_init_namespace(ancestor)})
+        assert cls.is_facade(ancestor) is expected
+        assert obj.is_facade(ancestor) is expected
+        assert cls.is_facade(ancestor_obj) is expected
+        assert obj.is_facade(ancestor_obj) is expected
+        if expected:  # Inverted is False
+            expected = cls is ancestor  # Only `True` if equal
+            assert ancestor.is_facade(cls) is expected
+            assert ancestor.is_facade(obj) is expected
+            assert ancestor_obj.is_facade(cls) is expected
+            assert ancestor_obj.is_facade(obj) is expected
