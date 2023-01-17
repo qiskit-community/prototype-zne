@@ -195,8 +195,7 @@ def _pack_init_args(obj: object, *args, **kwargs) -> dict[str, Any]:
 def _infer_init_namespace(cls: type) -> tuple[str, ...]:
     """Infer init namespace from a given class."""
     init_signature = signature(cls.__init__)  # type: ignore
-    parameters = init_signature.parameters.values()
-    namespace = tuple(map(lambda p: p.name, parameters))
+    namespace = tuple(init_signature.parameters.keys())
     return namespace[1:]  # Note: disregard `self`
 
 
