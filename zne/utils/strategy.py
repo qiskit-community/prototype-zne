@@ -25,6 +25,10 @@ exclusions. Similarly, construction-time init args (including defaults) are refe
 as 'original args': they are merely a reflection of the values of all arguments passed
 to ``__init__`` when instantiating the given strategy object.
 
+Currently, init arguments of kind POSITIONAL_ONLY, VAR_POSITIONAL, and VAR_KEYWORD
+are disallowed. See https://docs.python.org/3/library/inspect.html#inspect.Parameter.kind
+fpr more information.
+
 Strategy classes include the following specific mehods and fields:
     01. ``__init_subclass__``: to handle subclassing.
     02. ``__new__``: to save the original args at construction-time.
@@ -75,7 +79,7 @@ from __future__ import annotations
 
 from abc import ABC
 from copy import deepcopy
-from inspect import signature
+from inspect import Parameter, signature
 from typing import Any
 
 from .classconstant import classconstant
@@ -246,6 +250,7 @@ class _BaseStrategy:
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
         super().__init_subclass__(*args, **kwargs)
+        cls._validate_init()
         cls.NAME = classconstant(cls.__name__)
         cls.INIT_NAMESPACE = classconstant(_infer_init_namespace(cls))
         cls.SETTINGS_NAMESPACE = classconstant(_infer_settings_namespace(cls))
@@ -317,6 +322,24 @@ class _BaseStrategy:
         init_args = deepcopy(self.init_args)
         init_args.update(kwargs)
         return type(self)(**init_args)
+
+    @classmethod
+    def _validate_init(cls):
+        """Validate init method.
+
+        Raises:
+            TypeError: if POSITIONAL_ONLY, VAR_POSITIONAL, or VAR_KEYWORD arguments.
+        """
+        init_signature = signature(cls.__init__)
+        parameters = init_signature.parameters.values()
+        kinds = tuple(p.kind for p in parameters)[1:]  # Note: disregard `self`
+        disallowed = {Parameter.POSITIONAL_ONLY, Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD}
+        for kind in kinds:
+            if kind in disallowed:
+                raise TypeError(
+                    f"Invalid __init__ method in strategy class <{cls.__name__}>: "
+                    f"{kind} arguments disallowed."
+                )
 
 
 # TODO

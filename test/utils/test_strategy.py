@@ -494,3 +494,33 @@ class TestStrategyNonParametric:
             assert ancestor.is_facade(obj) is expected
             assert ancestor_obj.is_facade(cls) is expected
             assert ancestor_obj.is_facade(obj) is expected
+
+    @mark.parametrize(
+        "init, error",
+        [
+            (lambda self: None, False),
+            (lambda self, /: None, False),
+            (lambda self, foo: None, False),
+            (lambda self, /, foo: None, False),
+            (lambda self, foo, /: None, True),
+            (lambda self, foo, /, bar: None, True),
+            (lambda self, foo, bar, /: None, True),
+            (lambda self, *args: None, True),
+            (lambda self, foo, *args: None, True),
+            (lambda self, foo, *args, bar: None, True),
+            (lambda self, foo, *, bar: None, False),
+            (lambda self, *, foo, bar: None, False),
+            (lambda self, **kwargs: None, True),
+            (lambda self, foo, **kwargs: None, True),
+            (lambda self, *, foo, **kwargs: None, True),
+            (lambda self, foo, *, bar, **kwargs: None, True),
+            (lambda self, *args, **kwargs: None, True),
+            (lambda self, foo, /, *args, **kwargs: None, True),
+        ],
+    )
+    def test_validate_init(self, init, error):
+        if error:
+            with raises(TypeError):
+                _ = type("cls", (_BaseStrategy,), {"__init__": init})
+        else:
+            _ = type("cls", (_BaseStrategy,), {"__init__": init})
