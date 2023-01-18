@@ -27,7 +27,7 @@ to ``__init__`` when instantiating the given strategy object.
 
 Currently, init arguments of kind POSITIONAL_ONLY, VAR_POSITIONAL, and VAR_KEYWORD
 are disallowed. See https://docs.python.org/3/library/inspect.html#inspect.Parameter.kind
-fpr more information.
+for more information.
 
 Strategy classes include the following specific mehods and fields:
     01. ``__init_subclass__``: to handle subclassing.
