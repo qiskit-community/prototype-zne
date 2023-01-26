@@ -1,7 +1,7 @@
 [run]
 branch = true
 data_file = .coverage
-omit = .venv/*,test/*,docs/*,*/qiskit/*
+omit = .venv/*,tools/*,test/*,docs/*,*/qiskit/*
 
 [paths]
 

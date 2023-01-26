@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -57,6 +57,7 @@ class ZNEJob(Job):
     ## ZNE
     ################################################################################
     def result(self) -> EstimatorResult:
+        """Return the results of the job."""
         result: EstimatorResult = self.base_job.result()
         if self.zne_strategy.performs_zne:
             result = self.zne_strategy.mitigate_noisy_result(result)
@@ -100,7 +101,9 @@ class ZNEJob(Job):
     ## DUMMY ABSTRACT METHOD IMPLEMENTATION
     ################################################################################
     def submit(self):
+        """Submit the job to the backend for execution."""
         return self.base_job.submit()
 
     def status(self):
+        """Return the status of the job, among the values of ``JobStatus``."""
         return self.base_job.status()

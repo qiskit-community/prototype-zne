@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -72,6 +72,7 @@ class NoiseAmplifier(ImmutableStrategy, ABC):
                 return self._noise_amplifier
 
             def run(self, dag: DAGCircuit) -> DAGCircuit:
+                """Run a pass on the DAGCircuit."""
                 return self.noise_amplifier.amplify_dag_noise(dag, noise_factor)
 
         return NoiseAmplificationPass(noise_amplifier=self)
