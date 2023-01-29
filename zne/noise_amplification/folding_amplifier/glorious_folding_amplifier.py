@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Initial Function implmention. Will be evolved and documented more in depth"""
+"""Glorious DAG Folding Noise Amplification (Temporary)"""
 import copy
 
 from qiskit.circuit.library import Barrier
