@@ -13,24 +13,26 @@
 """Glorious DAG Folding Noise Amplification (Temporary)"""
 import copy
 
+from qiskit.circuit.library import Barrier
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit
 
 
-def _inverse_dag(dag_to_inverse: DAGCircuit) -> DAGCircuit:
+def _invert_dag(dag_to_inverse: DAGCircuit) -> DAGCircuit:
     """Inverts dag circuit"""
-    dag_to_inverse = dag_to_circuit(dag_to_inverse)
-    dag_to_inverse.barrier()
-    dag_to_inverse = dag_to_inverse.inverse()
-    dag_to_inverse.barrier()
+    dag_to_inverse = dag_to_circuit(dag_to_inverse).inverse()
     return circuit_to_dag(dag_to_inverse)
 
 
 def apply_folding(original_dag: DAGCircuit, num_foldings: int) -> DAGCircuit:
     """Build dag circuit by composing copies of an input dag circuit."""
+    barrier = Barrier(original_dag.num_qubits())
+    inverse_dag = _invert_dag(original_dag)
     noisy_dag = copy.deepcopy(original_dag)
-    inverse_dag = _inverse_dag(original_dag)
     for _ in range(num_foldings):
+        noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
         noisy_dag.compose(inverse_dag, inplace=True)
+        noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
         noisy_dag.compose(original_dag, inplace=True)
+    # noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
     return noisy_dag
