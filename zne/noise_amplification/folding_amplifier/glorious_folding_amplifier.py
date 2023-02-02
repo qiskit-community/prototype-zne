@@ -61,12 +61,12 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         except (ValueError, TypeError):
             print(
                 f"{self.name} expects a positive floating value"
-                f"Received {type(noise_factor)} instead."
+                f"Received value of {type(noise_factor)} instead."
             )
         if noise_factor < 1:
             raise ValueError(
                 f"{self.name} expects a positive float noise_factor >= 1."
-                f"Received value of {noise_factor} instead."
+                f"Received {noise_factor} instead."
             )
         if noise_factor % 2 == 0:
             raise ValueError(
