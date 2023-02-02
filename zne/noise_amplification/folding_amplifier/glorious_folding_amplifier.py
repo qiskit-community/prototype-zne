@@ -45,7 +45,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             noisy_dag.compose(inverse_dag, inplace=True)
             noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
             noisy_dag.compose(dag, inplace=True)
-        # noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
+        # TODO: noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
         return noisy_dag
 
     def _invert_dag(self, dag_to_inverse: DAGCircuit) -> DAGCircuit:
