@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2022-2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -67,5 +67,5 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             )
 
     def _compute_folding_nums(self, noise_factor: float) -> int:
-        """Compute num foldings"""
+        """Compute num foldings."""
         return int((noise_factor - 1) / 2)
