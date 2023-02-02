@@ -13,6 +13,7 @@
 """Glorious DAG Folding Noise Amplification (Temporary)"""
 
 import copy
+from typing import Any
 
 from qiskit.circuit.library import Barrier
 from qiskit.converters import circuit_to_dag, dag_to_circuit
@@ -26,8 +27,8 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
     by the ``noise_factor``.
     """
 
-    def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
-        self._validate_noise_factor(noise_factor)
+    def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: Any) -> DAGCircuit:
+        noise_factor = self._validate_noise_factor(noise_factor)
         num_full_foldings = self._compute_folding_nums(noise_factor)
         return self._apply_full_folding(dag, num_full_foldings)
 
@@ -53,18 +54,26 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         dag_to_inverse = dag_to_circuit(dag_to_inverse).inverse()
         return circuit_to_dag(dag_to_inverse)
 
-    def _validate_noise_factor(self, noise_factor: float) -> None:
-        """Validates noise factor."""
+    def _validate_noise_factor(self, noise_factor: Any) -> float:
+        """Normalizes and validates noise factor."""
+        try:
+            noise_factor = float(noise_factor)
+        except (ValueError, TypeError):
+            print(
+                f"{self.name} expects a positive floating value"
+                f"Received {type(noise_factor)} instead."
+            )
         if noise_factor < 1:
             raise ValueError(
                 f"{self.name} expects a positive float noise_factor >= 1."
-                f"Received {noise_factor} instead."
+                f"Received value of {noise_factor} instead."
             )
         if noise_factor % 2 == 0:
             raise ValueError(
                 f"{self.name} expects a positive odd noise_factor. "
                 f"Received {noise_factor} instead."
             )
+        return noise_factor
 
     def _compute_folding_nums(self, noise_factor: float) -> int:
         """Compute num foldings."""
