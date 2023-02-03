@@ -16,7 +16,6 @@ import copy
 from typing import Any
 
 from qiskit.circuit.library import Barrier
-from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit
 
 from ..noise_amplifier import DAGNoiseAmplifier
@@ -51,8 +50,12 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
 
     def _invert_dag(self, dag_to_inverse: DAGCircuit) -> DAGCircuit:
         """Inverts a dag circuit on a copy of the original dag"""
-        dag_to_inverse = dag_to_circuit(dag_to_inverse).inverse()
-        return circuit_to_dag(dag_to_inverse)
+        inverted_dag = dag_to_inverse.copy_empty_like()
+        for node in dag_to_inverse.topological_op_nodes():
+            inverted_dag.apply_operation_front(
+                node.op.inverse(), qargs=node.qargs, cargs=node.cargs
+            )
+        return inverted_dag
 
     def _validate_noise_factor(self, noise_factor: Any) -> float:
         """Normalizes and validates noise factor."""
