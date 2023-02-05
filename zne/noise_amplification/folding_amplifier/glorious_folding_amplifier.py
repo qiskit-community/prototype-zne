@@ -13,7 +13,6 @@
 """Glorious DAG Folding Noise Amplification (Temporary)"""
 
 import copy
-from typing import Any
 
 from qiskit.circuit.library import Barrier
 from qiskit.dagcircuit import DAGCircuit
@@ -31,9 +30,8 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             `<https://ieeexplore.ieee.org/document/9259940>`
     """
 
-    def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: Any) -> DAGCircuit:
+    def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
         """Applies global folding to input DAGCircuit and returns amplified circuit"""
-        noise_factor = self._validate_noise_factor(noise_factor)
         num_full_foldings = self._compute_folding_nums(noise_factor)
         return self._apply_full_folding(dag, num_full_foldings)
 
@@ -78,7 +76,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             )
         return inverted_dag
 
-    def _validate_noise_factor(self, noise_factor: Any) -> float:
+    def _validate_noise_factor(self, noise_factor: float) -> float:
         """Normalizes and validates noise factor.
         Args:
             noise_factor (float) : The original noisefactor input.
@@ -91,19 +89,19 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         """
         try:
             noise_factor = float(noise_factor)
-        except (ValueError, TypeError):
-            print(
-                f"{self.name} expects a positive floating value"
-                f"Received value of {type(noise_factor)} instead."
-            )
+        except ValueError as exc:
+            raise ValueError(
+                f"`noise_factor` is expected to be a positive floating value. "
+                f"Received value of {noise_factor} instead."
+            ) from exc
         if noise_factor < 1:
             raise ValueError(
-                f"{self.name} expects a positive float noise_factor >= 1."
+                f"`noise_factor` is expected to be a positive float noise_factor >= 1."
                 f"Received {noise_factor} instead."
             )
         if noise_factor % 2 == 0:
             raise ValueError(
-                f"{self.name} expects a positive odd noise_factor. "
+                f"`noise_factor` is expected to be a positive odd noise_factor. "
                 f"Received {noise_factor} instead."
             )
         return noise_factor
@@ -116,4 +114,5 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         Returns:
             int: Number of foldings calculated from noise_factor
         """
+        noise_factor = self._validate_noise_factor(noise_factor)
         return int((noise_factor - 1) / 2)
