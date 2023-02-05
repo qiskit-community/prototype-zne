@@ -78,6 +78,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
 
     def _validate_noise_factor(self, noise_factor: float) -> float:
         """Normalizes and validates noise factor.
+
         Args:
             noise_factor (float) : The original noisefactor input.
 
@@ -108,6 +109,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
 
     def _compute_folding_nums(self, noise_factor: float) -> int:
         """Compute num foldings.
+
         Args:
             noise_factor (float) : The original noise_factor input.
 
