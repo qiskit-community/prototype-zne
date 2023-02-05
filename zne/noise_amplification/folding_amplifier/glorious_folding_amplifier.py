@@ -61,7 +61,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         return noisy_dag
 
     def _invert_dag(self, dag_to_inverse: DAGCircuit) -> DAGCircuit:
-        """Inverts a dag circuit on a copy of the original dag
+        """Inverts an input dag circuit.
 
         Args:
             dag_to_inverse (DAGCircuit) : The original dag circuit to invert.
@@ -82,10 +82,10 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             noise_factor (float) : The original noisefactor input.
 
         Returns:
-            float: Normalised noisefactor input
+            float: Normalised noisefactor input.
 
         Raises:
-            ValueError: If input noise_factor value is not of type float
+            ValueError: If input noise_factor value is not of type float.
         """
         try:
             noise_factor = float(noise_factor)
@@ -112,7 +112,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             noise_factor (float) : The original noise_factor input.
 
         Returns:
-            int: Number of foldings calculated from noise_factor
+            int: Number of foldings calculated from noise_factor.
         """
         noise_factor = self._validate_noise_factor(noise_factor)
         return int((noise_factor - 1) / 2)
