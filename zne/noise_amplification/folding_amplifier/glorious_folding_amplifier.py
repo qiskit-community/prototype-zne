@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=raise-missing-from
+
 """Glorious DAG Folding Noise Amplification (Temporary)"""
 
 import copy
@@ -87,22 +89,28 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
 
         Raises:
             ValueError: If input noise_factor value is not of type float.
+            TypeError: If input noise_factor value is not of type float.
         """
         try:
             noise_factor = float(noise_factor)
-        except ValueError as exc:
+        except ValueError:
             raise ValueError(
-                f"`noise_factor` is expected to be a positive floating value. "
+                f"`_compute_num_foldings` expects a positive floating value. "
                 f"Received value of {noise_factor} instead."
-            ) from exc
+            )
+        except TypeError:
+            raise TypeError(
+                f"`_compute_num_foldings` expects a positive floating value. "
+                f"Received value of {noise_factor} instead."
+            )
         if noise_factor < 1:
             raise ValueError(
-                f"`noise_factor` is expected to be a positive float noise_factor >= 1."
+                f"`_compute_num_foldings` expects a positive float noise_factor >= 1."
                 f"Received {noise_factor} instead."
             )
         if noise_factor % 2 == 0:
             raise ValueError(
-                f"`noise_factor` is expected to be a positive odd noise_factor. "
+                f"`_compute_num_foldings` expects a positive odd noise_factor. "
                 f"Received {noise_factor} instead."
             )
         return noise_factor
