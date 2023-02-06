@@ -12,7 +12,7 @@
 
 """ZNE meta programming capabilities.
 
-Enables injecting error mitigation functionility to classes implementing the
+Enables injecting error mitigation functionality to classes implementing the
 :class:`qiskit.primitives.BaseEstimator` interface.
 """
 
@@ -26,7 +26,7 @@ from zne.meta.run import zne_run
 from zne.zne_strategy import ZNEStrategy
 
 
-def zne(cls: BaseEstimator) -> BaseEstimator:  # TODO: integration tests
+def zne(cls: type) -> type:  # TODO: integration tests
     """Add ZNE functionality to input class.
 
     Args:
@@ -37,15 +37,17 @@ def zne(cls: BaseEstimator) -> BaseEstimator:  # TODO: integration tests
     """
     if not isinstance(cls, type) or not issubclass(cls, BaseEstimator):
         raise TypeError("Invalid class, does not implement the BaseEstimator interface.")
-    clz: BaseEstimator = type(f"ZNE{cls.__name__}", (cls,), {})
-    clz.__init__ = zne_init(clz.__init__)  # TODO: update docstring
-    clz.__call__ = zne_call(clz.__call__)  # TODO: deprecate
-    clz._run = zne_run(clz._run)  # pylint: disable=protected-access
-    clz.zne_strategy = property(_get_zne_strategy, _set_zne_strategy)
-    return clz
+    namespace = {
+        "__init__": zne_init(cls.__init__),  # type: ignore  # TODO: update docstring
+        "__call__": zne_call(cls.__call__),  # TODO: deprecate
+        "_run": zne_run(cls._run),  # type: ignore  # pylint: disable=protected-access
+        "zne_strategy": property(_get_zne_strategy, _set_zne_strategy),
+    }
+    return type(f"ZNE{cls.__name__}", (cls,), namespace)
 
 
 def _get_zne_strategy(self) -> ZNEStrategy:
+    """ZNE strategy for error mitigation."""
     try:
         return self._zne_strategy  # pylint: disable=protected-access
     except AttributeError:
