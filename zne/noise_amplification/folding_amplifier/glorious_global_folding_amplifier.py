@@ -10,9 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=raise-missing-from
 
-"""Glorious DAG Folding Noise Amplification (Temporary)"""
+"""Glorious Global DAG Folding Noise Amplification (Temporary)"""
 
 import copy
 
@@ -34,7 +33,7 @@ class GloriousGlobalFoldingAmplifier(DAGNoiseAmplifier):
 
     def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
         """Applies global folding to input DAGCircuit and returns amplified circuit"""
-        num_full_foldings = self._compute_folding_nums(noise_factor)
+        num_full_foldings = self._compute_num_foldings(noise_factor)
         return self._apply_full_folding(dag, num_full_foldings)
 
     def _apply_full_folding(
@@ -85,7 +84,7 @@ class GloriousGlobalFoldingAmplifier(DAGNoiseAmplifier):
             noise_factor (float) : The original noisefactor input.
 
         Returns:
-            float: Normalised noisefactor input.
+            float: Normalised noise_factor input.
 
         Raises:
             ValueError: If input noise_factor value is not of type float.
@@ -94,29 +93,29 @@ class GloriousGlobalFoldingAmplifier(DAGNoiseAmplifier):
         try:
             noise_factor = float(noise_factor)
         except ValueError:
-            raise ValueError(
-                f"`_compute_num_foldings` expects a positive floating value. "
+            raise ValueError(  # pylint: disable=raise-missing-from
+                f"Function call expects a positive floating value. "
                 f"Received value of {noise_factor} instead."
             )
         except TypeError:
-            raise TypeError(
-                f"`_compute_num_foldings` expects a positive floating value. "
+            raise TypeError(  # pylint: disable=raise-missing-from
+                f"Function call expects a positive floating value. "
                 f"Received value of {noise_factor} instead."
             )
         if noise_factor < 1:
             raise ValueError(
-                f"`_compute_num_foldings` expects a positive float noise_factor >= 1."
+                f"Function call expects a positive float noise_factor >= 1."
                 f"Received {noise_factor} instead."
             )
         if noise_factor % 2 == 0:
             raise ValueError(
-                f"`_compute_num_foldings` expects a positive odd noise_factor. "
+                f"Function call expects a positive odd noise_factor. "
                 f"Received {noise_factor} instead."
             )
         return noise_factor
 
-    def _compute_folding_nums(self, noise_factor: float) -> int:
-        """Compute num foldings.
+    def _compute_num_foldings(self, noise_factor: float) -> int:
+        """Compute number of foldings.
 
         Args:
             noise_factor (float) : The original noise_factor input.
