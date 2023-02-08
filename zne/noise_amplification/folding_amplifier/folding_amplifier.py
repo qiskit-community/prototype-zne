@@ -17,7 +17,6 @@ from __future__ import annotations
 from warnings import warn
 
 from numpy.random import Generator, default_rng
-from qiskit.circuit import QuantumCircuit
 
 from ...utils.typing import isreal
 from ..noise_amplifier import CircuitNoiseAmplifier
@@ -153,13 +152,3 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
             )
         num_full_foldings, num_sub_foldings = divmod(num_foldings, num_instructions)
         return num_full_foldings, num_sub_foldings
-
-    # TODO: `QuantumCircuit.insert_barriers_everywhere()`
-    @staticmethod
-    def _insert_barriers(circuit: QuantumCircuit) -> QuantumCircuit:
-        """Insert barriers between every instruction to avoid simplification."""
-        barrier_circuit = circuit.copy_empty_like()  # TODO: avoid copying
-        for instrunction, qargs, cargs in circuit:
-            barrier_circuit.append(instrunction, qargs, cargs)
-            barrier_circuit.barrier(qargs)
-        return barrier_circuit

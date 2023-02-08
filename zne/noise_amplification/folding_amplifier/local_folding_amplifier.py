@@ -153,7 +153,7 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         noisy_circuit = circuit.copy_empty_like()
         for operation, num_foldings in zip(circuit, foldings):
             noisy_circuit = self._append_folded(noisy_circuit, operation, num_foldings)
-        return self._insert_barriers(noisy_circuit)
+        return noisy_circuit
 
     def _build_foldings_per_gate(self, circuit: QuantumCircuit, noise_factor: float) -> list[int]:
         """Returns number of foldings for each gate in the circuit.
@@ -237,16 +237,19 @@ class LocalFoldingAmplifier(FoldingAmplifier):
             noise_factor: The corresponding noise factor.
 
         Returns:
-            The updated noisy cirucit.
+            The updated noisy circuit.
         """
         # TODO: Create FoldableCircuit class extending QuantumCircuit
         # TODO: CircuitInstruction.inverse()
         self._validate_num_foldings(num_foldings)
         instruction, qargs, cargs = operation
+        noisy_circuit.barrier(qargs)
         noisy_circuit.append(instruction, qargs, cargs)
         if num_foldings > 0:
+            noisy_circuit.barrier(qargs)
             noisy_circuit.append(instruction.inverse(), qargs, cargs)
-            noisy_circuit = self._append_folded(noisy_circuit, operation, num_foldings - 1)
+            return self._append_folded(noisy_circuit, operation, num_foldings - 1)
+        noisy_circuit.barrier(qargs)
         return noisy_circuit
 
     @staticmethod

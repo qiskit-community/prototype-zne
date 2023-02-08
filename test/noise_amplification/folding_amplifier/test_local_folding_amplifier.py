@@ -343,20 +343,22 @@ class TestBuildSubFoldings:
     ),
     ids=[f"Instruction<{s}>-{nf}" for s, nf in cases],
 )
-def test_append_folded(
-    noise_amplifier, patch_amplifier_with_mock, circuit, get_random_circuit, seed, num_foldings
-):
-    original_operation = get_random_circuit(seed).data[0]
-    noisy_circuit = noise_amplifier._append_folded(circuit.copy(), original_operation, num_foldings)
+def test_append_folded(noise_amplifier, circuit, get_random_circuit, seed, num_foldings):
+    operation = get_random_circuit(seed).data[0]
+    noisy_circuit = noise_amplifier._append_folded(circuit.copy(), operation, num_foldings)
     assert noisy_circuit.data[: len(circuit)] == circuit.data
     operation_gen = (operation for operation in noisy_circuit[len(circuit) :])
-    original_instruction, original_qargs, _ = original_operation
+    instruction, qargs, cargs = operation
+    barrier = CircuitInstruction(Barrier(len(qargs)), qargs, [])
+    inverse = CircuitInstruction(instruction.inverse(), qargs, cargs)
     for _ in range(num_foldings):
-        assert next(operation_gen) == original_operation
-        next_instruction, next_qargs, _ = next(operation_gen)
-        assert next_instruction == original_instruction.inverse()
-        assert next_qargs == original_qargs
-    assert next(operation_gen) == original_operation
+        assert next(operation_gen) == barrier
+        assert next(operation_gen) == operation
+        assert next(operation_gen) == barrier
+        assert next(operation_gen) == inverse
+    assert next(operation_gen) == barrier
+    assert next(operation_gen) == operation
+    assert next(operation_gen) == barrier
 
 
 @mark.parametrize("num_foldings", [0.0, 0.5, 1.0, -1.0])
@@ -396,8 +398,10 @@ class TestParametrizedCircuits:
         original_instruction, _, _ = example_operation
         for i in range(noise_factor):
             if i % 2 == 0:
+                next(instruction_gen)
                 assert next(instruction_gen).params == original_instruction.params
             else:
+                next(instruction_gen)
                 assert next(instruction_gen).params == original_instruction.inverse().params
 
 
