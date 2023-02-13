@@ -47,7 +47,7 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
         noisy_circuit = circuit.copy_empty_like()
         noisy_circuit = self._apply_full_folding(noisy_circuit, circuit, num_full_foldings)
         noisy_circuit = self._apply_sub_folding(noisy_circuit, circuit, num_sub_foldings)
-        return self._insert_barriers(noisy_circuit)
+        return noisy_circuit
 
     def _apply_full_folding(
         self, noisy_circuit: QuantumCircuit, original_circuit: QuantumCircuit, num_foldings: int
@@ -68,6 +68,7 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
                 noisy_circuit.compose(original_circuit, inplace=True)
             else:
                 noisy_circuit.compose(original_circuit.inverse(), inplace=True)
+            noisy_circuit.barrier()
         return noisy_circuit
 
     def _apply_sub_folding(
@@ -102,10 +103,13 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
         """
         sub_circuit = circuit.copy_empty_like()
         if self._sub_folding_option == "from_first":
-            sub_circuit.data = circuit.data[:size]
+            sub_data = circuit.data[:size]
         elif self._sub_folding_option == "from_last":
-            sub_circuit.data = circuit.data[-size:]
+            sub_data = circuit.data[-size:]
         else:
             instruction_idxs = sorted(self._rng.choice(len(circuit), size=size, replace=False))
-            sub_circuit.data = [circuit.data[i] for i in instruction_idxs]
+            sub_data = [circuit.data[i] for i in instruction_idxs]
+        for instruction, qargs, cargs in sub_data:
+            # sub_circuit.barrier(qargs)  # Note: sub-folded gates may simplify
+            sub_circuit.append(instruction, qargs, cargs)
         return sub_circuit

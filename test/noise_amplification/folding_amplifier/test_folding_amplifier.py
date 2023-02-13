@@ -15,7 +15,6 @@ from unittest.mock import Mock, patch
 
 from numpy.random import Generator, default_rng
 from pytest import fixture, mark, raises, warns
-from qiskit.circuit.random import random_circuit
 
 from zne.noise_amplification.folding_amplifier.global_folding_amplifier import (
     GlobalFoldingAmplifier,
@@ -221,14 +220,3 @@ class TestFoldingAmplifier:
     def test_compute_folding_no_foldings(self, NoiseAmplifier):
         with warns(UserWarning):
             assert NoiseAmplifier()._compute_folding_nums(3, 0) == (0, 0)
-
-    @mark.parametrize("seed", range(5))
-    def test_insert_barriers(self, NoiseAmplifier, seed):
-        circuit = random_circuit(2, 2, seed=seed).decompose(reps=1)
-        barrier_circuit = NoiseAmplifier._insert_barriers(circuit)
-        operations = iter(barrier_circuit)
-        for instruction, qargs, cargs in circuit:
-            assert (instruction, qargs, cargs) == next(operations)
-            barrier, barrier_qargs, _ = next(operations)
-            assert barrier.name == "barrier"
-            assert barrier_qargs == qargs

@@ -201,6 +201,14 @@ Currently, noise amplification is performed before [transpilation](https://qiski
 
 In a future release, noise amplification will be performed after transpilation by default, such that all base instructions in the circuit are folded by the correct amount whenever the noise factor is not an odd integer. However, there might be use cases where noise amplification before transpilation is preferred. For example, one might want to locally fold a user-defined instruction that consists of several basis gates (e.g. a Pauli twirling sequence). In these cases, one should specify that noise amplification needs to be performed before transpilation.
 
+When randomly sub-folding (i.e. partial-folding) gates in global folding, these gates may simplify more than what we aimed at with the selected noise factor, leading to inaccuracies in the noise amplification process. Similarly, they may simplify less, meaning that the original and inverse circuits simplify more than the partial folding, hence leading to an over-representation of the noise.
+
+There are three solutions for this:
+
+1. Inserting gates everywhere to avoid any simplification whatsoever. This is avoided as it would prevent gate simplification altogether, raising the baseline noise, reaching noise saturation earlier, and decreasing the effectiveness of the entire mitigation process.
+2. Making a randomness assumption and stating that, _on average_, the simplification on the partial and full foldings will be roughly the same quantitatively.
+3. Performing noise amplification after the simplification (i.e. optimization) process in the transpilation pipeline.
+
 ### Non-exact noise factors
 Certain noise amplifiers cannot reach the exact noise factors requested by the user, and will approximate them the best they can. If this approximation is not good enough (according to a tunable tolerance), a warning will be raised. Extrapolation though, will be performed based on the requested noise factors, instead of the approximated ones, which might result in inaccuracies. As of the current implementation, there is no way to retrieve the actual noise factors.
 

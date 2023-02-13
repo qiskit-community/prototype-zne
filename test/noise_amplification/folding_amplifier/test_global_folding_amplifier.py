@@ -14,8 +14,8 @@ from itertools import product
 from unittest.mock import Mock, patch
 
 from numpy.random import default_rng
-from pytest import approx, fixture, mark
-from qiskit.circuit import ParameterVector, QuantumCircuit
+from pytest import approx, fixture, mark, raises
+from qiskit.circuit import Barrier, CircuitInstruction, ParameterVector, QuantumCircuit
 from qiskit.circuit.random import random_circuit
 from qiskit.quantum_info.operators import Operator
 from qiskit.transpiler.passes import RemoveBarriers
@@ -119,6 +119,10 @@ def test_apply_full_folding(noise_amplifier, get_random_circuit, circuit_seed, n
             for original_operation in circuit.inverse():
                 assert next(noisy_operation) == original_operation
                 num_gates += 1
+        instruction, qargs, cargs = next(noisy_operation)
+        assert instruction == Barrier(circuit.num_qubits)
+        assert qargs == noisy_circuit.qubits
+        assert cargs == []
     assert 2 * num_foldings + 1 == num_gates / len(circuit)
 
 
@@ -189,17 +193,62 @@ def test_apply_sub_folding(
 class TestGetSubFolding:
     def test_sub_folding_from_last(self, get_sub_circuit, circuit, num_foldings):
         sub_circuit = get_sub_circuit(circuit, "from_last", num_foldings)
-        assert sub_circuit.data == circuit.data[-num_foldings:]
+        sub_data = (operation for operation in sub_circuit)
+        original_data = (operation for operation in circuit[-num_foldings:])
+        for _ in range(num_foldings):
+            o_instruction, o_qargs, o_cargs = next(original_data)
+            # instruction, qargs, cargs = next(sub_data)
+            # assert instruction == Barrier(len(o_qargs))
+            # assert qargs == o_qargs
+            # assert cargs == []
+            instruction, qargs, cargs = next(sub_data)
+            assert instruction == o_instruction
+            assert qargs == o_qargs
+            assert cargs == o_cargs
+        with raises(StopIteration):
+            next(original_data)
+        with raises(StopIteration):
+            next(sub_data)
 
     def test_sub_folding_from_first(self, get_sub_circuit, circuit, num_foldings):
         sub_circuit = get_sub_circuit(circuit, "from_first", num_foldings)
-        assert sub_circuit.data == circuit.data[:num_foldings]
+        sub_data = (operation for operation in sub_circuit)
+        original_data = (operation for operation in circuit[:num_foldings])
+        for _ in range(num_foldings):
+            o_instruction, o_qargs, o_cargs = next(original_data)
+            # instruction, qargs, cargs = next(sub_data)
+            # assert instruction == Barrier(len(o_qargs))
+            # assert qargs == o_qargs
+            # assert cargs == []
+            instruction, qargs, cargs = next(sub_data)
+            assert instruction == o_instruction
+            assert qargs == o_qargs
+            assert cargs == o_cargs
+        with raises(StopIteration):
+            next(original_data)
+        with raises(StopIteration):
+            next(sub_data)
 
     @mark.parametrize("seed", cases := [1, 5, 66], ids=[f"{s}" for s in cases])
     def test_get_sub_folding_random(self, get_sub_circuit, circuit, num_foldings, seed):
         sub_circuit = get_sub_circuit(circuit, "random", num_foldings, random_seed=seed)
+        sub_data = (operation for operation in sub_circuit)
         idxs = sorted(default_rng(seed).choice(len(circuit), size=num_foldings, replace=False))
-        assert sub_circuit.data == [circuit.data[i] for i in idxs]
+        original_data = (circuit.data[i] for i in idxs)
+        for _ in range(num_foldings):
+            o_instruction, o_qargs, o_cargs = next(original_data)
+            # instruction, qargs, cargs = next(sub_data)
+            # assert instruction == Barrier(len(o_qargs))
+            # assert qargs == o_qargs
+            # assert cargs == []
+            instruction, qargs, cargs = next(sub_data)
+            assert instruction == o_instruction
+            assert qargs == o_qargs
+            assert cargs == o_cargs
+        with raises(StopIteration):
+            next(original_data)
+        with raises(StopIteration):
+            next(sub_data)
 
 
 class TestParametrizedCircuits:
@@ -247,10 +296,12 @@ class TestParametrizedCircuits:
 
     def test_apply_full_folding_circuit_parameters(self, parametrized_circuit, noisy_circuit):
         noisy_operation = (operation for operation in noisy_circuit)
+        barrier = CircuitInstruction(Barrier(noisy_circuit.num_qubits), noisy_circuit.qubits, [])
         for circuit in [parametrized_circuit, parametrized_circuit.inverse(), parametrized_circuit]:
             for original_instruction, _, _ in circuit:
                 instruction, _, _ = next(noisy_operation)
                 assert instruction.params == original_instruction.params
+            assert next(noisy_operation) == barrier
 
 
 ################################################################################
