@@ -18,10 +18,10 @@ import copy
 from qiskit.circuit.library import Barrier
 from qiskit.dagcircuit import DAGCircuit
 
-from ..noise_amplifier import DAGNoiseAmplifier
+from .glorious_folding_amplifier import GloriousFoldingAmplifier
 
 
-class GloriousGlobalFoldingAmplifier(DAGNoiseAmplifier):
+class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
     """Alternatingly composes the circuit and its inverse as many times as indicated
     by the ``noise_factor``.
 
@@ -76,52 +76,3 @@ class GloriousGlobalFoldingAmplifier(DAGNoiseAmplifier):
                 node.op.inverse(), qargs=node.qargs, cargs=node.cargs
             )
         return inverted_dag
-
-    def _validate_noise_factor(self, noise_factor: float) -> float:
-        """Normalizes and validates noise factor.
-
-        Args:
-            noise_factor (float) : The original noisefactor input.
-
-        Returns:
-            float: Normalised noise_factor input.
-
-        Raises:
-            ValueError: If input noise_factor value is not of type float.
-            TypeError: If input noise_factor value is not of type float.
-        """
-        try:
-            noise_factor = float(noise_factor)
-        except ValueError:
-            raise ValueError(  # pylint: disable=raise-missing-from
-                f"Function call expects a positive floating value. "
-                f"Received value of {noise_factor} instead."
-            )
-        except TypeError:
-            raise TypeError(  # pylint: disable=raise-missing-from
-                f"Function call expects a positive floating value. "
-                f"Received value of {noise_factor} instead."
-            )
-        if noise_factor < 1:
-            raise ValueError(
-                f"Function call expects a positive float noise_factor >= 1."
-                f"Received {noise_factor} instead."
-            )
-        if noise_factor % 2 == 0:
-            raise ValueError(
-                f"Function call expects a positive odd noise_factor. "
-                f"Received {noise_factor} instead."
-            )
-        return noise_factor
-
-    def _compute_num_foldings(self, noise_factor: float) -> int:
-        """Compute number of foldings.
-
-        Args:
-            noise_factor (float) : The original noise_factor input.
-
-        Returns:
-            int: Number of foldings calculated from noise_factor.
-        """
-        noise_factor = self._validate_noise_factor(noise_factor)
-        return int((noise_factor - 1) / 2)
