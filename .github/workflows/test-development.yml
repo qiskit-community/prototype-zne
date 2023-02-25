@@ -10,7 +10,7 @@ on:
       - main
       - 'stable/**'
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   dev-tests:
@@ -23,7 +23,7 @@ jobs:
         os: [ubuntu-latest]
         python-version: ['3.11']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:

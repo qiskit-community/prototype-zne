@@ -21,7 +21,7 @@ jobs:
         os: [ubuntu-latest]
         python-version: ['3.11']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -33,8 +33,10 @@ jobs:
       - name: Run coverage
         run: tox -e coverage
       - name: Convert to lcov
+        if: always()
         run: coveragepy-lcov --output_file_path coveralls.info
       - name: Upload report to Coveralls
+        if: success()
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

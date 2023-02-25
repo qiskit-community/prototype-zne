@@ -1,0 +1,74 @@
+name: 🚀 Feature request
+description: Suggest an idea for this project
+labels: [feature, triage]
+assignees:
+  - ""
+
+body:
+
+################################################################################
+## REPORT
+################################################################################
+  - type: markdown
+    attributes:
+      value: |
+        ### Feature request
+  
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What is the current behavior?
+      description: A clear and concise description of what the current status is. If applicable, add screenshots to help explain your point.
+      placeholder: Current behavior
+    validations:
+      required: true
+  
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What is the expected enhancement?
+      description: A clear and concise description of what you expect.
+      placeholder: Expected behavior
+    validations:
+      required: true
+  
+
+################################################################################
+## OPTIONAL
+################################################################################
+  - type: markdown
+    attributes:
+      value: |
+        ### Additional feedback
+  
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: |
+        Add any other context about the problem here if any.      
+      placeholder: Context
+    validations:
+      required: false
+  
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions
+      description: Not required, but if you have suggestions for how a contributor should address this, or any problems we should be aware of, let us know.      
+      placeholder: Suggestions
+    validations:
+      required: false
+
+
+################################################################################
+## AGREEMENT
+################################################################################
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct.
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

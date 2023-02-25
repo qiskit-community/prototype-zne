@@ -15,11 +15,11 @@ maintainers = [
     {name = "Pedro Rivero", email = "pedro.rivero@ibm.com"},
 ]
 keywords = [
-    "quantum computing",
     "error mitigation",
     "zero noise extrapolation",
+    "quantum computing",
+    "quantum information science",
     "qiskit",
-    "IBM",
 ]
 readme = "README.md"
 license = {file = "LICENSE.txt"}
@@ -47,7 +47,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "tox >= 3.25.1",
+    "tox >= 4.4.6",
     "pre-commit >= 2.19.0",
     "commitizen >= 2.28.0",
 ]
@@ -55,6 +55,7 @@ test = [
     "pytest >= 7.1.2",
     "pytest-cov >= 3.0.0",
     "pytest-randomly >= 3.12.0",
+    "qiskit-aer >= 0.11.0",
 ]
 lint = [
     "autoflake >= 1.7.6",

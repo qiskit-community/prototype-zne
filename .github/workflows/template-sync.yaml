@@ -1,0 +1,24 @@
+name: Template sync
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+
+jobs:
+  template-sync:
+    name: Sync repo template
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Sync template
+        uses: AndreasAugustin/actions-template-sync@v0.7.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_repo_path: pedrorrivero/pyproject-qiskit
+          upstream_branch: main
+          pr_title: "chore(template): merge template changes"
+          pr_labels: template
+          pr_commit_msg: "chore(template): merge template changes"

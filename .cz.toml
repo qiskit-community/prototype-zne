@@ -6,7 +6,8 @@ version = "1.0.0"
 version_files = [
     ".cz.toml:version",
     "zne/__init__.py:__version__",
-    "test/__init__.py:__version__"
+    "test/__init__.py:__version__",
+    "CITATION.bib:version"
 ]
 update_changelog_on_bump = true
 annotated_tag = true

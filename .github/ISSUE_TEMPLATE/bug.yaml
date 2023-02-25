@@ -1,0 +1,126 @@
+name: 🐛 Bug report
+description: Report defects to make amends
+labels: [bug, triage]
+assignees:
+  - ""
+
+body:
+
+################################################################################
+## SYSTEM INFO
+################################################################################
+  - type: markdown
+    attributes:
+      value: |
+        ### System information
+        Please, provide some information about your system for debugging purposes.
+  
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: e.g. MacBook Pro (16-inch, 2019)
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: e.g. macOS Monterey version 12.3.1
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: e.g. 3.11.0
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Release version or branch/commit
+      placeholder: e.g. 0.0.0 -OR- main/0f3f39f
+    validations:
+      required: true
+
+
+################################################################################
+## REPORT
+################################################################################
+  - type: markdown
+    attributes:
+      value: |
+        ### Bug report
+  
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What is the current behavior?
+      description: A clear and concise description of what the current behavior is. If applicable, add screenshots to help explain your problem.
+      placeholder: Current behavior
+    validations:
+      required: true
+  
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What is the expected behavior?
+      description: A clear and concise description of what you expected to happen.
+      placeholder: Expected behavior
+    validations:
+      required: true
+  
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce the problem
+      description: Steps to reproduce the bug. A minimal, working, code example with output is best. If you are copying in code, please remember to enclose it in triple backticks so that it displays correctly.
+      placeholder: |
+        ```python
+        from qiskit import QuantumCircuit
+        circuit = QuantumCircuit(4)
+        ```
+    validations:
+      required: true
+  
+
+################################################################################
+## OPTIONAL
+################################################################################
+  - type: markdown
+    attributes:
+      value: |
+        ### Additional feedback
+  
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: |
+        Add any other context about the problem here if any.      
+      placeholder: Context
+    validations:
+      required: false
+  
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions
+      description: Not required, but if you have suggestions for how a contributor should fix this, or any problems we should be aware of, let us know.      
+      placeholder: Suggestions
+    validations:
+      required: false
+
+
+################################################################################
+## AGREEMENT
+################################################################################
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct.
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

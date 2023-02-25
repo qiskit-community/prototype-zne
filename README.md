@@ -8,6 +8,7 @@
   [![Tests](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml/badge.svg)](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml)
   [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
   [![Release](https://img.shields.io/github/release/qiskit-community/prototype-zne.svg?include_prereleases&label=Release)](https://github.com/qiskit-community/prototype-zne/releases)
+  [![DOI](https://img.shields.io/badge/DOI-zz.nnnn/zenodo.ddddddd-informational)](https://zenodo.org/)
   [![License](https://img.shields.io/github/license/qiskit-community/prototype-zne?label=License)](LICENSE.txt)
 
 </div>
@@ -43,31 +44,31 @@
 7. [License](#license)
 
 #### For users
-1. [Installation](https://github.com/qiskit-community/prototype-zne/tree/main/INSTALL.md)
+1. [Installation](https://github.com/qiskit-community/prototype-zne/blob/main/INSTALL.md)
 2. [Tutorials](https://github.com/qiskit-community/prototype-zne/tree/main/docs/tutorials/)
-3. [Reference Guide](https://github.com/qiskit-community/prototype-zne/tree/main/docs/reference_guide.md)
+3. [Reference Guide](https://github.com/qiskit-community/prototype-zne/blob/main/docs/reference_guide.md)
 4. [How-tos](https://github.com/qiskit-community/prototype-zne/tree/main/docs/how_tos/)
 5. [Explanations](https://github.com/qiskit-community/prototype-zne/tree/main/docs/explanations/)
-6. [How to Give Feedback](https://github.com/qiskit-community/prototype-zne/tree/main/CONTRIBUTING.md#giving-feedback)
+6. [How to Give Feedback](https://github.com/qiskit-community/prototype-zne/blob/main/CONTRIBUTING.md#giving-feedback)
 
 #### For developers
-1. [Contribution Guidelines](https://github.com/qiskit-community/prototype-zne/tree/main/CONTRIBUTING.md)
+1. [Contribution Guidelines](https://github.com/qiskit-community/prototype-zne/blob/main/CONTRIBUTING.md)
 
 
 ----------------------------------------------------------------------
 
 ### About This Project
 
-This module builds on top of the [_Estimator_ primitive official specification](https://github.com/qiskit-community/prototype-zne/tree/main/docs/tutorials/0-estimator.ipynb), providing a highly customizable _zero noise extrapolation_ (ZNE) workflow for error mitigation on expectation value calculations. This is achieved by [injecting orchestrated ZNE capabilities](https://github.com/qiskit-community/prototype-zne/tree/main/docs/tutorials/1-zne.ipynb) into an `Estimator` class of choice in two phases:
+This module builds on top of the [_Estimator_ primitive official specification](https://github.com/qiskit-community/prototype-zne/blob/main/docs/tutorials/0-estimator.ipynb), providing a highly customizable _zero noise extrapolation_ (ZNE) workflow for error mitigation on expectation value calculations. This is achieved by [injecting orchestrated ZNE capabilities](https://github.com/qiskit-community/prototype-zne/blob/main/docs/tutorials/1-zne.ipynb) into an `Estimator` class of choice in two phases:
 
-1. [Amplifying the noise](https://github.com/qiskit-community/prototype-zne/tree/main/docs/tutorials/2-noise_amplification.ipynb) introduced by the gates of input circuits.
+1. [Amplifying the noise](https://github.com/qiskit-community/prototype-zne/blob/main/docs/tutorials/2-noise_amplification.ipynb) introduced by the gates of input circuits.
 2. Extrapolating the returned expectation values to the zero noise limit.
 
 In principle, this prototype is compatible with any `Estimator` class as long as it implements the [`qiskit.primitives.BaseEstimator` interface](https://github.com/Qiskit/qiskit-terra/tree/main/qiskit/primitives) (e.g. `qiskit.primitives.Estimator`, `qiskit.primitives.BackendEstimator`, `qiskit_ibm_runtime.Estimator`). Notice, however, that error mitigation techniques only make sense in the context of noisy computations; therefore using ZNE on noisless platforms (e.g. simulators), although technically possible, will not produce better results.
 
-Furthermore, the software architecture has been devised specifically to allow users to create their custom noise amplification and extrapolation techniques, and to plug them into the overall ZNE workflow seamlessly. Libraries of pre-implemented strategies for both of these tasks are provided in the module, and external packages can easily be made to work with this tool by providing [implementations of well defined interfaces](https://github.com/qiskit-community/prototype-zne/tree/main/docs/reference_guide.md#custom-zne-strategies) for these tasks.
+Furthermore, the software architecture has been devised specifically to allow users to create their custom noise amplification and extrapolation techniques, and to plug them into the overall ZNE workflow seamlessly. Libraries of pre-implemented strategies for both of these tasks are provided in the module, and external packages can easily be made to work with this tool by providing [implementations of well defined interfaces](https://github.com/qiskit-community/prototype-zne/blob/main/docs/reference_guide.md#custom-zne-strategies) for these tasks.
 
-Before using the module for new work, users should read through the [reference guide](https://github.com/qiskit-community/prototype-zne/tree/main/docs/reference_guide.md), specifically the [current limitations](https://github.com/qiskit-community/prototype-zne/tree/main/docs/reference_guide.md#current-limitations) of the module. Demo [tutorials](https://github.com/qiskit-community/prototype-zne/tree/main/docs/tutorials) are also available as jupyter notebooks.
+Before using the module for new work, users should read through the [reference guide](https://github.com/qiskit-community/prototype-zne/blob/main/docs/reference_guide.md), specifically the [current limitations](https://github.com/qiskit-community/prototype-zne/blob/main/docs/reference_guide.md#current-limitations) of the module. Demo [tutorials](https://github.com/qiskit-community/prototype-zne/tree/main/docs/tutorials) are also available as jupyter notebooks.
 
 
 ----------------------------------------------------------------------
@@ -83,7 +84,7 @@ Check out our [landing page](https://qiskit-community.github.io/prototypes/) and
 
 ### Deprecation Policy
 
-Prototypes are meant to evolve rapidly and, as such, do not follow [Qiskit's deprecation policy](https://qiskit.org/documentation/contributing_to_qiskit.html#deprecation-policy). We may occasionally make breaking changes in order to improve the user experience. When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the new ones. Each substantial improvement, breaking change, or deprecation will be documented in [`CHANGELOG.md`](https://github.com/qiskit-community/prototype-zne/tree/main/CHANGELOG.md).
+Prototypes are meant to evolve rapidly and, as such, do not follow [Qiskit's deprecation policy](https://qiskit.org/documentation/contributing_to_qiskit.html#deprecation-policy). We may occasionally make breaking changes in order to improve the user experience. When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the new ones. Each substantial improvement, breaking change, or deprecation will be documented in [`CHANGELOG.md`](https://github.com/qiskit-community/prototype-zne/blob/main/CHANGELOG.md).
 
 
 ----------------------------------------------------------------------
@@ -119,4 +120,4 @@ Importantly, *[Qiskit IBM Runtime](https://qiskit.org/documentation/partners/qis
 ----------------------------------------------------------------------
 
 ### License
-[Apache License 2.0](https://github.com/qiskit-community/prototype-zne/tree/main/LICENSE.txt)
+[Apache License 2.0](https://github.com/qiskit-community/prototype-zne/blob/main/LICENSE.txt)
