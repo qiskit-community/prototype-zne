@@ -61,6 +61,11 @@ Additionally, in order to ensure meeting the quality of code standards for this 
 pre-commit install -t pre-commit
 ```
 
+Alternatively, you can install both hooks with just one command:
+```
+pre-commit install
+```
+
 Notice that this tool is not a substitute of `tox`, which should still be used to run tests and ensure that lint checks pass with all relevant versions. Instead, it should be regarded simply as a convenient device for continuously performing light-weight lint checks in an incremental fashion.
 
 
