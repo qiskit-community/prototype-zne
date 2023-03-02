@@ -12,7 +12,6 @@
 
 """Noise amplification library."""
 
-from ..utils import build_dict_library
 from .folding_amplifier import (
     CxAmplifier,
     GlobalFoldingAmplifier,
@@ -21,12 +20,15 @@ from .folding_amplifier import (
 )
 from .noise_amplifier import CircuitNoiseAmplifier, DAGNoiseAmplifier, NoiseAmplifier
 
-NOISE_AMPLIFIER_LIBRARY: dict = build_dict_library(
-    GlobalFoldingAmplifier,
-    LocalFoldingAmplifier,
-    CxAmplifier,
-    TwoQubitAmplifier,
-)
+NOISE_AMPLIFIER_LIBRARY = {
+    cls.__name__: cls
+    for cls in (
+        GlobalFoldingAmplifier,
+        LocalFoldingAmplifier,
+        CxAmplifier,
+        TwoQubitAmplifier,
+    )
+}
 
 __all__ = [
     "NoiseAmplifier",
