@@ -12,10 +12,8 @@
 
 """Generic utils library."""
 
-from .dict_library import build_dict_library
 from .standard_gates import STANDARD_GATES
 
 __all__ = [
-    "build_dict_library",
     "STANDARD_GATES",
 ]
