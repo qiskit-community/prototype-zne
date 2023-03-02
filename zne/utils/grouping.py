@@ -17,8 +17,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 from typing import Any
 
-from .typing import isint
-
 
 def group_elements(elements: Sequence, group_size: int) -> list[tuple]:
     """Group elements in iterable into tuples of a given size.
@@ -45,7 +43,7 @@ def group_elements_gen(elements: Sequence, group_size: int) -> Iterator[tuple]:
     """
     if not isinstance(elements, Iterable):
         raise TypeError("Values argument must be iterable.")
-    if not isint(group_size):
+    if not isinstance(group_size, int):
         raise TypeError("Size argument must be non-zero positive int.")
     if group_size < 1:
         raise ValueError("Size argument must be non-zero positive int.")

@@ -20,7 +20,6 @@ from qiskit.circuit import CircuitInstruction, QuantumCircuit
 
 from ...utils import STANDARD_GATES
 from ...utils.docstrings import insert_into_docstring
-from ...utils.typing import isint
 from .folding_amplifier import FoldingAmplifier
 
 
@@ -113,8 +112,8 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         """
         if gates_to_fold is None:
             return gates_to_fold
-        if isint(gates_to_fold) or isinstance(gates_to_fold, str):
-            gates_to_fold_set: frozenset[int | str] = frozenset((gates_to_fold,))  # type: ignore
+        if isinstance(gates_to_fold, (int, str)):
+            gates_to_fold_set: frozenset[int | str] = frozenset((gates_to_fold,))
         elif isinstance(gates_to_fold, Iterable):
             gates_to_fold_set = frozenset(gates_to_fold)
         else:
@@ -134,12 +133,12 @@ class LocalFoldingAmplifier(FoldingAmplifier):
             TypeError: If gates_to_fold contains objects that are neither int nor str.
             ValueError: If gates_to_fold contains integers smaller than one.
         """
-        if not all(isint(g) or isinstance(g, str) for g in gates_to_fold):
+        if not all(isinstance(g, (int, str)) for g in gates_to_fold):
             raise TypeError(
                 f"Expected Iterable[str | int], received {type(gates_to_fold)} instead."
             )
         for gate in gates_to_fold:
-            if isint(gate) and gate < 1:  # type: ignore
+            if isinstance(gate, int) and gate < 1:
                 raise ValueError(f"gates_to_fold contains {gate} which is smaller than one.")
             if isinstance(gate, str) and gate not in STANDARD_GATES:
                 self.warn(f"gates_to_fold contains {gate} which is not a standard gate name.")
@@ -263,7 +262,7 @@ class LocalFoldingAmplifier(FoldingAmplifier):
             TypeError: If num_foldings is not int.
             ValueError: If num_foldings is negative.
         """
-        if not isint(num_foldings):
+        if not isinstance(num_foldings, int):
             raise TypeError(f"Expected int, received {type(num_foldings)} instead.")
         if num_foldings < 0:
             raise ValueError("Number of foldings must be greater than or equal to zero.")
