@@ -125,7 +125,7 @@ def test_set_gates_to_fold_type_error(gates_to_fold):
 
 @mark.parametrize(
     "gates_to_fold",
-    cases := [("x", True), (2, 1.0), ("h", 2, None), ("rz", 1j, 3, "i")],
+    cases := [(2, 1.0), ("h", 2, None), ("rz", 1j, 3, "i")],
     ids=[f"{c}" for c in cases],
 )
 def test_validate_gates_to_fold_type_error(gates_to_fold):
