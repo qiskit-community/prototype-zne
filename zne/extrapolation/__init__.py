@@ -12,7 +12,6 @@
 
 """Extrapolation library."""
 
-from ..utils import build_dict_library
 from .extrapolator import Extrapolator
 from .polynomial_extrapolator import (
     CubicExtrapolator,
@@ -22,12 +21,15 @@ from .polynomial_extrapolator import (
     QuarticExtrapolator,
 )
 
-EXTRAPOLATOR_LIBRARY: dict = build_dict_library(
-    PolynomialExtrapolator,
-    LinearExtrapolator,
-    QuadraticExtrapolator,
-    CubicExtrapolator,
-    QuarticExtrapolator,
-)
+EXTRAPOLATOR_LIBRARY = {
+    cls.__name__: cls
+    for cls in (
+        PolynomialExtrapolator,
+        LinearExtrapolator,
+        QuadraticExtrapolator,
+        CubicExtrapolator,
+        QuarticExtrapolator,
+    )
+}
 
 __all__ = ["Extrapolator", *EXTRAPOLATOR_LIBRARY.keys()]
