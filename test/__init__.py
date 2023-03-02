@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from collections.abc import Iterable
+
 from zne import __version__
 
 
@@ -30,18 +32,18 @@ TYPES = [
     STR := "0",
     BOOL := True,
     NONE := None,
-    LST := [0],
-    TPL := (0,),
+    LIST := [0],
+    TUPLE := (0,),
     DICT := {0: 0},
 ]
-NO_INTS = [t for t in TYPES if type(t) != type(INT)]
-NO_NONE = [t for t in TYPES if type(t) != type(NONE)]
-NO_INTS_NONE = [t for t in NO_INTS if type(t) != type(NONE)]
-NO_REAL = [t for t in NO_INTS if type(t) != type(FLOAT) or t in (NAN, INF, MINF)]
-NO_NUM = [t for t in NO_REAL if type(t) != type(COMPLEX)]
-ITERS = [t for t in TYPES if t in [STR, LST, TPL, DICT]]
-NO_ITERS = [t for t in TYPES if t not in ITERS]
-NO_ITERS_NONE = [t for t in NO_ITERS if type(t) != type(NONE)]
+NO_INTS = [t for t in TYPES if not isinstance(t, int)]
+NO_NONE = [t for t in TYPES if t is not None]
+NO_INTS_NONE = [t for t in NO_INTS if t is not None]
+NO_REAL = [t for t in NO_INTS if not isinstance(t, float)]
+NO_NUM = [t for t in NO_REAL if not isinstance(t, complex)]
+ITERS = [t for t in TYPES if isinstance(t, Iterable)]
+NO_ITERS = [t for t in TYPES if not isinstance(t, Iterable)]
+NO_ITERS_NONE = [t for t in NO_ITERS if t is not None]
 
 
 ################################################################################
