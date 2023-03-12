@@ -46,22 +46,18 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             noise_factor = float(noise_factor)
         except ValueError:
             raise ValueError(  # pylint: disable=raise-missing-from
-                f"Function call expects a positive floating value. "
-                f"Received value of {noise_factor} instead."
+                f"Expected positive float value, received {noise_factor} instead."
             )
         except TypeError:
             raise TypeError(  # pylint: disable=raise-missing-from
-                f"Function call expects a positive floating value. "
-                f"Received value of {noise_factor} instead."
+                f"Expected positive float value, received {noise_factor} instead."
             )
         if noise_factor < 1:
             raise ValueError(
-                f"Function call expects a positive float noise_factor >= 1."
-                f"Received {noise_factor} instead."
+                f"Expected positive float noise_factor >= 1, received {noise_factor} instead."
             )
         if noise_factor % 2 == 0:
             raise ValueError(
-                f"Function call expects a positive odd noise_factor. "
-                f"Received {noise_factor} instead."
+                f"Expected positive odd noise_factor, received {noise_factor} instead."
             )
         return noise_factor
