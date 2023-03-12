@@ -14,6 +14,7 @@
 """Glorious Global DAG Folding Noise Amplification (Temporary)"""
 
 import copy
+from typing import Tuple
 
 from qiskit.circuit.library import Barrier
 from qiskit.dagcircuit import DAGCircuit
@@ -31,11 +32,20 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
             `<https://ieeexplore.ieee.org/document/9259940>`
     """
 
+    def __init__(self, barriers: bool = True) -> None:
+        self.barriers = barriers
+
+    ################################################################################
+    ## INTERFACE IMPLEMENTATION
+    ################################################################################
     def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
         """Applies global folding to input DAGCircuit and returns amplified circuit"""
-        num_full_foldings = self._compute_num_foldings(noise_factor)
-        return self._apply_full_folding(dag, num_full_foldings)
+        num_foldings = self._compute_num_foldings(noise_factor)
+        return self._apply_full_folding(dag, num_foldings)
 
+    ################################################################################
+    ## AUXILIARY
+    ################################################################################
     def _apply_full_folding(
         self,
         dag: DAGCircuit,
@@ -50,16 +60,21 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
         Returns:
             DAGCircuit: The noise amplified DAG circuit.
         """
-        barrier = Barrier(dag.num_qubits())
-        inverse_dag = self._invert_dag(dag)
         noisy_dag = copy.deepcopy(dag)
+        inverse_dag = self._invert_dag(dag)
         for _ in range(num_foldings):
-            noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
-            noisy_dag.compose(inverse_dag, inplace=True)
-            noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
-            noisy_dag.compose(dag, inplace=True)
-        # TODO: noisy_dag.apply_operation_back(barrier, qargs=noisy_dag.qubits)
+            self._compose(noisy_dag, inverse_dag, noisy_dag.qubits)
+            self._compose(noisy_dag, dag, noisy_dag.qubits)
+        noisy_dag.apply_operation_back(Barrier(noisy_dag.num_qubits()), qargs=noisy_dag.qubits)
         return noisy_dag
+
+    def _compose(
+        self, dag: DAGCircuit, dag_to_compose: DAGCircuit, qargs: Tuple = ()
+    ) -> DAGCircuit:
+        if self.barriers:
+            barrier = Barrier(dag.num_qubits())
+            dag.apply_operation_back(barrier, qargs)
+        dag.compose(dag_to_compose, inplace=True)
 
     def _invert_dag(self, dag_to_inverse: DAGCircuit) -> DAGCircuit:
         """Inverts an input dag circuit.
