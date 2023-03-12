@@ -107,7 +107,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         """Validates if gates_to_fold is valid.
 
         Args:
-            gates_to_fold (Sequence[int | str] | None) : Original gates_to_fold input.
+            gates_to_fold: Original gates_to_fold input.
         """
         if gates_to_fold is None:
             return set()

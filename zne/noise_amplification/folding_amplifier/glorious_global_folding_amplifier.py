@@ -54,8 +54,8 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
         """Fully folds the original DAG circuit a number of ``num_foldings`` times.
 
         Args:
-            dag (DAGCircuit): The original dag circuit without foldings.
-            num_foldings (float): Number of times the circuit should be folded.
+            dag: The original dag circuit without foldings.
+            num_foldings: Number of times the circuit should be folded.
 
         Returns:
             DAGCircuit: The noise amplified DAG circuit.
@@ -65,7 +65,7 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
         for _ in range(num_foldings):
             self._compose(noisy_dag, inverse_dag, noisy_dag.qubits)
             self._compose(noisy_dag, dag, noisy_dag.qubits)
-        noisy_dag.apply_operation_back(Barrier(noisy_dag.num_qubits()), qargs=noisy_dag.qubits)
+        noisy_dag.apply_operation_back(Barrier(dag.num_qubits()), qargs=noisy_dag.qubits)
         return noisy_dag
 
     def _compose(
@@ -80,7 +80,7 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
         """Inverts an input dag circuit.
 
         Args:
-            dag_to_inverse (DAGCircuit) : The original dag circuit to invert.
+            dag_to_inverse: The original dag circuit to invert.
 
         Returns:
             DAGCircuit: The inverted DAG circuit.

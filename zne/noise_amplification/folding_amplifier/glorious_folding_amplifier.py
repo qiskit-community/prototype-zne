@@ -22,7 +22,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         """Compute number of foldings.
 
         Args:
-            noise_factor (float) : The original noise_factor input.
+            noise_factor: The original noise_factor input.
         Returns:
             int: Number of foldings calculated from noise_factor.
         """
@@ -33,7 +33,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         """Normalizes and validates noise factor.
 
         Args:
-            noise_factor (float) : The original noisefactor input.
+            noise_factor: The original noisefactor input.
 
         Returns:
             float: Normalised noise_factor input.
