@@ -14,7 +14,6 @@
 
 from typing import Any, Dict, Sequence, Tuple, Union
 
-from numpy import dtype, float_, ndarray
 from qiskit import QuantumCircuit
 
 Metadata = Dict[str, Any]
@@ -24,4 +23,4 @@ CircuitKey = tuple
 NoiseFactor = float
 ZNECacheKey = Tuple[CircuitKey, NoiseFactor]
 ZNECache = Dict[ZNECacheKey, QuantumCircuit]
-NumericArray = ndarray[Any, dtype[float_]]
+# NumericArray = "ndarray[Any, dtype[float_]]"  # pylint: disable=invalid-name

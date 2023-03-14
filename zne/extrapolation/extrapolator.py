@@ -17,10 +17,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from collections.abc import Sequence
+from typing import Any
 
-from numpy import array, float_, ones
+from numpy import array, dtype, float_, ndarray, ones
 
-from zne.types import NumericArray
 from zne.utils.strategy import strategy
 
 # TODO: import from staged_primitives
@@ -43,10 +43,10 @@ class Extrapolator(ABC):
     @abstractmethod
     def _extrapolate_zero(
         self,
-        x_data: NumericArray,
-        y_data: NumericArray,
-        sigma_x: NumericArray,
-        sigma_y: NumericArray,
+        x_data: "ndarray[Any, dtype[float_]]",
+        y_data: "ndarray[Any, dtype[float_]]",
+        sigma_x: "ndarray[Any, dtype[float_]]",
+        sigma_y: "ndarray[Any, dtype[float_]]",
     ) -> ReckoningResult:
         """Core functionality for `extrapolate_zero` after input validation."""
         raise NotImplementedError  # pragma: no cover
@@ -56,10 +56,10 @@ class Extrapolator(ABC):
     ################################################################################
     def extrapolate_zero(
         self,
-        x_data: Sequence[float] | NumericArray,
-        y_data: Sequence[float] | NumericArray,
-        sigma_x: Sequence[float] | NumericArray | None = None,
-        sigma_y: Sequence[float] | NumericArray | None = None,
+        x_data: Sequence[float] | "ndarray[Any, dtype[float_]]",
+        y_data: Sequence[float] | "ndarray[Any, dtype[float_]]",
+        sigma_x: Sequence[float] | "ndarray[Any, dtype[float_]]" | None = None,
+        sigma_y: Sequence[float] | "ndarray[Any, dtype[float_]]" | None = None,
     ) -> ReckoningResult:
         """Extrapolate to zero by fitting a regression model to the provided data.
 
@@ -97,7 +97,9 @@ class Extrapolator(ABC):
     ################################################################################
     ## VALIDATION
     ################################################################################
-    def _validate_data(self, data: Sequence[float] | NumericArray) -> NumericArray:
+    def _validate_data(
+        self, data: Sequence[float] | "ndarray[Any, dtype[float_]]"
+    ) -> "ndarray[Any, dtype[float_]]":
         """Validates data for the regression model.
 
         Args:
@@ -118,9 +120,9 @@ class Extrapolator(ABC):
 
     def _validate_sigma(
         self,
-        sigma: Sequence[float] | NumericArray | None,
+        sigma: Sequence[float] | "ndarray[Any, dtype[float_]]" | None,
         default_size: int,
-    ) -> NumericArray | None:
+    ) -> "ndarray[Any, dtype[float_]]" | None:
         """Validates sigma for the regression model data.
 
         Args:

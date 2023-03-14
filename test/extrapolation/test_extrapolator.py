@@ -110,7 +110,7 @@ class TestExtrapoaltor:
         with raises(TypeError):
             extrapolator._validate_data(data)
 
-    @mark.parametrize("data", [0, 1.0, True, [[0]], [[0, 0]], [[0, 0, 0], [0, 0]]])
+    @mark.parametrize("data", [0, 1.0, True, [[0]], [[0, 0]], [[0, 0], [0, 0]]])
     def test_validate_data_value_error(self, extrapolator, data):
         """Test validate data value error."""
         with raises(ValueError):
