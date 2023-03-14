@@ -243,12 +243,12 @@ class ZNEStrategy:
         metadata: list[Metadata] = []
         for result_group in self._generate_noisy_result_groups(noisy_result):
             data = self._regression_data_from_result_group(result_group)
-            val, meta = self.extrapolator.extrapolate_zero(*data)
-            common_metadata: Metadata = {}  # TODO: extract common metadata
+            val, err, meta = self.extrapolator.extrapolate_zero(*data)
+            common_metadata: Metadata = {"std_error": err}  # TODO: extract other common metadata
             zne_metadata: Metadata = self.build_zne_metadata(result_group, meta)
             values.append(val)
             metadata.append({**common_metadata, "zne": zne_metadata})
-        return EstimatorResult(values=array(values), metadata=tuple(metadata))
+        return EstimatorResult(values=array(values), metadata=list(metadata))
 
     # TODO: decouple indexing logic depending on this method
     def _generate_noisy_result_groups(

@@ -431,26 +431,26 @@ class TestExtrapolation:
     @mark.parametrize(
         "noise_factors, values, variances, num_results, extrapolate_return",
         [
-            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 1, [0, {}]),
-            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 1, [0, {"R2": 0.1}]),
-            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 2, [0, {}]),
-            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 3, [0, {"R2": 0.1, "P": 6.5}]),
+            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 1, [0, 1, {}]),
+            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 1, [0, 1, {"R2": 0.1}]),
+            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 2, [0, 1, {}]),
+            ([1, 2, 3], [1, 2, 3], [0, 0, 0], 3, [0, 1, {"R2": 0.1, "P": 6.5}]),
         ],
     )
     def test_mitigate_noisy_result(
         self, noise_factors, values, variances, num_results, extrapolate_return
     ):
-        pred, meta = extrapolate_return
+        val, err, meta = extrapolate_return
         extrapolator = Mock(Extrapolator)
         extrapolator.extrapolate_zero = Mock(return_value=tuple(extrapolate_return))
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         zne_strategy.extrapolator = extrapolator
         metadata = [{"variance": var, "shots": 1024} for var in variances]
         noisy_result = EstimatorResult(
-            values=array(values * num_results), metadata=tuple(metadata * num_results)
+            values=array(values * num_results), metadata=list(metadata * num_results)
         )
         result = zne_strategy.mitigate_noisy_result(noisy_result)
-        assert result.values.tolist() == [pred] * num_results
+        assert result.values.tolist() == [val] * num_results
         metadatum = {
             "noise_amplification": {
                 "noise_amplifier": zne_strategy.noise_amplifier,
@@ -464,7 +464,7 @@ class TestExtrapolation:
                 **meta,
             },
         }
-        assert result.metadata == tuple([{"zne": metadatum} for _ in range(num_results)])
+        assert result.metadata == [{"std_error": err, "zne": metadatum} for _ in range(num_results)]
 
     @mark.parametrize(
         "num_noise_factors, values, variances",
@@ -520,7 +520,7 @@ class TestExtrapolation:
             {"variance": err**2, **metadatum} if err is not None else metadatum
             for err in std_errors
         ]
-        result_group = EstimatorResult(values=array(values), metadata=tuple(metadata))
+        result_group = EstimatorResult(values=array(values), metadata=list(metadata))
         data = zne_strategy._regression_data_from_result_group(result_group)
         expected = (
             noise_factors,
@@ -542,7 +542,7 @@ class TestExtrapolation:
         zne_strategy = ZNEStrategy(noise_factors=range(1, num_noise_factors + 1))
         values = [1] * num_experiments
         metadata = [{"variance": 0}] * num_experiments
-        result_group = EstimatorResult(values=array(values), metadata=tuple(metadata))
+        result_group = EstimatorResult(values=array(values), metadata=list(metadata))
         with raises(ValueError):
             zne_strategy._regression_data_from_result_group(result_group)
 
@@ -601,7 +601,7 @@ class TestExtrapolation:
     )
     def test_build_zne_metadata(self, noise_factors, values, metadata, extrapolation, expected_na):
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
-        result_group = EstimatorResult(values=array(values), metadata=tuple(metadata))
+        result_group = EstimatorResult(values=array(values), metadata=list(metadata))
         computed = zne_strategy.build_zne_metadata(result_group, extrapolation)
         expected_na = {
             "noise_amplifier": zne_strategy.noise_amplifier,

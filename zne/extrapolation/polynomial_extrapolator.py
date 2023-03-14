@@ -120,9 +120,9 @@ class PolynomialExtrapolator(Extrapolator):
         residuals = y_data - self._model(x_data, *coefficients)
         r_squared = self._r_squared(y_data, residuals)
         return {
-            "coefficients": coefficients.tolist(),
-            "covariance_matrix": covariance_matrix.tolist(),
-            "residuals": residuals.tolist(),
+            "coefficients": tuple(coefficients.tolist()),
+            "covariance_matrix": tuple(tuple(r) for r in covariance_matrix.tolist()),
+            "residuals": tuple(residuals.tolist()),
             "R2": r_squared.tolist(),
             # TODO: CHI2, p_value, ...
         }
