@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from collections import namedtuple
 from typing import Any
 
 from numpy import array, dtype, float_, mean, ndarray, sqrt, zeros
@@ -23,10 +24,12 @@ from zne.types import Metadata
 
 from .extrapolator import Extrapolator, ReckoningResult
 
-
 ################################################################################
 ## GENERAL
 ################################################################################
+_RegressionData = namedtuple("_RegressionData", ("x_data", "y_data", "sigma_x", "sigma_y"))
+
+
 class PolynomialExtrapolator(Extrapolator):
     """Polynomial ordinary-least-squares (OLS) extrapolator."""
 
@@ -72,29 +75,19 @@ class PolynomialExtrapolator(Extrapolator):
         sigma_y: "ndarray[Any, dtype[float_]]",
     ) -> ReckoningResult:
         # TODO: if curve fit fails (e.g. p-value test) warn and return closest to zero
-        regression_data = (x_data, y_data, sigma_x, sigma_y)
+        regression_data = _RegressionData(x_data, y_data, sigma_x, sigma_y)
         return self._infer(0, regression_data)
 
     ################################################################################
     ## AUXILIARY
     ################################################################################
-    def _infer(  #
-        self,
-        target: float,
-        regression_data: tuple[
-            "ndarray[Any, dtype[float_]]",
-            "ndarray[Any, dtype[float_]]",
-            "ndarray[Any, dtype[float_]]",
-            "ndarray[Any, dtype[float_]]",
-        ],
-    ) -> ReckoningResult:
+    def _infer(self, target: float, regression_data: _RegressionData) -> ReckoningResult:
         """Fit regression model from data and infer evaluation for target value."""
-        x_data, y_data, _, sigma_y = regression_data
         coefficients, covariance_matrix = curve_fit(
             self._model,
-            x_data,
-            y_data,
-            sigma=sigma_y,
+            regression_data.x_data,
+            regression_data.y_data,
+            sigma=regression_data.sigma_y,
             absolute_sigma=True,
             p0=zeros(self.degree + 1),  # Note: Initial point determines number of d.o.f.
         )
@@ -102,7 +95,12 @@ class PolynomialExtrapolator(Extrapolator):
         value = target_powers @ coefficients  # Note: == self._model(target, *coefficients)
         variance = target_powers @ covariance_matrix @ target_powers
         std_error = sqrt(variance)
-        metadata = self._build_metadata(x_data, y_data, coefficients, covariance_matrix)
+        metadata = self._build_metadata(
+            regression_data.x_data,
+            regression_data.y_data,
+            coefficients,
+            covariance_matrix,
+        )
         return ReckoningResult(value.tolist(), std_error.tolist(), metadata)
 
     @staticmethod
