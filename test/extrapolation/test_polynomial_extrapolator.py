@@ -11,8 +11,9 @@
 # that they have been altered from the originals.
 
 
-from math import isclose
+from test import NO_INTS
 
+from numpy import allclose, random
 from pytest import mark, raises
 
 from zne.extrapolation import (
@@ -22,19 +23,30 @@ from zne.extrapolation import (
     QuadraticExtrapolator,
     QuarticExtrapolator,
 )
-
+from zne.utils.unset import UNSET
 
 ################################################################################
 ## AUXILIARY
 ################################################################################
-def fit_regression_model_test_parameters(max_degree):
+ATOL: float = 1e-2
+RTOL: float = 1e-5
+
+
+def extrapolate_zero_test_cases(max_degree):
     for degree in range(1, max_degree + 1):  # All degrees up to max
-        for d in range(1, degree + 1):  # All curves of degree less than or equal
-            poly = lambda x: x**d
-            for extra in range(5):  # Differet number of data points
-                data = [(x, poly(x), 0) for x in range(1, degree + 2 + extra)]
-                for target in [0, degree + 2 + extra]:  # Extrapolation to the left and right
-                    yield (degree, tuple(data), target, poly(target))
+        for coefficients in (
+            [1 for _ in range(degree + 1)],
+            [c for c in range(degree + 1)],
+            [1 + c for c in range(degree + 1)],
+            [1 - c for c in range(degree + 1)],
+        ):  # Different curves
+            poly = lambda x: sum(c * (x**p) for p, c in enumerate(coefficients))
+            for extra in range(5):  # Different number of data points
+                x_data = [1 + x for x in range(degree + 1 + extra)]
+                y_data = [poly(x) + random.normal(0, 1e-4) for x in x_data]
+                sigma_y = [random.normal(0.1, 1e-4) for _ in y_data]
+                expected = poly(0)
+                yield degree, x_data, y_data, sigma_y, expected
 
 
 ################################################################################
@@ -46,16 +58,37 @@ class TestPolynomialExtrapolator:
     ## TESTS
     ################################################################################
     @mark.parametrize(
-        "degree", cases := range(1, 5 + 1), ids=[f"degree = {degree}" for degree in cases]
+        "degree", cases := range(1, 5 + 1), ids=[f"degree = {degree!r}" for degree in cases]
     )
     def test_degree(self, degree):
+        """Test degree."""
         extrapolator = PolynomialExtrapolator(degree=degree)
+        assert isinstance(extrapolator.degree, int)
+        assert extrapolator.degree == degree
+        extrapolator = PolynomialExtrapolator(degree=str(degree))
+        assert isinstance(extrapolator.degree, int)
+        assert extrapolator.degree == degree
+        extrapolator = PolynomialExtrapolator(degree=float(degree))
+        assert isinstance(extrapolator.degree, int)
         assert extrapolator.degree == degree
 
     @mark.parametrize(
-        "degree", cases := range(0, -5, -1), ids=[f"degree = {degree}" for degree in cases]
+        "degree",
+        cases := [d for d in NO_INTS if not isinstance(d, (str, float))],
+        ids=[f"degree = {degree!r}" for degree in cases],
+    )
+    def test_degree_type_error(self, degree):
+        """Test degree type error."""
+        with raises(TypeError):
+            PolynomialExtrapolator(degree)
+
+    @mark.parametrize(
+        "degree",
+        cases := list(range(0, -5, -1)) + [str(float(d)) for d in range(1, 5 + 1)],
+        ids=[f"degree = {degree!r}" for degree in cases],
     )
     def test_degree_value_error(self, degree):
+        """Test degree value error."""
         with raises(ValueError):
             PolynomialExtrapolator(degree)
 
@@ -63,20 +96,22 @@ class TestPolynomialExtrapolator:
         "degree", cases := range(1, 5 + 1), ids=[f"degree = {degree}" for degree in cases]
     )
     def test_min_points(self, degree):
+        """Test min points."""
         extrapolator = PolynomialExtrapolator(degree=degree)
         assert extrapolator.min_points == degree + 1
 
     @mark.parametrize(
-        "degree, data, target, expected",
-        [*fit_regression_model_test_parameters(5)],
+        "degree, x_data, y_data, sigma_y, expected",
+        [*extrapolate_zero_test_cases(5)],
     )
-    def test_fit_regression_model(self, degree, data, target, expected):
-        extrapolator = PolynomialExtrapolator(degree=degree)
-        model, metadata = extrapolator._fit_regression_model(data)
-        prediction, variance = model(target)
-        assert isclose(prediction, expected, abs_tol=1e-4, rel_tol=1e-4)
-        assert variance is None
-        assert metadata == {}
+    def test_extrapolate_zero(self, degree, x_data, y_data, sigma_y, expected):
+        """Test extrapolate zero."""
+        extrapolator = PolynomialExtrapolator(degree)
+        value, std_error, metadata = extrapolator.extrapolate_zero(x_data, y_data, sigma_y=sigma_y)
+        assert allclose(value, expected, atol=ATOL, rtol=RTOL)
+        assert isinstance(std_error, float)  # TODO: test value
+        for key in ["coefficients", "covariance_matrix", "residuals", "R2"]:
+            assert metadata.get(key, UNSET) is not UNSET  # TODO: test values
 
 
 ################################################################################
@@ -93,6 +128,7 @@ class TestFacades:
         ],
     )
     def test_two_qubit_amplifier(self, cls, configs):
+        """Test polynomial extrapolator facades."""
         extrapolator = cls()
         assert isinstance(extrapolator, PolynomialExtrapolator)
         for key, value in configs.items():

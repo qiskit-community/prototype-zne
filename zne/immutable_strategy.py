@@ -18,7 +18,7 @@ from inspect import signature
 from typing import Any
 
 
-class ImmutableStrategy:
+class ImmutableStrategy:  # Note: pending deprecation  # pragma: no cover
     """Immutable strategy class to provide common base functionality.
 
     Note that all :class:`ImmutableStrategy` instance objects and their attributes are immutable by

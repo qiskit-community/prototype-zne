@@ -507,20 +507,29 @@ class TestExtrapolation:
             assert next(generator)
 
     @mark.parametrize(
-        "noise_factors, values, variances, expected",
+        "noise_factors, values, std_errors",
         [
-            ([1, 2], [0, 1], [0, 0], ((1, 0, 0), (2, 1, 0))),
-            ([1, 2.0], [0.4, 1.2], [0, None], ((1, 0.4, 0), (2.0, 1.2, 0))),
+            ([1, 2], [0, 1], [0, 0]),
+            ([1, 2.0], [0.4, 1.2], [0, None]),
         ],
     )
-    def test_regression_data_from_result_group(self, noise_factors, values, variances, expected):
+    def test_regression_data_from_result_group(self, noise_factors, values, std_errors):
         zne_strategy = ZNEStrategy(noise_factors=noise_factors)
         metadatum = {"shots": 1024}
         metadata = [
-            {"variance": var, **metadatum} if var is not None else metadatum for var in variances
+            {"variance": err**2, **metadatum} if err is not None else metadatum
+            for err in std_errors
         ]
         result_group = EstimatorResult(values=array(values), metadata=tuple(metadata))
-        assert zne_strategy._regression_data_from_result_group(result_group) == expected
+        data = zne_strategy._regression_data_from_result_group(result_group)
+        expected = (
+            noise_factors,
+            values,
+            [1 for _ in noise_factors],
+            [1 if err is None else err for err in std_errors],
+        )
+        for dat, exp in zip(data, expected):
+            assert dat == exp
 
     @mark.parametrize(
         "num_noise_factors, num_experiments",

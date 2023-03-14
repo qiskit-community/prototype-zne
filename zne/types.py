@@ -12,8 +12,9 @@
 
 """Type definitions for the Zero Noise Extrapolation (ZNE) Estimator class."""
 
-from typing import Any, Callable, Dict, Sequence, Tuple, Union
+from typing import Any, Dict, Sequence, Tuple, Union
 
+from numpy import dtype, float_, ndarray
 from qiskit import QuantumCircuit
 
 Metadata = Dict[str, Any]
@@ -23,5 +24,4 @@ CircuitKey = tuple
 NoiseFactor = float
 ZNECacheKey = Tuple[CircuitKey, NoiseFactor]
 ZNECache = Dict[ZNECacheKey, QuantumCircuit]
-RegressionModel = Callable[[float], Tuple[float, float]]
-RegressionDatum = Tuple[float, float, float]
+NumericArray = ndarray[Any, dtype[float_]]

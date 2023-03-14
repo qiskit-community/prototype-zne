@@ -17,10 +17,10 @@ from unittest.mock import Mock
 
 from pytest import fixture, mark
 
-from zne import EXTRAPOLATOR_LIBRARY, NOISE_AMPLIFIER_LIBRARY
+from zne import NOISE_AMPLIFIER_LIBRARY
 from zne.immutable_strategy import ImmutableStrategy
 
-STRATEGIES = {**EXTRAPOLATOR_LIBRARY, **NOISE_AMPLIFIER_LIBRARY}
+STRATEGIES = {**NOISE_AMPLIFIER_LIBRARY}
 
 INIT_OPTIONS = [
     ((), {}),

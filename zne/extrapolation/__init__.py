@@ -12,7 +12,7 @@
 
 """Extrapolation library."""
 
-from .extrapolator import Extrapolator
+from .extrapolator import Extrapolator, ReckoningResult
 from .polynomial_extrapolator import (
     CubicExtrapolator,
     LinearExtrapolator,
@@ -32,4 +32,4 @@ EXTRAPOLATOR_LIBRARY = {
     )
 }
 
-__all__ = ["Extrapolator", *EXTRAPOLATOR_LIBRARY.keys()]
+__all__ = ["Extrapolator", "ReckoningResult", *EXTRAPOLATOR_LIBRARY.keys()]

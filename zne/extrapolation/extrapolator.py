@@ -15,96 +15,121 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import namedtuple
 from collections.abc import Sequence
 
-from ..immutable_strategy import ImmutableStrategy
-from ..types import Metadata, RegressionDatum, RegressionModel
+from numpy import array, float_, ones
+
+from zne.types import NumericArray
+from zne.utils.strategy import strategy
+
+# TODO: import from staged_primitives
+ReckoningResult = namedtuple("ReckoningResult", ("value", "std_error", "metadata"))
 
 
-class Extrapolator(ImmutableStrategy, ABC):
+################################################################################
+## EXTRAPOLATOR
+################################################################################
+@strategy
+class Extrapolator(ABC):
     """Interface for extrapolation strategies."""
 
     @property
     @abstractmethod
     def min_points(self) -> int:
         """The minimum number of data points required to fit the regression model."""
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def _fit_regression_model(
-        self, data: tuple[RegressionDatum, ...]
-    ) -> tuple[RegressionModel, Metadata]:
-        """Core functionality for `fit_regression_model` after input normalization."""
+    def _extrapolate_zero(
+        self,
+        x_data: NumericArray,
+        y_data: NumericArray,
+        sigma_x: NumericArray,
+        sigma_y: NumericArray,
+    ) -> ReckoningResult:
+        """Core functionality for `extrapolate_zero` after input validation."""
+        raise NotImplementedError  # pragma: no cover
 
     ################################################################################
     ## API
     ################################################################################
-    def fit_regression_model(
-        self, data: Sequence[Sequence[float]]
-    ) -> tuple[RegressionModel, Metadata]:
-        """Fit regression model given data points.
+    def extrapolate_zero(
+        self,
+        x_data: Sequence[float] | NumericArray,
+        y_data: Sequence[float] | NumericArray,
+        sigma_x: Sequence[float] | NumericArray | None = None,
+        sigma_y: Sequence[float] | NumericArray | None = None,
+    ) -> ReckoningResult:
+        """Extrapolate to zero by fitting a regression model to the provided data.
 
         Args:
-            data: A sequence of data points to fit the regression model from, each of which
-                consisting on the value of the regressor, measured mean, and estimated variance.
+            x_data: A sequence of X values for the data points to fit.
+            y_data: A sequence of Y values for the data points to fit.
+            sigma_x: A sequence of std errors along the X axis for the data points to fit.
+                If `None`, ones of `x_data` size is assumed.
+            sigma_y: A sequence of std errors along the Y axis for the data points to fit.
+                If `None`, ones of `y_data` size is assumed.
 
         Returns:
-            A two-tuple consisting on a callable, representing the fitted model, and
-                metadata about the fitting process. The model callable takes in a target
-                float value for the regressor, and returns two floats representing the
-                inferred value of the regressand and its associated variance.
+            A ReckoningResult object with the extrapolated value, std error, and metadata.
         """
-        data = self._validate_data(data)
-        return self._fit_regression_model(data)
-
-    def infer(self, target: float, data: Sequence[Sequence[float]]) -> tuple[float, Metadata]:
-        """Infer a prediction for the target value of the regressor based on data.
-
-        Args:
-            target: A target value for the regressor.
-            data: A sequence of data points to fit the regression model from, each of which
-                consisting on the value of the regressor, measured mean, and estimated variance.
-
-        Returns:
-            A two-tuple consisting on the inferred value of the regressand and metadata.
-        """
-        model, metadata = self.fit_regression_model(data)
-        prediction, variance = model(target)
-        if variance is not None:
-            metadata = {"variance": variance, **metadata}
-        return prediction, metadata
-
-    def extrapolate_zero(self, data: Sequence[Sequence[float]]) -> tuple[float, Metadata]:
-        """Same as `infer` but fixing `target = 0`."""
-        return self.infer(0, data)
+        # Single validation
+        x_data = self._validate_data(x_data)
+        y_data = self._validate_data(y_data)
+        sigma_x = self._validate_sigma(sigma_x, default_size=x_data.size)
+        sigma_y = self._validate_sigma(sigma_y, default_size=y_data.size)
+        # Cross-validation
+        num_points = len(set(x_data))
+        if num_points < self.min_points:
+            raise ValueError(
+                f"Insufficient number of distinct data points provided ({num_points}), "
+                f"at least {self.min_points} needed."
+            )
+        sizes = (x_data.size, y_data.size, sigma_x.size, sigma_y.size)
+        if any(s != x_data.size for s in sizes):
+            raise ValueError(
+                "Invalid data, all inputs should be of the same size: "
+                f"{x_data.size = }, {y_data.size = }, {sigma_x.size = }, {sigma_y.size = }."
+            )
+        return self._extrapolate_zero(x_data, y_data, sigma_x, sigma_y)
 
     ################################################################################
     ## VALIDATION
     ################################################################################
-    def _validate_data(self, data: Sequence[Sequence[float]]) -> tuple[RegressionDatum, ...]:
-        """Validates data points for the regression model.
+    def _validate_data(self, data: Sequence[float] | NumericArray) -> NumericArray:
+        """Validates data for the regression model.
 
         Args:
-            data: A sequence of data points to fit the regression model from, each of which
-                consisting on the value of the regressor, measured mean, and estimated variance.
+            data: A sequence of values for the regression model.
 
         Returns:
             Validated data normalized.
-
-        Raises:
-            TypeError: If provided data is not a valid sequence of data points.
-            ValueError: If the number of data points is smaller than the minimum required
-                number of data points for the given Estrapolator.
         """
-        if not isinstance(data, Sequence) or not all(
-            isinstance(d, Sequence) and len(d) == 3 and all(isinstance(v, (float, int)) for v in d)
-            for d in data
-        ):
-            raise TypeError(
-                "Invalid data provided, expeceted Sequence[Sequence[float, float, float]]."
-            )
-        if len(data) < self.min_points:
+        try:
+            data = array(data).astype(float_, casting="same_kind")
+        except TypeError as exc:
+            raise TypeError(f"Invalid non-numeric (i.e. non-real) data array: {data}.") from exc
+        if len(data.shape) != 1:
             raise ValueError(
-                f"At least {self.min_points} data point{'s' if self.min_points != 1 else ''} "
-                "must be provided to fit the regression model."
+                "Invalid regression data provided, expected one dimensional sequence of floats."
             )
-        return tuple(tuple(d) for d in data)  # type: ignore
+        return data
+
+    def _validate_sigma(
+        self,
+        sigma: Sequence[float] | NumericArray | None,
+        default_size: int,
+    ) -> NumericArray | None:
+        """Validates sigma for the regression model data.
+
+        Args:
+            sigma: A sequence of values for the std error in the regression model data.
+            default_size: Default size of the sigma to be returned if `None`.
+
+        Returns:
+            Validated sigma normalized. If `None`, ones of default size is returned.
+        """
+        if sigma is None:
+            sigma = ones(default_size)  # Note: zeros mean that the data is exact
+        return self._validate_data(sigma)
