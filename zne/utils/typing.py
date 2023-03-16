@@ -14,6 +14,8 @@
 
 from typing import Any
 
+from numpy import array
+
 
 def isint(obj: Any) -> bool:
     """Check if object is int"""
@@ -28,3 +30,17 @@ def isinteger(obj: Any) -> bool:
 def isreal(obj: Any) -> bool:
     """Check if object is a real number: int or float minus ``±Inf`` and ``NaN``."""
     return isint(obj) or isinstance(obj, float) and float("-Inf") < obj < float("Inf")
+
+
+def normalize_array(arr: Any) -> Any:
+    """Normalize array-like objects (i.e. as in numpy) to tuples of the same shape.
+
+    If zero dimensional, the object is preserved or casted to a core python type.
+    """
+    arr = array(arr)
+    num_dimensions = len(arr.shape)
+    if num_dimensions == 0:
+        return arr.tolist()
+    if num_dimensions == 1:
+        return tuple(arr.tolist())
+    return tuple(map(normalize_array, arr))
