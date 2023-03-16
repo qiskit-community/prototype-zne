@@ -27,7 +27,7 @@ from .extrapolation import Extrapolator, LinearExtrapolator
 from .noise_amplification import NoiseAmplifier, TwoQubitAmplifier
 from .types import EstimatorResultData, Metadata  # noqa: F401
 from .utils.grouping import from_common_key, group_elements_gen, merge_dicts
-from .utils.typing import isreal
+from .utils.typing import isreal, normalize_array
 from .utils.validation import quality
 
 
@@ -321,7 +321,7 @@ class ZNEStrategy:
         noise_amplification: Metadata = {
             "noise_amplifier": self.noise_amplifier,
             "noise_factors": self.noise_factors,
-            "values": tuple(result_group.values.tolist()),  # TODO: simplify when tuple
+            "values": normalize_array(result_group.values),  # TODO: simplify when tuple
         }
         for key in merge_dicts(result_group.metadata):
             value = from_common_key(result_group.metadata, key)

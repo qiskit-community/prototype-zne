@@ -50,7 +50,7 @@ def extrapolate_zero_test_cases(max_degree):
 
 
 ################################################################################
-## EXTRPOLATORS
+## EXTRAPOLATORS
 ################################################################################
 class TestPolynomialExtrapolator:
 
@@ -112,6 +112,15 @@ class TestPolynomialExtrapolator:
         assert isinstance(std_error, float)  # TODO: test value
         for key in ["coefficients", "covariance_matrix", "residuals", "R2"]:
             assert metadata.get(key, UNSET) is not UNSET  # TODO: test values
+
+    @mark.parametrize("degree", range(1, 5))
+    def test_extrapolate_zero_min_points(self, degree):
+        """Test extrapolate zero min points."""
+        extrapolator = PolynomialExtrapolator(degree=degree)
+        x_data = [1] * (degree + 1)
+        y_data = range(degree + 1)
+        with raises(ValueError):
+            extrapolator.extrapolate_zero(x_data, y_data)
 
 
 ################################################################################

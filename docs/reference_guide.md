@@ -169,10 +169,10 @@ where we only need to implement a number of (performing) methods with the approp
     @abstractmethod
     def _extrapolate_zero(
         self,
-        x_data: ndarray[Any, dtype[float_]], 
-        y_data: ndarray[Any, dtype[float_]], 
-        sigma_x: ndarray[Any, dtype[float_]],
-        sigma_y: ndarray[Any, dtype[float_]],
+        x_data: ndarray[Any, dtype], 
+        y_data: ndarray[Any, dtype], 
+        sigma_x: ndarray[Any, dtype],
+        sigma_y: ndarray[Any, dtype],
     ) -> ReckoningResult:
         """Extrapolate to zero by fitting a regression model to the provided data.
 

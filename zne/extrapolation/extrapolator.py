@@ -17,11 +17,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from collections.abc import Sequence
-from typing import Any
-
-from numpy import array, dtype, float_, ndarray, ones
 
 from zne.utils.strategy import strategy
+from zne.utils.typing import isreal
 
 # TODO: import from staged_primitives
 ReckoningResult = namedtuple("ReckoningResult", ("value", "std_error", "metadata"))
@@ -43,10 +41,10 @@ class Extrapolator(ABC):
     @abstractmethod
     def _extrapolate_zero(
         self,
-        x_data: "ndarray[Any, dtype[float_]]",
-        y_data: "ndarray[Any, dtype[float_]]",
-        sigma_x: "ndarray[Any, dtype[float_]]",
-        sigma_y: "ndarray[Any, dtype[float_]]",
+        x_data: tuple[float, ...],
+        y_data: tuple[float, ...],
+        sigma_x: tuple[float, ...],
+        sigma_y: tuple[float, ...],
     ) -> ReckoningResult:
         """Core functionality for `extrapolate_zero` after input validation."""
         raise NotImplementedError  # pragma: no cover
@@ -56,10 +54,10 @@ class Extrapolator(ABC):
     ################################################################################
     def extrapolate_zero(
         self,
-        x_data: Sequence[float] | "ndarray[Any, dtype[float_]]",
-        y_data: Sequence[float] | "ndarray[Any, dtype[float_]]",
-        sigma_x: Sequence[float] | "ndarray[Any, dtype[float_]]" | None = None,
-        sigma_y: Sequence[float] | "ndarray[Any, dtype[float_]]" | None = None,
+        x_data: Sequence[float],
+        y_data: Sequence[float],
+        sigma_x: Sequence[float] | None = None,
+        sigma_y: Sequence[float] | None = None,
     ) -> ReckoningResult:
         """Extrapolate to zero by fitting a regression model to the provided data.
 
@@ -77,29 +75,21 @@ class Extrapolator(ABC):
         # Single validation
         x_data = self._validate_data(x_data)
         y_data = self._validate_data(y_data)
-        sigma_x = self._validate_sigma(sigma_x, default_size=x_data.size)
-        sigma_y = self._validate_sigma(sigma_y, default_size=y_data.size)
+        sigma_x = self._validate_sigma(sigma_x, default_size=len(x_data))
+        sigma_y = self._validate_sigma(sigma_y, default_size=len(y_data))
         # Cross-validation
-        num_points = len(set(x_data))
-        if num_points < self.min_points:
-            raise ValueError(
-                f"Insufficient number of distinct data points provided ({num_points}), "
-                f"at least {self.min_points} needed."
-            )
-        sizes = (x_data.size, y_data.size, sigma_x.size, sigma_y.size)
-        if any(s != x_data.size for s in sizes):
+        sizes = (len(x_data), len(y_data), len(sigma_x), len(sigma_y))
+        if len(set(sizes)) != 1:
             raise ValueError(
                 "Invalid data, all inputs should be of the same size: "
-                f"{x_data.size = }, {y_data.size = }, {sigma_x.size = }, {sigma_y.size = }."
+                f"{len(x_data) = }, {len(y_data) = }, {len(sigma_x) = }, {len(sigma_y) = }."
             )
         return self._extrapolate_zero(x_data, y_data, sigma_x, sigma_y)
 
     ################################################################################
     ## VALIDATION
     ################################################################################
-    def _validate_data(
-        self, data: Sequence[float] | "ndarray[Any, dtype[float_]]"
-    ) -> "ndarray[Any, dtype[float_]]":
+    def _validate_data(self, data: Sequence[float]) -> tuple[float, ...]:
         """Validates data for the regression model.
 
         Args:
@@ -108,21 +98,18 @@ class Extrapolator(ABC):
         Returns:
             Validated data normalized.
         """
-        try:
-            data = array(data).astype(float_, casting="same_kind")
-        except TypeError as exc:
-            raise TypeError(f"Invalid non-numeric (i.e. non-real) data array: {data}.") from exc
-        if len(data.shape) != 1:
+        if not isinstance(data, Sequence) or not all(isreal(d) for d in data):
+            raise TypeError(f"Invalid data {data}, expected sequence of floats.")
+        if len(data) < self.min_points:
             raise ValueError(
-                "Invalid regression data provided, expected one dimensional sequence of floats."
+                f"Insufficient number of distinct data points provided ({len(data)}), "
+                f"at least {self.min_points} needed."
             )
-        return data
+        return tuple(data)
 
     def _validate_sigma(
-        self,
-        sigma: Sequence[float] | "ndarray[Any, dtype[float_]]" | None,
-        default_size: int,
-    ) -> "ndarray[Any, dtype[float_]]" | None:
+        self, sigma: Sequence[float] | None, default_size: int
+    ) -> tuple[float, ...]:
         """Validates sigma for the regression model data.
 
         Args:
@@ -133,5 +120,5 @@ class Extrapolator(ABC):
             Validated sigma normalized. If `None`, ones of default size is returned.
         """
         if sigma is None:
-            sigma = ones(default_size)  # Note: zeros mean that the data is exact
+            sigma = [1] * default_size  # Note: zeros mean that the data is exact
         return self._validate_data(sigma)

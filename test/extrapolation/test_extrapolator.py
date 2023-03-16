@@ -48,8 +48,14 @@ class TestExtrapoaltor:
     @mark.parametrize(
         "x_data, y_data, sigma_x, sigma_y",
         [
-            ([1, 2], [1, 2], None, [1, 1]),
-            ([1, 2, 3], [1, 2, 3], None, [1, 1, 1]),
+            ([1, 2], [1, 2], None, None),
+            ([1, 2], [1, 2], None, [4, 4]),
+            ([1, 2], [1, 2], [4, 4], None),
+            ([1, 2], [1, 2], [4, 4], [4, 4]),
+            ([1, 2, 3], [1, 2, 3], None, None),
+            ([1, 2, 3], [1, 2, 3], None, [4, 4, 4]),
+            ([1, 2, 3], [1, 2, 3], [4, 4, 4], None),
+            ([1, 2, 3], [1, 2, 3], [4, 4, 4], [4, 4, 4]),
         ],
     )
     def test_extrapolate_zero(self, extrapolator, x_data, y_data, sigma_x, sigma_y):
@@ -59,41 +65,25 @@ class TestExtrapoaltor:
         extrapolator._extrapolate_zero.assert_called_once()
         call_args = extrapolator._extrapolate_zero.call_args[0]
         expected_call_args = (
-            array(x_data),
-            array(y_data),
-            array(sigma_x or [1] * len(x_data)),
-            array(sigma_y),
+            tuple(x_data),
+            tuple(y_data),
+            tuple(sigma_x or [1] * len(x_data)),
+            tuple(sigma_y or [1] * len(y_data)),
         )
         for arg, exp in zip(call_args, expected_call_args):
-            assert equal(arg, exp).all()
-
-    @mark.parametrize("min_points", range(1, 6))
-    def test_extrapolate_zero_min_points(self, MockExtrapolator, min_points):
-        """Test extrapolate zero min points."""
-        extrapolator = MockExtrapolator(min_points)
-        small = range(min_points - 1)
-        exact = range(min_points)
-        large = range(min_points + 1)
-        with raises(ValueError):
-            extrapolator.extrapolate_zero(small, exact, None, large)
-        with raises(ValueError):
-            extrapolator.extrapolate_zero(large, small, None, exact)
-        with raises(ValueError):
-            extrapolator.extrapolate_zero(exact, large, None, small)
-        with raises(ValueError):
-            small = [1] * min_points  # Note: disallow repeated x data
-            extrapolator.extrapolate_zero(small, exact, None, large)
+            assert arg == exp
 
     @mark.parametrize(
         "x_data, y_data, sigma_x, sigma_y",
         [
-            ([1, 2], [0, 1, 2], None, [1, 1]),
-            ([0, 1, 2], [1, 2], None, [1, 1]),
+            ([1, 2], [0, 1, 2], None, None),
+            ([0, 1, 2], [1, 2], None, None),
+            ([1, 2], [1, 2], [1, 1, 1], None),
             ([1, 2], [1, 2], None, [1, 1, 1]),
         ],
     )
-    def test_extrapolate_zero_sizes(self, extrapolator, x_data, y_data, sigma_x, sigma_y):
-        """Test extrapolate zero sizes."""
+    def test_extrapolate_zero_input_sizes(self, extrapolator, x_data, y_data, sigma_x, sigma_y):
+        """Test extrapolate zero input sizes."""
         with raises(ValueError):
             extrapolator.extrapolate_zero(x_data, y_data, sigma_x, sigma_y)
 
@@ -101,18 +91,19 @@ class TestExtrapoaltor:
     def test_validate_data(self, extrapolator, data):
         """Test validate data."""
         result = extrapolator._validate_data(data)
-        valid = array(data)
-        assert equal(result, valid).all()
+        assert result == tuple(data)
 
-    @mark.parametrize("data", [set(), [set()], None, [None], 1j, [1j]])
+    @mark.parametrize("data", [None, True, 1, 1.0, float("nan"), 1j, [1j], [None], set(), [[0]]])
     def test_validate_data_type_error(self, extrapolator, data):
         """Test validate data type error."""
         with raises(TypeError):
             extrapolator._validate_data(data)
 
-    @mark.parametrize("data", [0, 1.0, True, [[0]], [[0, 0]], [[0, 0], [0, 0]]])
-    def test_validate_data_value_error(self, extrapolator, data):
-        """Test validate data value error."""
+    @mark.parametrize("data", [(1,), (1, 2)])
+    def test_validate_data_min_points(self, MockExtrapolator, data):
+        """Test validate data min points."""
+        extrapolator = MockExtrapolator(len(data) + 1)
+        print(extrapolator.min_points)
         with raises(ValueError):
             extrapolator._validate_data(data)
 

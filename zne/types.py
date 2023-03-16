@@ -23,4 +23,3 @@ CircuitKey = tuple
 NoiseFactor = float
 ZNECacheKey = Tuple[CircuitKey, NoiseFactor]
 ZNECache = Dict[ZNECacheKey, QuantumCircuit]
-# NumericArray = "ndarray[Any, dtype[float_]]"  # pylint: disable=invalid-name

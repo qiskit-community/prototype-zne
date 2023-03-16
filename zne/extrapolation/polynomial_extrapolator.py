@@ -15,12 +15,14 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import Any
 
-from numpy import array, dtype, float_, mean, ndarray, sqrt, zeros
+from numpy import array
+from numpy import float_ as npfloat
+from numpy import mean, ndarray, sqrt, zeros
 from scipy.optimize import curve_fit
 
 from zne.types import Metadata
+from zne.utils.typing import normalize_array
 
 from .extrapolator import Extrapolator, ReckoningResult
 
@@ -31,17 +33,13 @@ _RegressionData = namedtuple("_RegressionData", ("x_data", "y_data", "sigma_x", 
 
 
 class PolynomialExtrapolator(Extrapolator):
-    """Polynomial ordinary-least-squares (OLS) extrapolator."""
+    """Polynomial ordinary-least-squares (OLS) extrapolator.
+
+    Args:
+        degree: The degree of the polynomial regression curve.
+    """
 
     def __init__(self, degree: int = 1):  # pylint: disable=super-init-not-called
-        """Initializes the Polynomial extrapolator.
-
-        Args:
-            degree: The degree of the polynomial regression curve.
-
-        Raises:
-            ValueError: If degree is less than one.
-        """
         self._set_degree(degree)
 
     ################################################################################
@@ -69,12 +67,18 @@ class PolynomialExtrapolator(Extrapolator):
     # pylint: disable=duplicate-code
     def _extrapolate_zero(
         self,
-        x_data: "ndarray[Any, dtype[float_]]",
-        y_data: "ndarray[Any, dtype[float_]]",
-        sigma_x: "ndarray[Any, dtype[float_]]",
-        sigma_y: "ndarray[Any, dtype[float_]]",
+        x_data: tuple[float, ...],
+        y_data: tuple[float, ...],
+        sigma_x: tuple[float, ...],
+        sigma_y: tuple[float, ...],
     ) -> ReckoningResult:
         # TODO: if curve fit fails (e.g. p-value test) warn and return closest to zero
+        num_points = len(set(x_data))  # TODO: equal up to tolerance
+        if num_points < self.min_points:
+            raise ValueError(
+                f"Insufficient number of distinct X data points provided ({num_points}), "
+                f"at least {self.min_points} needed."
+            )
         regression_data = _RegressionData(x_data, y_data, sigma_x, sigma_y)
         return self._infer(0, regression_data)
 
@@ -82,7 +86,17 @@ class PolynomialExtrapolator(Extrapolator):
     ## AUXILIARY
     ################################################################################
     def _infer(self, target: float, regression_data: _RegressionData) -> ReckoningResult:
-        """Fit regression model from data and infer evaluation for target value."""
+        """Fit regression model from data and infer evaluation for target value.
+
+        Args:
+            target: The target X value to infer a Y value for.
+            regression_data: A four-tuple of tuples representing X-data, Y-data,
+                and corresponding std errors for the X and Y data respectively.
+
+        Returns:
+            Reckoning result holding the inferred value, std error, and metadata about
+            the curve fit procedure.
+        """
         coefficients, covariance_matrix = curve_fit(
             self._model,
             regression_data.x_data,
@@ -96,8 +110,8 @@ class PolynomialExtrapolator(Extrapolator):
         variance = target_powers @ covariance_matrix @ target_powers
         std_error = sqrt(variance)
         metadata = self._build_metadata(
-            regression_data.x_data,
-            regression_data.y_data,
+            array(regression_data.x_data),
+            array(regression_data.y_data),
             coefficients,
             covariance_matrix,
         )
@@ -111,26 +125,23 @@ class PolynomialExtrapolator(Extrapolator):
 
     def _build_metadata(
         self,
-        x_data: "ndarray[Any, dtype[float_]]",
-        y_data: "ndarray[Any, dtype[float_]]",
-        coefficients: "ndarray[Any, dtype[float_]]",
-        covariance_matrix: "ndarray[Any, dtype[float_]]",
+        x_data: ndarray,
+        y_data: ndarray,
+        coefficients: ndarray,
+        covariance_matrix: ndarray,
     ) -> Metadata:
         """Build regression metadata."""
         residuals = y_data - self._model(x_data, *coefficients)
         r_squared = self._r_squared(y_data, residuals)
         return {
-            "coefficients": tuple(coefficients.tolist()),
-            "covariance_matrix": tuple(tuple(r) for r in covariance_matrix.tolist()),
-            "residuals": tuple(residuals.tolist()),
-            "R2": r_squared.tolist(),
-            # TODO: CHI2, p_value, ...
+            "coefficients": normalize_array(coefficients),
+            "covariance_matrix": normalize_array(covariance_matrix),
+            "residuals": normalize_array(residuals),
+            "R2": normalize_array(r_squared),
         }
 
     @staticmethod
-    def _r_squared(
-        y_data: "ndarray[Any, dtype[float_]]", residuals: "ndarray[Any, dtype[float_]]"
-    ) -> float_:
+    def _r_squared(y_data: ndarray, residuals: ndarray) -> npfloat:
         """Compute R-squared (i.e. coefficient of determination)."""
         y_diff = y_data - mean(y_data)
         TSS = y_diff @ y_diff  # pylint: disable=invalid-name
