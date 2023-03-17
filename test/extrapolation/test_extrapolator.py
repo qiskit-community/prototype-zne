@@ -12,9 +12,11 @@
 
 from unittest.mock import Mock
 
+from numpy import array, equal
 from pytest import fixture, mark, raises
 
 from zne.extrapolation import Extrapolator
+from zne.extrapolation.extrapolator import ReckoningResult
 
 
 class TestExtrapoaltor:
@@ -31,9 +33,8 @@ class TestExtrapoaltor:
             def min_points(self):
                 return self._min_points
 
-            def _fit_regression_model(self, data):
-                model = lambda _: (1, None)
-                return model, {}
+            def _extrapolate_zero(self, x_data, y_data, sigma_x, sigma_y):
+                return ReckoningResult(1, 1, {})
 
         return MockExtrapolator
 
@@ -44,73 +45,76 @@ class TestExtrapoaltor:
     ################################################################################
     ## TESTS
     ################################################################################
-    def test_fit_regression_model(self, extrapolator):
-        extrapolator._validate_data = Mock(side_effect=lambda x: x)
-        extrapolator._fit_regression_model = Mock(return_value=("model", "metadata"))
-        assert extrapolator.fit_regression_model("data") == ("model", "metadata")
-        extrapolator._validate_data.assert_called_once_with("data")
-        extrapolator._fit_regression_model.assert_called_once_with("data")
-
-    @mark.parametrize("prediction, variance, metadata", [(1, 0, {}), (0, None, {"m": "d"})])
-    def test_infer(self, extrapolator, prediction, variance, metadata):
-        if variance is not None:
-            metadata = {"variance": variance, **metadata}
-        model = lambda _: (prediction, variance)
-        extrapolator.fit_regression_model = Mock(return_value=(model, metadata))
-        pred, meta = extrapolator.infer(0, "data")
-        extrapolator.fit_regression_model.assert_called_once_with("data")
-        assert pred == prediction
-        assert meta == metadata
-
-    def test_extrapolate_zero(self, extrapolator):
-        extrapolator.infer = Mock()
-        extrapolator.extrapolate_zero("data")
-        extrapolator.infer.assert_called_once_with(0, "data")
-
     @mark.parametrize(
-        "data, expected",
+        "x_data, y_data, sigma_x, sigma_y",
         [
-            ([[0, 0, 0], [0, 0, 0]], ((0, 0, 0), (0, 0, 0))),
-            ([(0, 0, 0), [0, 0, 0]], ((0, 0, 0), (0, 0, 0))),
-            ([[0, 0, 0], (0, 0, 0)], ((0, 0, 0), (0, 0, 0))),
-            ([(0, 0, 0), (0, 0, 0)], ((0, 0, 0), (0, 0, 0))),
-            (([0, 0, 0], [0, 0, 0]), ((0, 0, 0), (0, 0, 0))),
-            (((0, 0, 0), [0, 0, 0]), ((0, 0, 0), (0, 0, 0))),
-            (([0, 0, 0], (0, 0, 0)), ((0, 0, 0), (0, 0, 0))),
-            (((0, 0, 0), (0, 0, 0)), ((0, 0, 0), (0, 0, 0))),
-            ([[0, 0, 0], [0, 0, 0], [0, 0, 0]], ((0, 0, 0), (0, 0, 0), (0, 0, 0))),
+            ([1, 2], [1, 2], None, None),
+            ([1, 2], [1, 2], None, [4, 4]),
+            ([1, 2], [1, 2], [4, 4], None),
+            ([1, 2], [1, 2], [4, 4], [4, 4]),
+            ([1, 2, 3], [1, 2, 3], None, None),
+            ([1, 2, 3], [1, 2, 3], None, [4, 4, 4]),
+            ([1, 2, 3], [1, 2, 3], [4, 4, 4], None),
+            ([1, 2, 3], [1, 2, 3], [4, 4, 4], [4, 4, 4]),
         ],
     )
-    def test_validate_data(self, extrapolator, data, expected):
-        assert extrapolator._validate_data(data) == expected
+    def test_extrapolate_zero(self, extrapolator, x_data, y_data, sigma_x, sigma_y):
+        """Test extrapolate zero."""
+        extrapolator._extrapolate_zero = Mock()
+        extrapolator.extrapolate_zero(x_data, y_data, sigma_x, sigma_y)
+        extrapolator._extrapolate_zero.assert_called_once()
+        call_args = extrapolator._extrapolate_zero.call_args[0]
+        expected_call_args = (
+            tuple(x_data),
+            tuple(y_data),
+            tuple(sigma_x or [1] * len(x_data)),
+            tuple(sigma_y or [1] * len(y_data)),
+        )
+        for arg, exp in zip(call_args, expected_call_args):
+            assert arg == exp
 
     @mark.parametrize(
-        "data",
+        "x_data, y_data, sigma_x, sigma_y",
         [
-            0,
-            1.0,
-            1j,
-            True,
-            set(),
-            [0],
-            [1.0],
-            [1j],
-            [True],
-            [set()],
-            [[0]],
-            [[0, 0]],
-            [[0, 0, 1j]],
-            [[0, 0, 0], [0, 0]],
-            [[0, 0, 0], [0, 0, 1j]],
+            ([1, 2], [0, 1, 2], None, None),
+            ([0, 1, 2], [1, 2], None, None),
+            ([1, 2], [1, 2], [1, 1, 1], None),
+            ([1, 2], [1, 2], None, [1, 1, 1]),
         ],
     )
+    def test_extrapolate_zero_input_sizes(self, extrapolator, x_data, y_data, sigma_x, sigma_y):
+        """Test extrapolate zero input sizes."""
+        with raises(ValueError):
+            extrapolator.extrapolate_zero(x_data, y_data, sigma_x, sigma_y)
+
+    @mark.parametrize("data", [[0] * 2, [0] * 3, [0] * 4, [1] * 2, [1] * 3, [1] * 4, range(4)])
+    def test_validate_data(self, extrapolator, data):
+        """Test validate data."""
+        result = extrapolator._validate_data(data)
+        assert result == tuple(data)
+
+    @mark.parametrize("data", [None, True, 1, 1.0, float("nan"), 1j, [1j], [None], set(), [[0]]])
     def test_validate_data_type_error(self, extrapolator, data):
+        """Test validate data type error."""
         with raises(TypeError):
             extrapolator._validate_data(data)
 
-    @mark.parametrize("min_points", range(2, 9))
-    def test_validate_data_value_error(self, MockExtrapolator, min_points):
-        extrapolator = MockExtrapolator(min_points)
+    @mark.parametrize("data", [(1,), (1, 2)])
+    def test_validate_data_min_points(self, MockExtrapolator, data):
+        """Test validate data min points."""
+        extrapolator = MockExtrapolator(len(data) + 1)
+        print(extrapolator.min_points)
         with raises(ValueError):
-            data = [(0, 0, 0)] * (min_points - 1)
             extrapolator._validate_data(data)
+
+    @mark.parametrize(
+        "sigma", [[0] * 2, [0] * 3, [0] * 4, [1] * 2, [1] * 3, [1] * 4, range(4), None]
+    )
+    def test_validate_sigma(self, extrapolator, sigma):
+        """Test validate sigma."""
+        default_size = 4
+        result = extrapolator._validate_sigma(sigma, default_size)
+        if sigma is None:
+            sigma = [1] * default_size
+        valid = array(sigma)
+        assert equal(result, valid).all()

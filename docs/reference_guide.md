@@ -120,13 +120,15 @@ EstimatorResult: {
 ### Custom ZNE strategies
 This prototype has been devised specifically to allow users to create their custom noise amplification and extrapolation techniques. This can be easily done through custom implementations of the `CircuitNoiseAmplifier` and `Extrapolator` abstract classes respectively:
 ```python
-from zne.extrapolation import Extrapolator
+from zne.extrapolation import Extrapolator, ReckoningResult
 from zne.noise_amplification import CircuitNoiseAmplifier
+
 
 ############################  NOISE AMPLIFIER  ############################
 class CustomAmplifier(CircuitNoiseAmplifier):
     def amplify_circuit_noise(self, circuit, noise_factor):
         return circuit.copy()  # Dummy, nonperforming
+
 
 ############################  EXTRAPOLATOR  ############################
 class CustomExtrapolator(Extrapolator):
@@ -134,11 +136,11 @@ class CustomExtrapolator(Extrapolator):
     def min_points(self):
         return 2
     
-    def _fit_regression_model(self, data):
-        prediction = 1.0
-        variance = 0.0
-        model = lambda target: (prediction, variance)
-        return model, {"metadata": None}  # Dummy, nonperforming
+    def _extrapolate_zero(self, x_data, y_data, sigma_x, sigma_y):
+        value = 1.0
+        std_error = 1.0
+        metadata = {"meta": "data"}
+        return ReckoningResult(value, std_error, metadata)  # Dummy, nonperforming
 ```
 where we only need to implement a number of (performing) methods with the appropriate [function signature](https://stackoverflow.com/a/72789014/12942875):
 - __[CircuitNoiseAmplifier]__ Amplify circuit noise:
@@ -162,23 +164,28 @@ where we only need to implement a number of (performing) methods with the approp
     def min_points(self) -> int:
         """The minimum number of points required for extrapolation."""
     ```
-- __[Extrapolator]__ Fit regression model:
+- __[Extrapolator]__ Extrapolate to zero:
     ```python
     @abstractmethod
-    def _fit_regression_model(
-        self, data: tuple[RegressionDatum, ...]
-    ) -> tuple[RegressionModel, Metadata]:
-        """Fit regression model given data points.
+    def _extrapolate_zero(
+        self,
+        x_data: ndarray[Any, dtype], 
+        y_data: ndarray[Any, dtype], 
+        sigma_x: ndarray[Any, dtype],
+        sigma_y: ndarray[Any, dtype],
+    ) -> ReckoningResult:
+        """Extrapolate to zero by fitting a regression model to the provided data.
 
         Args:
-            data: A sequence of data points to fit the regression model from, each of which
-                consisting on the value of the regressor, measured mean, and estimated variance.
+            x_data: A sequence of X values for the data points to fit.
+            y_data: A sequence of Y values for the data points to fit.
+            sigma_x: A sequence of std errors along the X axis for the data points to fit.
+                If `None`, ones of `x_data` size is assumed.
+            sigma_y: A sequence of std errors along the Y axis for the data points to fit.
+                If `None`, ones of `y_data` size is assumed.
 
         Returns:
-            A two-tuple consisting on a callable, representing the fitted model, and
-                metadata about the fitting process. The model callable takes in a target
-                float value for the regressor, and returns two floats representing the
-                inferred value of the regressand and its associated variance.
+            A ReckoningResult object with the extrapolated value, std error, and metadata.
         """
     ```
 

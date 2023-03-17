@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Sequence
+from math import sqrt
 from typing import Any
 from warnings import warn
 
@@ -24,9 +25,9 @@ from qiskit.primitives import EstimatorResult
 
 from .extrapolation import Extrapolator, LinearExtrapolator
 from .noise_amplification import NoiseAmplifier, TwoQubitAmplifier
-from .types import EstimatorResultData, Metadata, RegressionDatum  # noqa: F401
+from .types import EstimatorResultData, Metadata  # noqa: F401
 from .utils.grouping import from_common_key, group_elements_gen, merge_dicts
-from .utils.typing import isreal
+from .utils.typing import isreal, normalize_array
 from .utils.validation import quality
 
 
@@ -242,12 +243,12 @@ class ZNEStrategy:
         metadata: list[Metadata] = []
         for result_group in self._generate_noisy_result_groups(noisy_result):
             data = self._regression_data_from_result_group(result_group)
-            val, meta = self.extrapolator.extrapolate_zero(data)
-            common_metadata: Metadata = {}  # TODO: extract common metadata
+            val, err, meta = self.extrapolator.extrapolate_zero(*data)
+            common_metadata: Metadata = {"std_error": err}  # TODO: extract other common metadata
             zne_metadata: Metadata = self.build_zne_metadata(result_group, meta)
             values.append(val)
             metadata.append({**common_metadata, "zne": zne_metadata})
-        return EstimatorResult(values=array(values), metadata=tuple(metadata))
+        return EstimatorResult(values=array(values), metadata=list(metadata))
 
     # TODO: decouple indexing logic depending on this method
     def _generate_noisy_result_groups(
@@ -279,7 +280,7 @@ class ZNEStrategy:
 
     def _regression_data_from_result_group(
         self, result_group: EstimatorResult
-    ) -> tuple[RegressionDatum, ...]:
+    ) -> tuple[list[float], list[float], list[float], list[float]]:
         """Build regression data from noisy result group.
 
         Args:
@@ -291,9 +292,11 @@ class ZNEStrategy:
         """
         if result_group.num_experiments != self.num_noise_factors:
             raise ValueError("Inconsistent number of noisy experiments and noise factors.")
-        values: list[float] = result_group.values.tolist()
-        variances: list[float] = [md.get("variance", 0) for md in result_group.metadata]
-        return tuple(zip(self.noise_factors, values, variances))
+        x_data = list(self.noise_factors)  # TODO: get actual noise factors achieved
+        y_data = result_group.values.tolist()
+        sigma_x = [1 for _ in x_data]
+        sigma_y = [sqrt(md.get("variance", 1)) for md in result_group.metadata]
+        return x_data, y_data, sigma_x, sigma_y  # type: ignore
 
     # TODO: add validation
     def build_zne_metadata(
@@ -318,7 +321,7 @@ class ZNEStrategy:
         noise_amplification: Metadata = {
             "noise_amplifier": self.noise_amplifier,
             "noise_factors": self.noise_factors,
-            "values": tuple(result_group.values.tolist()),  # TODO: simplify when tuple
+            "values": normalize_array(result_group.values),  # TODO: simplify when tuple
         }
         for key in merge_dicts(result_group.metadata):
             value = from_common_key(result_group.metadata, key)
