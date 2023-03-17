@@ -53,6 +53,7 @@ def extrapolate_zero_test_cases(max_degree):
 ## EXTRAPOLATORS
 ################################################################################
 class TestPolynomialExtrapolator:
+    """Test polynomial extrapolator."""
 
     ################################################################################
     ## TESTS
@@ -116,6 +117,8 @@ class TestPolynomialExtrapolator:
 ## FACADES
 ################################################################################
 class TestFacades:
+    """Test polynomial extrapolator facades."""
+
     @mark.parametrize(
         "cls, configs",
         [
