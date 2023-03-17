@@ -92,9 +92,7 @@ class TestPolynomialExtrapolator:
         with raises(ValueError):
             PolynomialExtrapolator(degree)
 
-    @mark.parametrize(
-        "degree", cases := range(1, 5 + 1), ids=[f"degree = {degree}" for degree in cases]
-    )
+    @mark.parametrize("degree", cases := range(1, 5 + 1), ids=[f"{degree=}" for degree in cases])
     def test_min_points(self, degree):
         """Test min points."""
         extrapolator = PolynomialExtrapolator(degree=degree)
@@ -113,15 +111,6 @@ class TestPolynomialExtrapolator:
         for key in ["coefficients", "covariance_matrix", "residuals", "R2"]:
             assert metadata.get(key, UNSET) is not UNSET  # TODO: test values
 
-    @mark.parametrize("degree", range(1, 5))
-    def test_extrapolate_zero_min_points(self, degree):
-        """Test extrapolate zero min points."""
-        extrapolator = PolynomialExtrapolator(degree=degree)
-        x_data = [1] * (degree + 1)
-        y_data = range(degree + 1)
-        with raises(ValueError):
-            extrapolator.extrapolate_zero(x_data, y_data)
-
 
 ################################################################################
 ## FACADES
@@ -136,9 +125,7 @@ class TestFacades:
             (QuarticExtrapolator, {"degree": 4}),
         ],
     )
-    def test_two_qubit_amplifier(self, cls, configs):
+    def test_facades(self, cls, configs):
         """Test polynomial extrapolator facades."""
-        extrapolator = cls()
-        assert isinstance(extrapolator, PolynomialExtrapolator)
-        for key, value in configs.items():
-            assert getattr(extrapolator, key) == value
+        # Note: using `strategy` decorator functionality
+        assert cls() == PolynomialExtrapolator(**configs)

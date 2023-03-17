@@ -12,14 +12,18 @@
 
 from unittest.mock import Mock
 
-from numpy import array, equal
+from numpy import array
 from pytest import fixture, mark, raises
 
-from zne.extrapolation import Extrapolator
+from zne.extrapolation import Extrapolator, OLSExtrapolator
 from zne.extrapolation.extrapolator import ReckoningResult
+from zne.utils.typing import normalize_array
+from zne.utils.unset import UNSET
 
 
 class TestExtrapoaltor:
+    """Test Extrapolator interface."""
+
     ################################################################################
     ## FIXTURES
     ################################################################################
@@ -87,6 +91,13 @@ class TestExtrapoaltor:
         with raises(ValueError):
             extrapolator.extrapolate_zero(x_data, y_data, sigma_x, sigma_y)
 
+    @mark.parametrize("data", [(1,), (1, 1), (1, 2)])
+    def test_validate_min_points(self, MockExtrapolator, data):
+        """Test validate data min points."""
+        extrapolator = MockExtrapolator(len(set(data)) + 1)
+        with raises(ValueError):
+            extrapolator.extrapolate_zero(data, data)
+
     @mark.parametrize("data", [[0] * 2, [0] * 3, [0] * 4, [1] * 2, [1] * 3, [1] * 4, range(4)])
     def test_validate_data(self, extrapolator, data):
         """Test validate data."""
@@ -99,14 +110,6 @@ class TestExtrapoaltor:
         with raises(TypeError):
             extrapolator._validate_data(data)
 
-    @mark.parametrize("data", [(1,), (1, 2)])
-    def test_validate_data_min_points(self, MockExtrapolator, data):
-        """Test validate data min points."""
-        extrapolator = MockExtrapolator(len(data) + 1)
-        print(extrapolator.min_points)
-        with raises(ValueError):
-            extrapolator._validate_data(data)
-
     @mark.parametrize(
         "sigma", [[0] * 2, [0] * 3, [0] * 4, [1] * 2, [1] * 3, [1] * 4, range(4), None]
     )
@@ -116,5 +119,81 @@ class TestExtrapoaltor:
         result = extrapolator._validate_sigma(sigma, default_size)
         if sigma is None:
             sigma = [1] * default_size
-        valid = array(sigma)
-        assert equal(result, valid).all()
+        assert result == tuple(sigma)
+
+
+class TestOLSExtrapolator:
+    """Test Extrapolator interface."""
+
+    ################################################################################
+    ## FIXTURES
+    ################################################################################
+    @fixture(scope="function")
+    def MockExtrapolator(self):
+        class MockExtrapolator(OLSExtrapolator):
+            def __init__(self, min_points=2) -> None:
+                self._min_points = min_points
+
+            @property
+            def min_points(self):
+                return self._min_points
+
+            def _extrapolate_zero(self, x_data, y_data, sigma_x, sigma_y):
+                return ReckoningResult(1, 1, {})
+
+            def _model(self, x, *coefficients):
+                return 1
+
+        return MockExtrapolator
+
+    @fixture(scope="function")
+    def extrapolator(self, MockExtrapolator):
+        return MockExtrapolator()
+
+    ################################################################################
+    ## TESTS
+    ################################################################################
+    @mark.parametrize(
+        "y_data, residuals, expected",
+        [
+            ([0, 2], [0, 0], 1),
+            ([0, 2], [1, 0], 1 / 2),
+            ([0, 2], [0, 1], 1 / 2),
+            ([0, 2], [1, 1], 0),
+            ([0, 1, 2], [0, 0, 0], 1),
+            ([0, 1, 2], [1, 0, 0], 1 / 2),
+            ([0, 1, 2], [0, 1, 0], 1 / 2),
+            ([0, 1, 2], [0, 0, 1], 1 / 2),
+            ([0, 1, 2], [1, 1, 0], 0),
+            ([0, 1, 2], [1, 0, 1], 0),
+            ([0, 1, 2], [0, 1, 1], 0),
+            ([0, 1, 2], [1, 1, 1], -1 / 2),
+        ],
+    )
+    def test_r_squared(self, extrapolator, y_data, residuals, expected):
+        """Test R-squared."""
+        y_data, residuals = array(y_data), array(residuals)
+        assert extrapolator._r_squared(y_data, residuals) == expected
+
+    @mark.parametrize(
+        "x_data, y_data, coefficients, covariance_matrix, r_squared",
+        [
+            ([0, 1], [0, 1], [0, 1], [[0, 0], [0, 0]], 1),
+            ([0, 1, 2], [0, 1, 2], [1, 0], [[1, 1], [1, 1]], 1),
+        ],
+    )
+    def test_build_metadata(
+        self, extrapolator, x_data, y_data, coefficients, covariance_matrix, r_squared
+    ):
+        """Test build metadata."""
+        x_data, y_data = array(x_data), array(y_data)
+        coefficients, covariance_matrix = array(coefficients), array(covariance_matrix)
+        extrapolator._r_squared = Mock(return_value=r_squared)
+        metadata = extrapolator._build_metadata(x_data, y_data, coefficients, covariance_matrix)
+        for entry in ("coefficients", "covariance_matrix", "residuals", "R2"):
+            assert metadata.get(entry, UNSET) is not UNSET
+        residuals = y_data - extrapolator._model(x_data, *coefficients)
+        assert metadata.get("coefficients") == normalize_array(coefficients)
+        assert metadata.get("covariance_matrix") == normalize_array(covariance_matrix)
+        assert metadata.get("residuals") == normalize_array(residuals)
+        assert metadata.get("R2") == normalize_array(r_squared)

@@ -16,15 +16,10 @@ from __future__ import annotations
 
 from collections import namedtuple
 
-from numpy import array
-from numpy import float_ as npfloat
-from numpy import mean, ndarray, sqrt, zeros
+from numpy import array, ndarray, sqrt, zeros
 from scipy.optimize import curve_fit
 
-from zne.types import Metadata
-from zne.utils.typing import normalize_array
-
-from .extrapolator import Extrapolator, ReckoningResult
+from .extrapolator import OLSExtrapolator, ReckoningResult
 
 ################################################################################
 ## GENERAL
@@ -32,7 +27,7 @@ from .extrapolator import Extrapolator, ReckoningResult
 _RegressionData = namedtuple("_RegressionData", ("x_data", "y_data", "sigma_x", "sigma_y"))
 
 
-class PolynomialExtrapolator(Extrapolator):
+class PolynomialExtrapolator(OLSExtrapolator):
     """Polynomial ordinary-least-squares (OLS) extrapolator.
 
     Args:
@@ -73,14 +68,13 @@ class PolynomialExtrapolator(Extrapolator):
         sigma_y: tuple[float, ...],
     ) -> ReckoningResult:
         # TODO: if curve fit fails (e.g. p-value test) warn and return closest to zero
-        num_points = len(set(x_data))  # TODO: equal up to tolerance
-        if num_points < self.min_points:
-            raise ValueError(
-                f"Insufficient number of distinct X data points provided ({num_points}), "
-                f"at least {self.min_points} needed."
-            )
         regression_data = _RegressionData(x_data, y_data, sigma_x, sigma_y)
         return self._infer(0, regression_data)
+
+    def _model(self, x, *coefficients) -> ndarray:  # pylint: disable=invalid-name
+        """Polynomial regression model for curve fitting."""
+        x = array(x)
+        return sum(c * (x**i) for i, c in enumerate(coefficients))
 
     ################################################################################
     ## AUXILIARY
@@ -116,37 +110,6 @@ class PolynomialExtrapolator(Extrapolator):
             covariance_matrix,
         )
         return ReckoningResult(value.tolist(), std_error.tolist(), metadata)
-
-    @staticmethod
-    def _model(x, *coefficients):  # pylint: disable=invalid-name
-        """Polynomial regression model for curve fitting."""
-        x = array(x)
-        return sum(c * (x**i) for i, c in enumerate(coefficients))
-
-    def _build_metadata(
-        self,
-        x_data: ndarray,
-        y_data: ndarray,
-        coefficients: ndarray,
-        covariance_matrix: ndarray,
-    ) -> Metadata:
-        """Build regression metadata."""
-        residuals = y_data - self._model(x_data, *coefficients)
-        r_squared = self._r_squared(y_data, residuals)
-        return {
-            "coefficients": normalize_array(coefficients),
-            "covariance_matrix": normalize_array(covariance_matrix),
-            "residuals": normalize_array(residuals),
-            "R2": normalize_array(r_squared),
-        }
-
-    @staticmethod
-    def _r_squared(y_data: ndarray, residuals: ndarray) -> npfloat:
-        """Compute R-squared (i.e. coefficient of determination)."""
-        y_diff = y_data - mean(y_data)
-        TSS = y_diff @ y_diff  # pylint: disable=invalid-name
-        RSS = residuals @ residuals  # pylint: disable=invalid-name
-        return 1 - RSS / TSS
 
 
 ################################################################################
