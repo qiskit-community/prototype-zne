@@ -12,6 +12,13 @@
 
 """Extrapolation library."""
 
+from .exponential_extrapolator import (
+    BiExponentialExtrapolator,
+    ExponentialExtrapolator,
+    QuadExponentialExtrapolator,
+    TriExponentialExtrapolator,
+    UniExponentialExtrapolator,
+)
 from .extrapolator import Extrapolator, OLSExtrapolator, ReckoningResult
 from .polynomial_extrapolator import (
     CubicExtrapolator,
@@ -29,6 +36,11 @@ EXTRAPOLATOR_LIBRARY = {
         QuadraticExtrapolator,
         CubicExtrapolator,
         QuarticExtrapolator,
+        ExponentialExtrapolator,
+        UniExponentialExtrapolator,
+        BiExponentialExtrapolator,
+        TriExponentialExtrapolator,
+        QuadExponentialExtrapolator,
     )
 }
 
