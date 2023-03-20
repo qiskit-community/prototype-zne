@@ -72,8 +72,9 @@ class ExponentialExtrapolator(OLSExtrapolator):
             y_data,
             sigma=sigma_y,
             absolute_sigma=True,
-            p0=ones(self.num_terms * 2),
+            p0=[2 ** (-i) for i in range(self.num_terms * 2)],
             bounds=(-inf, [inf, 7e2 / max(x_data)] * self.num_terms),
+            max_nfev=None,
         )
         value = self._model(0, *coefficients)
         entries = ones(self.num_terms)  # Note: entries for to amplitude coefficients

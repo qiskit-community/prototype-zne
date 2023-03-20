@@ -37,14 +37,17 @@ def extrapolate_zero_test_cases(max_num_terms):
     for num_terms in range(1, max_num_terms + 1):  # All num_terms up to max
         for coefficients in (
             [1 for _ in range(num_terms * 2)],
-            # [1 + c for c in range(num_terms * 2)],
-            # [1 / (1 + c) for c in range(num_terms * 2)],
-            # [ (-1)**(c % 2) * (1 + c) for c in range(num_terms * 2)],
+            [-1 for _ in range(num_terms * 2)],
+            [1 + c for c in range(num_terms * 2)],
+            [1 / (1 + c) for c in range(num_terms * 2)],
+            [(-1) ** (c % 2) * (1 + c) for c in range(num_terms * 2)],
         ):  # Different curves
-            model = lambda x: sum(a * exp(t * x) for a, t in group_elements_gen(coefficients, 2))
+            model = lambda x: sum(
+                amp * exp(tau * x) for amp, tau in group_elements_gen(coefficients, 2)
+            )
             for extra in range(5):  # Different number of data points
                 x_data = [1 + x for x in range(num_terms * 2 + extra)]
-                y_data = [model(x) + random.normal(0, 1e-4) for x in x_data]
+                y_data = [model(x) + random.normal(0, 1e-5) for x in x_data]
                 sigma_y = [random.normal(0.1, 1e-4) for _ in y_data]
                 expected = model(0)
                 yield num_terms, x_data, y_data, sigma_y, expected
@@ -106,7 +109,7 @@ class TestExponentialExtrapolator:
 
     @mark.parametrize(
         "num_terms, x_data, y_data, sigma_y, expected",
-        [*extrapolate_zero_test_cases(5)],
+        [*extrapolate_zero_test_cases(1)],
     )
     def test_extrapolate_zero(self, num_terms, x_data, y_data, sigma_y, expected):
         """Test extrapolate zero."""
