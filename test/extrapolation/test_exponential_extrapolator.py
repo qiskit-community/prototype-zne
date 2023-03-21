@@ -19,9 +19,8 @@ from pytest import mark, raises
 from zne.extrapolation import (
     BiExponentialExtrapolator,
     ExponentialExtrapolator,
-    QuadExponentialExtrapolator,
-    TriExponentialExtrapolator,
-    UniExponentialExtrapolator,
+    MonoExponentialExtrapolator,
+    MultiExponentialExtrapolator,
 )
 from zne.utils.grouping import group_elements_gen
 from zne.utils.unset import UNSET
@@ -32,18 +31,22 @@ from zne.utils.unset import UNSET
 ATOL: float = 1e-2
 RTOL: float = 1e-5
 
+MAX_NUM_TERMS: int = 1
+
 
 def extrapolate_zero_test_cases(max_num_terms):
     for num_terms in range(1, max_num_terms + 1):  # All num_terms up to max
         for coefficients in (
             [1 for _ in range(num_terms * 2)],
-            [-1 for _ in range(num_terms * 2)],
+            [(-1) ** (c % 2 + 1) for c in range(num_terms * 2)],
             [1 + c for c in range(num_terms * 2)],
             [1 / (1 + c) for c in range(num_terms * 2)],
-            [(-1) ** (c % 2) * (1 + c) for c in range(num_terms * 2)],
+            [(-1) ** (c % 2 + 1) * (1 + c) for c in range(num_terms * 2)],
+            [(-1) ** (c % 2 + 1) / (1 + c) for c in range(num_terms * 2)],
         ):  # Different curves
             model = lambda x: sum(
-                amp * exp(tau * x) for amp, tau in group_elements_gen(coefficients, 2)
+                amplitude * exp(-rate * x)
+                for amplitude, rate in group_elements_gen(coefficients, 2)
             )
             for extra in range(5):  # Different number of data points
                 x_data = [1 + x for x in range(num_terms * 2 + extra)]
@@ -69,13 +72,13 @@ class TestExponentialExtrapolator:
     )
     def test_num_terms(self, num_terms):
         """Test num_terms."""
-        extrapolator = ExponentialExtrapolator(num_terms=num_terms)
+        extrapolator = MultiExponentialExtrapolator(num_terms=num_terms)
         assert isinstance(extrapolator.num_terms, int)
         assert extrapolator.num_terms == num_terms
-        extrapolator = ExponentialExtrapolator(num_terms=str(num_terms))
+        extrapolator = MultiExponentialExtrapolator(num_terms=str(num_terms))
         assert isinstance(extrapolator.num_terms, int)
         assert extrapolator.num_terms == num_terms
-        extrapolator = ExponentialExtrapolator(num_terms=float(num_terms))
+        extrapolator = MultiExponentialExtrapolator(num_terms=float(num_terms))
         assert isinstance(extrapolator.num_terms, int)
         assert extrapolator.num_terms == num_terms
 
@@ -87,7 +90,7 @@ class TestExponentialExtrapolator:
     def test_num_terms_type_error(self, num_terms):
         """Test num_terms type error."""
         with raises(TypeError):
-            ExponentialExtrapolator(num_terms)
+            MultiExponentialExtrapolator(num_terms)
 
     @mark.parametrize(
         "num_terms",
@@ -97,23 +100,23 @@ class TestExponentialExtrapolator:
     def test_num_terms_value_error(self, num_terms):
         """Test num_terms value error."""
         with raises(ValueError):
-            ExponentialExtrapolator(num_terms)
+            MultiExponentialExtrapolator(num_terms)
 
     @mark.parametrize(
         "num_terms", cases := range(1, 5 + 1), ids=[f"{num_terms=}" for num_terms in cases]
     )
     def test_min_points(self, num_terms):
         """Test min points."""
-        extrapolator = ExponentialExtrapolator(num_terms=num_terms)
+        extrapolator = MultiExponentialExtrapolator(num_terms=num_terms)
         assert extrapolator.min_points == num_terms * 2
 
     @mark.parametrize(
         "num_terms, x_data, y_data, sigma_y, expected",
-        [*extrapolate_zero_test_cases(1)],
+        [*extrapolate_zero_test_cases(MAX_NUM_TERMS)],
     )
     def test_extrapolate_zero(self, num_terms, x_data, y_data, sigma_y, expected):
         """Test extrapolate zero."""
-        extrapolator = ExponentialExtrapolator(num_terms)
+        extrapolator = MultiExponentialExtrapolator(num_terms)
         value, std_error, metadata = extrapolator.extrapolate_zero(x_data, y_data, sigma_y=sigma_y)
         assert allclose(value, expected, atol=ATOL, rtol=RTOL)
         assert isinstance(std_error, float)  # TODO: test value
@@ -130,13 +133,12 @@ class TestFacades:
     @mark.parametrize(
         "cls, configs",
         [
-            (UniExponentialExtrapolator, {"num_terms": 1}),
+            (ExponentialExtrapolator, {"num_terms": 1}),
+            (MonoExponentialExtrapolator, {"num_terms": 1}),
             (BiExponentialExtrapolator, {"num_terms": 2}),
-            (TriExponentialExtrapolator, {"num_terms": 3}),
-            (QuadExponentialExtrapolator, {"num_terms": 4}),
         ],
     )
     def test_facades(self, cls, configs):
         """Test polynomial extrapolator facades."""
         # Note: using `strategy` decorator functionality
-        assert cls() == ExponentialExtrapolator(**configs)
+        assert cls() == MultiExponentialExtrapolator(**configs)

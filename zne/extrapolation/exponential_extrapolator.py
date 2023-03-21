@@ -25,12 +25,56 @@ from .extrapolator import OLSExtrapolator, ReckoningResult
 ################################################################################
 ## GENERAL
 ################################################################################
-class ExponentialExtrapolator(OLSExtrapolator):
-    """Exponential ordinary-least-squares (OLS) extrapolator.
+class MultiExponentialExtrapolator(OLSExtrapolator):
+    """Multi-exponential ordinary-least-squares (OLS) extrapolator.
+
+    Theoretical results [1] point at the multi-exponential model being the
+    most suitable for performing zero-noise extrapolation; nonetheless, the
+    nature of this regression model, where all the exponential terms are
+    identical, make it unstable to fit in practice [2] for more than one
+    exponential term. For the sake of generality, this class provides an
+    extrapolator for the multi-exponential regression model OLS fitted.
+
+    Notice that a multi-exponential decay always tends towards zero, however,
+    a general observable will tend towards the average of its eigenvalues for
+    a state closer and closer to the complete mixed state (i.e. as noise
+    increases). Generally speaking, such average will not be zero, and
+    therefore, the multi-exponential decay will not be a valid model in all
+    scenarios. Nonetheless, by expressing such general observable as a sum
+    Pauli operators, it is easy to notice that the only non-traceless element
+    will be the one associated to the identity operator (i.e. other Paulis are
+    always traceless), hence determining the expectation value that the
+    general observable will tend towards. Since the expectation value of the
+    identity operator is trivial to obtain, by virtue of subtracting such term
+    from the sum of Paulis, the remaining observable will naturally tend
+    towards zero just as the multi-exponential model assumes. Alternatively,
+    we can include one extra parameter in the regression model as a constant
+    factor being added at the expense of increased uncertainty in the results.
+
+    In order to extrapolate a constant value, the model will require all
+    parameters to be zero except for one of the amplitudes. Convergence in
+    this sort of scenario will generally be successful except fot the case
+    where such constant value is zero; which in turn is the most reasonable
+    scenario as explained above. This phenomenon is explained by the fact that,
+    even if the amplitudes are non-zero, one can fit arbitrarily many data
+    points on `y=0` for large enough values of the decay rate. Upper-bounding
+    the possible values of the decay rate will not solve this issue, as the
+    optimizer could always lower the value the amplitude to accommodate for
+    that. A possible solution for this would be to force the amplitudes to be
+    zero if the closest data point evaluated close to zero (i.e. up to certain
+    tolerance).
 
     Args:
-        num_terms: The number of exponential terms `amp * exp(tau * x)`
-            added in the regression model.
+        num_terms: The number of exponential terms `amplitude * exp(-rate * x)`
+            added together in the regression model.
+
+    References:
+        [1] Cai, Zhenyu. "Multi-exponential error extrapolation and combining
+        error mitigation techniques for NISQ applications." npj Quantum
+        Information 7 (2020): 1-12.
+        [2] Bi, C., Fishbein, K., Bouhrara, M. et al. "Stabilization of
+        parameter estimates from multiexponential decay through extension
+        into higher dimensions." Sci Rep 12, 5773 (2022).
     """
 
     def __init__(self, num_terms: int = 1):  # pylint: disable=super-init-not-called
@@ -73,7 +117,7 @@ class ExponentialExtrapolator(OLSExtrapolator):
             sigma=sigma_y,
             absolute_sigma=True,
             p0=[2 ** (-i) for i in range(self.num_terms * 2)],
-            bounds=(-inf, [inf, 7e2 / max(x_data)] * self.num_terms),
+            bounds=([-inf, 0] * self.num_terms, inf),  # Note: only decay considered
             max_nfev=None,
         )
         value = self._model(0, *coefficients)
@@ -92,36 +136,30 @@ class ExponentialExtrapolator(OLSExtrapolator):
         """Exponential regression model for curve fitting."""
         x = array(x)
         return sum(
-            amp * exp(tau * x) for amp, tau in group_elements_gen(coefficients, group_size=2)
+            amplitude * exp(-rate * x)  # Note: decay for positive values of `rate`
+            for amplitude, rate in group_elements_gen(coefficients, group_size=2)
         )
 
 
 ################################################################################
 ## FACADES
 ################################################################################
-class UniExponentialExtrapolator(ExponentialExtrapolator):
-    """Uni-exponential ordinary-least-squares (OLS) extrapolator."""
+class MonoExponentialExtrapolator(MultiExponentialExtrapolator):
+    """Mono-exponential ordinary-least-squares (OLS) extrapolator."""
 
     def __init__(self):
         super().__init__(num_terms=1)
 
 
-class BiExponentialExtrapolator(ExponentialExtrapolator):
-    """Bi-exponential ordinary-least-squares (OLS) extrapolator."""
+class BiExponentialExtrapolator(MultiExponentialExtrapolator):
+    """Bi-exponential ordinary-least-squares (OLS) extrapolator.
+
+    Note: The convergence of this model is unstable. Proceed with caution.
+    """
 
     def __init__(self):
         super().__init__(num_terms=2)
 
 
-class TriExponentialExtrapolator(ExponentialExtrapolator):
-    """Tri-exponential ordinary-least-squares (OLS) extrapolator."""
-
-    def __init__(self):
-        super().__init__(num_terms=3)
-
-
-class QuadExponentialExtrapolator(ExponentialExtrapolator):
-    """Quad-exponential ordinary-least-squares (OLS) extrapolator."""
-
-    def __init__(self):
-        super().__init__(num_terms=4)
+class ExponentialExtrapolator(MonoExponentialExtrapolator):
+    """Exponential ordinary-least-squares (OLS) extrapolator."""

@@ -31,6 +31,8 @@ from zne.utils.unset import UNSET
 ATOL: float = 1e-2
 RTOL: float = 1e-5
 
+MAX_DEGREE: int = 5
+
 
 def extrapolate_zero_test_cases(max_degree):
     for degree in range(1, max_degree + 1):  # All degrees up to max
@@ -102,7 +104,7 @@ class TestPolynomialExtrapolator:
 
     @mark.parametrize(
         "degree, x_data, y_data, sigma_y, expected",
-        [*extrapolate_zero_test_cases(5)],
+        [*extrapolate_zero_test_cases(MAX_DEGREE)],
     )
     def test_extrapolate_zero(self, degree, x_data, y_data, sigma_y, expected):
         """Test extrapolate zero."""
