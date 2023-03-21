@@ -13,7 +13,7 @@
 
 from test import NO_INTS
 
-from numpy import allclose, exp, random
+from numpy import allclose, random
 from pytest import mark, raises
 
 from zne.extrapolation import (
@@ -22,7 +22,6 @@ from zne.extrapolation import (
     MonoExponentialExtrapolator,
     MultiExponentialExtrapolator,
 )
-from zne.utils.grouping import group_elements_gen
 from zne.utils.unset import UNSET
 
 ################################################################################
@@ -36,21 +35,19 @@ MAX_NUM_TERMS: int = 1
 
 def extrapolate_zero_test_cases(max_num_terms):
     for num_terms in range(1, max_num_terms + 1):  # All num_terms up to max
+        min_points = num_terms * 2 + 1
         for coefficients in (
-            [1 for _ in range(num_terms * 2)],
-            [(-1) ** (c % 2 + 1) for c in range(num_terms * 2)],
-            [1 + c for c in range(num_terms * 2)],
-            [1 / (1 + c) for c in range(num_terms * 2)],
-            [(-1) ** (c % 2 + 1) * (1 + c) for c in range(num_terms * 2)],
-            [(-1) ** (c % 2 + 1) / (1 + c) for c in range(num_terms * 2)],
+            [1 for _ in range(min_points)],
+            [(-1) ** (c % 2) for c in range(min_points)],
+            [1 + c for c in range(min_points)],
+            [1 / (1 + c) for c in range(min_points)],
+            [(-1) ** (c % 2) * (1 + c) for c in range(min_points)],
+            [(-1) ** (c % 2) / (1 + c) for c in range(min_points)],
         ):  # Different curves
-            model = lambda x: sum(
-                amplitude * exp(-rate * x)
-                for amplitude, rate in group_elements_gen(coefficients, 2)
-            )
+            model = lambda x: MultiExponentialExtrapolator(num_terms)._model(x, *coefficients)
             for extra in range(5):  # Different number of data points
-                x_data = [1 + x for x in range(num_terms * 2 + extra)]
-                y_data = [model(x) + random.normal(0, 1e-5) for x in x_data]
+                x_data = [1 + x for x in range(min_points + extra)]
+                y_data = [model(x) + random.normal(0, 1e-6) for x in x_data]
                 sigma_y = [random.normal(0.1, 1e-4) for _ in y_data]
                 expected = model(0)
                 yield num_terms, x_data, y_data, sigma_y, expected
@@ -59,7 +56,7 @@ def extrapolate_zero_test_cases(max_num_terms):
 ################################################################################
 ## EXTRAPOLATORS
 ################################################################################
-class TestExponentialExtrapolator:
+class TestMultiExponentialExtrapolator:
     """Test polynomial extrapolator."""
 
     ################################################################################
@@ -108,7 +105,7 @@ class TestExponentialExtrapolator:
     def test_min_points(self, num_terms):
         """Test min points."""
         extrapolator = MultiExponentialExtrapolator(num_terms=num_terms)
-        assert extrapolator.min_points == num_terms * 2
+        assert extrapolator.min_points == num_terms * 2 + 1
 
     @mark.parametrize(
         "num_terms, x_data, y_data, sigma_y, expected",

@@ -33,36 +33,53 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
     nature of this regression model, where all the exponential terms are
     identical, make it unstable to fit in practice [2] for more than one
     exponential term. For the sake of generality, this class provides an
-    extrapolator for the multi-exponential regression model OLS fitted.
+    extrapolator for the multi-exponential regression model OLS fitted:
+    `shift + sum(amplitude[i] * exp(-rate[i] * x) for i in range(num_terms))`
 
     Notice that a multi-exponential decay always tends towards zero, however,
-    a general observable will tend towards the average of its eigenvalues for
-    a state closer and closer to the complete mixed state (i.e. as noise
-    increases). Generally speaking, such average will not be zero, and
-    therefore, the multi-exponential decay will not be a valid model in all
-    scenarios. Nonetheless, by expressing such general observable as a sum
-    Pauli operators, it is easy to notice that the only non-traceless element
-    will be the one associated to the identity operator (i.e. other Paulis are
-    always traceless), hence determining the expectation value that the
-    general observable will tend towards. Since the expectation value of the
-    identity operator is trivial to obtain, by virtue of subtracting such term
-    from the sum of Paulis, the remaining observable will naturally tend
-    towards zero just as the multi-exponential model assumes. Alternatively,
-    we can include one extra parameter in the regression model as a constant
-    factor being added at the expense of increased uncertainty in the results.
+    a general observable will tend towards the average of its eigenvalues
+    (i.e. trace over the number of dimensions) for a state closer and closer
+    to the complete mixed state (i.e. as noise increases). Generally speaking,
+    such average will not be zero, and therefore, the multi-exponential decay
+    will not be a valid model in all scenarios. Nonetheless, by expressing
+    such general observable as a sum Pauli operators, it is easy to notice
+    that the only non-traceless element will be the one associated to the
+    identity operator (i.e. other Paulis are always traceless), hence
+    determining the expectation value that the general observable will tend
+    towards. Since the expectation value of the identity operator is trivial
+    to obtain, by virtue of subtracting such term from the sum of Paulis, the
+    remaining observable will naturally tend towards zero just as the
+    multi-exponential model assumes. However, coherent noise can make the
+    expected asymptote to drift. For that reason, this regression model
+    includes one extra shift coefficient in the form of a constant factor
+    added to the exponential terms globally.
 
-    In order to extrapolate a constant value, the model will require all
-    parameters to be zero except for one of the amplitudes. Convergence in
-    this sort of scenario will generally be successful except fot the case
-    where such constant value is zero; which in turn is the most reasonable
-    scenario as explained above. This phenomenon is explained by the fact that,
-    even if the amplitudes are non-zero, one can fit arbitrarily many data
-    points on `y=0` for large enough values of the decay rate. Upper-bounding
-    the possible values of the decay rate will not solve this issue, as the
-    optimizer could always lower the value the amplitude to accommodate for
-    that. A possible solution for this would be to force the amplitudes to be
-    zero if the closest data point evaluated close to zero (i.e. up to certain
-    tolerance).
+    Extrapolating constant noise profiles will generally fail due to a poor
+    convergence of the model. There are several reasons for this:
+        1. Assuming all decay rates are fitted to zero, there is ambiguity in
+        how the constant factor should be distributed across the shift
+        coefficient and the amplitudes.
+        2. Even with non-zero amplitude coefficients, one could fit
+        arbitrarily many data points on the constant by virtue of boosting
+        the decay rates; as this will make the contributions from the
+        exponential terms arbitrarily close to zero for value of `x!=0`.
+
+    There are two main scenarios in the context of ZNE when this is relevant:
+        1. If noise saturation has been reached for all input data points;
+        in which case no relevant information can be extracted and
+        extrapolation is therefore meaningless.
+        2. If the desired mitigated value is close to the decayed value;
+        in which case the instability will prevent from achieving meaningful
+        error mitigation by providing either bad accuracy, precision or both.
+
+    Solving for this phenomena is beyond the scope of this class, but users
+    may consider techniques such as:
+        1. After extrapolation: Comparing with other extrapolation methods
+        (e.g. linear) and choosing the result based on metrics such as the std
+        error of the extrapolated value, or goodness of fit.
+        2. Before extrapolation: trying to predict whether the profile
+        corresponds to a constant before fitting by pre-analyzing the data
+        points, and manually assigning the coefficient values if so.
 
     Args:
         num_terms: The number of exponential terms `amplitude * exp(-rate * x)`
@@ -100,7 +117,7 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
     ################################################################################
     @property
     def min_points(self) -> int:
-        return self.num_terms * 2
+        return self.num_terms * 2 + 1
 
     # pylint: disable=duplicate-code
     def _extrapolate_zero(
@@ -116,13 +133,14 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
             y_data,
             sigma=sigma_y,
             absolute_sigma=True,
-            p0=[2 ** (-i) for i in range(self.num_terms * 2)],
-            bounds=([-inf, 0] * self.num_terms, inf),  # Note: only decay considered
+            p0=[2 ** (-i) for i in range(self.num_terms * 2 + 1)],
+            bounds=([-inf] + [-inf, 0] * self.num_terms, inf),  # Note: only decay considered
             max_nfev=None,
         )
         value = self._model(0, *coefficients)
-        entries = ones(self.num_terms)  # Note: entries for to amplitude coefficients
-        variance = entries @ covariance_matrix[::2, ::2] @ entries
+        entries = ones(self.num_terms * 2 + 1)
+        entries[2::2] = 0  # Note: decay rate coefficients not relevant for x=0
+        variance = entries @ covariance_matrix @ entries
         std_error = sqrt(variance)
         metadata = self._build_metadata(
             array(x_data),
@@ -135,10 +153,13 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
     def _model(self, x, *coefficients) -> ndarray:  # pylint: disable=invalid-name
         """Exponential regression model for curve fitting."""
         x = array(x)
-        return sum(
+        shift = coefficients[0]
+        exp_coefficients = coefficients[1:]
+        exponential = sum(
             amplitude * exp(-rate * x)  # Note: decay for positive values of `rate`
-            for amplitude, rate in group_elements_gen(coefficients, group_size=2)
+            for amplitude, rate in group_elements_gen(exp_coefficients, group_size=2)
         )
+        return exponential + shift
 
 
 ################################################################################

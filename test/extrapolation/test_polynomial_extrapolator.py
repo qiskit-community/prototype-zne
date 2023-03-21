@@ -36,17 +36,18 @@ MAX_DEGREE: int = 5
 
 def extrapolate_zero_test_cases(max_degree):
     for degree in range(1, max_degree + 1):  # All degrees up to max
+        min_points = degree + 1
         for coefficients in (
-            [1 for _ in range(degree + 1)],
-            [-1 for _ in range(degree + 1)],
-            [c for c in range(degree + 1)],
-            [1 + c for c in range(degree + 1)],
-            [1 - c for c in range(degree + 1)],
+            [1 for _ in range(min_points)],
+            [-1 for _ in range(min_points)],
+            [c for c in range(min_points)],
+            [1 + c for c in range(min_points)],
+            [1 - c for c in range(min_points)],
         ):  # Different curves
-            model = lambda x: sum(c * (x**p) for p, c in enumerate(coefficients))
+            model = lambda x: PolynomialExtrapolator(degree)._model(x, *coefficients)
             for extra in range(5):  # Different number of data points
-                x_data = [1 + x for x in range(degree + 1 + extra)]
-                y_data = [model(x) + random.normal(0, 1e-5) for x in x_data]
+                x_data = [1 + x for x in range(min_points + extra)]
+                y_data = [model(x) + random.normal(0, 1e-6) for x in x_data]
                 sigma_y = [random.normal(0.1, 1e-4) for _ in y_data]
                 expected = model(0)
                 yield degree, x_data, y_data, sigma_y, expected
