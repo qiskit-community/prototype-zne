@@ -10,23 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Polynomial extrapolator."""
-
-from __future__ import annotations
-
-from numpy import array, exp, inf, ndarray, ones, sqrt
-from scipy.optimize import curve_fit
-
-from zne.utils.grouping import group_elements_gen
-
-from .extrapolator import OLSExtrapolator, ReckoningResult
-
-
-################################################################################
-## GENERAL
-################################################################################
-class MultiExponentialExtrapolator(OLSExtrapolator):
-    """Multi-exponential ordinary-least-squares (OLS) extrapolator.
+"""Multi-exponential ordinary-least-squares (OLS) extrapolator.
 
     Theoretical results [1] point at the multi-exponential model being the
     most suitable for performing zero-noise extrapolation; nonetheless, the
@@ -81,9 +65,12 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
         corresponds to a constant before fitting by pre-analyzing the data
         points, and manually assigning the coefficient values if so.
 
-    Args:
-        num_terms: The number of exponential terms `amplitude * exp(-rate * x)`
-            added together in the regression model.
+    Notice however that, a priori, there is no way to identify which of the
+    possible scenarios we may be operating under. Therefore, one always has to
+    be wary of constant noise profiles regardless of the extrapolator;
+    as sometimes they will carry no information about the ideal value (i.e.
+    scenario #1), and sometimes they will portray relevant information and
+    be meaningful (i.e. scenario #2).
 
     References:
         [1] Cai, Zhenyu. "Multi-exponential error extrapolation and combining
@@ -92,6 +79,27 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
         [2] Bi, C., Fishbein, K., Bouhrara, M. et al. "Stabilization of
         parameter estimates from multiexponential decay through extension
         into higher dimensions." Sci Rep 12, 5773 (2022).
+"""
+
+from __future__ import annotations
+
+from numpy import array, exp, inf, ndarray, ones, sqrt
+from scipy.optimize import curve_fit
+
+from zne.utils.grouping import group_elements_gen
+
+from .extrapolator import OLSExtrapolator, ReckoningResult
+
+
+################################################################################
+## GENERAL
+################################################################################
+class MultiExponentialExtrapolator(OLSExtrapolator):
+    """Multi-exponential ordinary-least-squares (OLS) extrapolator.
+
+    Args:
+        num_terms: The number of exponential terms `amplitude * exp(-rate * x)`
+            added together in the regression model.
     """
 
     def __init__(self, num_terms: int = 1):  # pylint: disable=super-init-not-called
