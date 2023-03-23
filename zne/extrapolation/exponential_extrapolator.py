@@ -12,73 +12,73 @@
 
 """Multi-exponential ordinary-least-squares (OLS) extrapolator.
 
-    Theoretical results [1] point at the multi-exponential model being the
-    most suitable for performing zero-noise extrapolation; nonetheless, the
-    nature of this regression model, where all the exponential terms are
-    identical, make it unstable to fit in practice [2] for more than one
-    exponential term. For the sake of generality, this class provides an
-    extrapolator for the multi-exponential regression model OLS fitted:
-    `shift + sum(amplitude[i] * exp(-rate[i] * x) for i in range(num_terms))`
+Theoretical results [1] point at the multi-exponential model being the
+most suitable for performing zero-noise extrapolation; nonetheless, the
+nature of this regression model, where all the exponential terms are
+identical, make it unstable to fit in practice [2] for more than one
+exponential term. For the sake of generality, this class provides an
+extrapolator for the multi-exponential regression model OLS fitted:
+`shift + sum(amplitude[i] * exp(-rate[i] * x) for i in range(num_terms))`
 
-    Notice that a multi-exponential decay always tends towards zero, however,
-    a general observable will tend towards the average of its eigenvalues
-    (i.e. trace over the number of dimensions) for a state closer and closer
-    to the complete mixed state (i.e. as noise increases). Generally speaking,
-    such average will not be zero, and therefore, the multi-exponential decay
-    will not be a valid model in all scenarios. Nonetheless, by expressing
-    such general observable as a sum Pauli operators, it is easy to notice
-    that the only non-traceless element will be the one associated to the
-    identity operator (i.e. other Paulis are always traceless), hence
-    determining the expectation value that the general observable will tend
-    towards. Since the expectation value of the identity operator is trivial
-    to obtain, by virtue of subtracting such term from the sum of Paulis, the
-    remaining observable will naturally tend towards zero just as the
-    multi-exponential model assumes. However, coherent noise can make the
-    expected asymptote to drift. For that reason, this regression model
-    includes one extra shift coefficient in the form of a constant factor
-    added to the exponential terms globally.
+Notice that a multi-exponential decay always tends towards zero, however,
+a general observable will tend towards the average of its eigenvalues
+(i.e. trace over the number of dimensions) for a state closer and closer
+to the complete mixed state (i.e. as noise increases). Generally speaking,
+such average will not be zero, and therefore, the multi-exponential decay
+will not be a valid model in all scenarios. Nonetheless, by expressing
+such general observable as a sum Pauli operators, it is easy to notice
+that the only non-traceless element will be the one associated to the
+identity operator (i.e. other Paulis are always traceless), hence
+determining the expectation value that the general observable will tend
+towards. Since the expectation value of the identity operator is trivial
+to obtain, by virtue of subtracting such term from the sum of Paulis, the
+remaining observable will naturally tend towards zero just as the
+multi-exponential model assumes. However, coherent noise can make the
+expected asymptote to drift. For that reason, this regression model
+includes one extra shift coefficient in the form of a constant factor
+added to the exponential terms globally.
 
-    Extrapolating constant noise profiles will generally fail due to a poor
-    convergence of the model. There are several reasons for this:
-        1. Assuming all decay rates are fitted to zero, there is ambiguity in
-        how the constant factor should be distributed across the shift
-        coefficient and the amplitudes.
-        2. Even with non-zero amplitude coefficients, one could fit
-        arbitrarily many data points on the constant by virtue of boosting
-        the decay rates; as this will make the contributions from the
-        exponential terms arbitrarily close to zero for value of `x!=0`.
+Extrapolating constant noise profiles will generally fail due to a poor
+convergence of the model. There are several reasons for this:
+    1. Assuming all decay rates are fitted to zero, there is ambiguity in
+    how the constant factor should be distributed across the shift
+    coefficient and the amplitudes.
+    2. Even with non-zero amplitude coefficients, one could fit
+    arbitrarily many data points on the constant by virtue of boosting
+    the decay rates; as this will make the contributions from the
+    exponential terms arbitrarily close to zero for value of `x!=0`.
 
-    There are two main scenarios in the context of ZNE when this is relevant:
-        1. If noise saturation has been reached for all input data points;
-        in which case no relevant information can be extracted and
-        extrapolation is therefore meaningless.
-        2. If the desired mitigated value is close to the decayed value;
-        in which case the instability will prevent from achieving meaningful
-        error mitigation by providing either bad accuracy, precision or both.
+There are two main scenarios in the context of ZNE when this is relevant:
+    1. If noise saturation has been reached for all input data points;
+    in which case no relevant information can be extracted and
+    extrapolation is therefore meaningless.
+    2. If the desired mitigated value is close to the decayed value;
+    in which case the instability will prevent from achieving meaningful
+    error mitigation by providing either bad accuracy, precision or both.
 
-    Solving for this phenomena is beyond the scope of this class, but users
-    may consider techniques such as:
-        1. After extrapolation: Comparing with other extrapolation methods
-        (e.g. linear) and choosing the result based on metrics such as the std
-        error of the extrapolated value, or goodness of fit.
-        2. Before extrapolation: trying to predict whether the profile
-        corresponds to a constant before fitting by pre-analyzing the data
-        points, and manually assigning the coefficient values if so.
+Solving for this phenomena is beyond the scope of this class, but users
+may consider techniques such as:
+    1. After extrapolation: Comparing with other extrapolation methods
+    (e.g. linear) and choosing the result based on metrics such as the std
+    error of the extrapolated value, or goodness of fit.
+    2. Before extrapolation: trying to predict whether the profile
+    corresponds to a constant before fitting by pre-analyzing the data
+    points, and manually assigning the coefficient values if so.
 
-    Notice however that, a priori, there is no way to identify which of the
-    possible scenarios we may be operating under. Therefore, one always has to
-    be wary of constant noise profiles regardless of the extrapolator;
-    as sometimes they will carry no information about the ideal value (i.e.
-    scenario #1), and sometimes they will portray relevant information and
-    be meaningful (i.e. scenario #2).
+Notice however that, a priori, there is no way to identify which of the
+possible scenarios we may be operating under. Therefore, one always has to
+be wary of constant noise profiles regardless of the extrapolator;
+as sometimes they will carry no information about the ideal value (i.e.
+scenario #1), and sometimes they will portray relevant information and
+be meaningful (i.e. scenario #2).
 
-    References:
-        [1] Cai, Zhenyu. "Multi-exponential error extrapolation and combining
-        error mitigation techniques for NISQ applications." npj Quantum
-        Information 7 (2020): 1-12.
-        [2] Bi, C., Fishbein, K., Bouhrara, M. et al. "Stabilization of
-        parameter estimates from multiexponential decay through extension
-        into higher dimensions." Sci Rep 12, 5773 (2022).
+References:
+    [1] Cai, Zhenyu. "Multi-exponential error extrapolation and combining
+    error mitigation techniques for NISQ applications." npj Quantum
+    Information 7 (2020): 1-12.
+    [2] Bi, C., Fishbein, K., Bouhrara, M. et al. "Stabilization of
+    parameter estimates from multiexponential decay through extension
+    into higher dimensions." Sci Rep 12, 5773 (2022).
 """
 
 from __future__ import annotations
