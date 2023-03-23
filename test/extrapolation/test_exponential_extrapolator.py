@@ -17,11 +17,10 @@ from numpy import allclose, random
 from pytest import mark, raises
 
 from zne.extrapolation import (
-    CubicExtrapolator,
-    LinearExtrapolator,
-    PolynomialExtrapolator,
-    QuadraticExtrapolator,
-    QuarticExtrapolator,
+    BiExponentialExtrapolator,
+    ExponentialExtrapolator,
+    MonoExponentialExtrapolator,
+    MultiExponentialExtrapolator,
 )
 from zne.utils.unset import UNSET
 
@@ -31,85 +30,90 @@ from zne.utils.unset import UNSET
 ATOL: float = 1e-2
 RTOL: float = 1e-5
 
-MAX_DEGREE: int = 5
+MAX_NUM_TERMS: int = 1
 
 
-def extrapolate_zero_test_cases(max_degree):
-    for degree in range(1, max_degree + 1):  # All degrees up to max
-        min_points = degree + 1
+def extrapolate_zero_test_cases(max_num_terms):
+    for num_terms in range(1, max_num_terms + 1):  # All num_terms up to max
+        min_points = num_terms * 2 + 1
         for coefficients in (
             [1 for _ in range(min_points)],
-            [-1 for _ in range(min_points)],
-            [c for c in range(min_points)],
+            [(-1) ** (c % 2) for c in range(min_points)],
             [1 + c for c in range(min_points)],
-            [1 - c for c in range(min_points)],
+            [1 / (1 + c) for c in range(min_points)],
+            [(-1) ** (c % 2) * (1 + c) for c in range(min_points)],
+            [(-1) ** (c % 2) / (1 + c) for c in range(min_points)],
         ):  # Different curves
-            model = lambda x: PolynomialExtrapolator(degree)._model(x, *coefficients)
+            model = lambda x: MultiExponentialExtrapolator(num_terms)._model(x, *coefficients)
             for extra in range(5):  # Different number of data points
                 x_data = [1 + x for x in range(min_points + extra)]
                 y_data = [model(x) + random.normal(0, 1e-6) for x in x_data]
                 sigma_y = [random.normal(0.1, 1e-4) for _ in y_data]
                 expected = model(0)
-                yield degree, x_data, y_data, sigma_y, expected
+                yield num_terms, x_data, y_data, sigma_y, expected
 
 
 ################################################################################
 ## EXTRAPOLATORS
 ################################################################################
-class TestPolynomialExtrapolator:
+class TestMultiExponentialExtrapolator:
     """Test polynomial extrapolator."""
 
     ################################################################################
     ## TESTS
     ################################################################################
     @mark.parametrize(
-        "degree", cases := range(1, 5 + 1), ids=[f"degree = {degree!r}" for degree in cases]
+        "num_terms",
+        cases := range(1, 5 + 1),
+        ids=[f"num_terms = {num_terms!r}" for num_terms in cases],
     )
-    def test_degree(self, degree):
-        """Test degree."""
-        extrapolator = PolynomialExtrapolator(degree=degree)
-        assert isinstance(extrapolator.degree, int)
-        assert extrapolator.degree == degree
-        extrapolator = PolynomialExtrapolator(degree=str(degree))
-        assert isinstance(extrapolator.degree, int)
-        assert extrapolator.degree == degree
-        extrapolator = PolynomialExtrapolator(degree=float(degree))
-        assert isinstance(extrapolator.degree, int)
-        assert extrapolator.degree == degree
+    def test_num_terms(self, num_terms):
+        """Test num_terms."""
+        extrapolator = MultiExponentialExtrapolator(num_terms=num_terms)
+        assert isinstance(extrapolator.num_terms, int)
+        assert extrapolator.num_terms == num_terms
+        extrapolator = MultiExponentialExtrapolator(num_terms=str(num_terms))
+        assert isinstance(extrapolator.num_terms, int)
+        assert extrapolator.num_terms == num_terms
+        extrapolator = MultiExponentialExtrapolator(num_terms=float(num_terms))
+        assert isinstance(extrapolator.num_terms, int)
+        assert extrapolator.num_terms == num_terms
 
     @mark.parametrize(
-        "degree",
+        "num_terms",
         cases := [d for d in NO_INTS if not isinstance(d, (str, float))],
-        ids=[f"degree = {degree!r}" for degree in cases],
+        ids=[f"num_terms = {num_terms!r}" for num_terms in cases],
     )
-    def test_degree_type_error(self, degree):
-        """Test degree type error."""
+    def test_num_terms_type_error(self, num_terms):
+        """Test num_terms type error."""
         with raises(TypeError):
-            PolynomialExtrapolator(degree)
+            MultiExponentialExtrapolator(num_terms)
 
     @mark.parametrize(
-        "degree",
+        "num_terms",
         cases := list(range(0, -5, -1)) + [str(float(d)) for d in range(1, 5 + 1)],
-        ids=[f"degree = {degree!r}" for degree in cases],
+        ids=[f"num_terms = {num_terms!r}" for num_terms in cases],
     )
-    def test_degree_value_error(self, degree):
-        """Test degree value error."""
+    def test_num_terms_value_error(self, num_terms):
+        """Test num_terms value error."""
         with raises(ValueError):
-            PolynomialExtrapolator(degree)
-
-    @mark.parametrize("degree", cases := range(1, 5 + 1), ids=[f"{degree=}" for degree in cases])
-    def test_min_points(self, degree):
-        """Test min points."""
-        extrapolator = PolynomialExtrapolator(degree=degree)
-        assert extrapolator.min_points == degree + 1
+            MultiExponentialExtrapolator(num_terms)
 
     @mark.parametrize(
-        "degree, x_data, y_data, sigma_y, expected",
-        [*extrapolate_zero_test_cases(MAX_DEGREE)],
+        "num_terms", cases := range(1, 5 + 1), ids=[f"{num_terms=}" for num_terms in cases]
     )
-    def test_extrapolate_zero(self, degree, x_data, y_data, sigma_y, expected):
+    def test_min_points(self, num_terms):
+        """Test min points."""
+        extrapolator = MultiExponentialExtrapolator(num_terms=num_terms)
+        assert extrapolator.min_points == num_terms * 2 + 1
+
+    @mark.parametrize(
+        "num_terms, x_data, y_data, sigma_y, expected",
+        [*extrapolate_zero_test_cases(MAX_NUM_TERMS)],
+    )
+    def test_extrapolate_zero(self, num_terms, x_data, y_data, sigma_y, expected):
         """Test extrapolate zero."""
-        extrapolator = PolynomialExtrapolator(degree)
+        extrapolator = MultiExponentialExtrapolator(num_terms)
         value, std_error, metadata = extrapolator.extrapolate_zero(x_data, y_data, sigma_y=sigma_y)
         assert allclose(value, expected, atol=ATOL, rtol=RTOL)
         assert isinstance(std_error, float)  # TODO: test value
@@ -126,13 +130,12 @@ class TestFacades:
     @mark.parametrize(
         "cls, configs",
         [
-            (LinearExtrapolator, {"degree": 1}),
-            (QuadraticExtrapolator, {"degree": 2}),
-            (CubicExtrapolator, {"degree": 3}),
-            (QuarticExtrapolator, {"degree": 4}),
+            (ExponentialExtrapolator, {"num_terms": 1}),
+            (MonoExponentialExtrapolator, {"num_terms": 1}),
+            (BiExponentialExtrapolator, {"num_terms": 2}),
         ],
     )
     def test_facades(self, cls, configs):
         """Test polynomial extrapolator facades."""
         # Note: using `strategy` decorator functionality
-        assert cls() == PolynomialExtrapolator(**configs)
+        assert cls() == MultiExponentialExtrapolator(**configs)
