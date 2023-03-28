@@ -108,13 +108,15 @@ Importantly, *[Qiskit IBM Runtime](https://qiskit.org/documentation/partners/qis
 
 ### References
 
-[1] Kandala, Abhinav, et al. "Extending the computational reach of a noisy superconducting quantum processor."arXiv preprint arXiv:1805.04492(2018).
+[1] Kandala, Abhinav, et al. "Extending the computational reach of a noisy superconducting quantum processor." arXiv:1805.04492(2018).
 
-[2] Stamatopoulos, Nikitas, et al. "Option pricing using quantum computers."Quantum4 (2020): 291.
+[2] Stamatopoulos, Nikitas, et al. "Option pricing using quantum computers." Quantum4 (2020): 291.
 
-[3] LaRose, Ryan, et al. "Mitiq: A software package for error mitigation on noisy quantum computers."arXiv preprintarXiv:2009.04417(2020).
+[3] LaRose, Ryan, et al. "Mitiq: A software package for error mitigation on noisy quantum computers." arXiv:2009.04417(2020).
 
-[4] Kim, Youngseok, et al. "Scalable error mitigation for noisy quantum circuits produces competitive expectation values."arXiv preprint arXiv:2108.09197(2021).
+[4] Kim, Youngseok, et al. "Scalable error mitigation for noisy quantum circuits produces competitive expectation values." arXiv:2108.09197(2021).
+
+[5] T. Giurgica-Tiron, Y. Hindy, R. LaRose, A. Mari and W. J. Zeng, "Digital zero noise extrapolation for quantum error mitigation," 2020 IEEE International Conference on Quantum Computing and Engineering (QCE), Denver, CO, USA, 2020, pp. 306-316, doi: 10.1109/QCE49297.2020.00045.
 
 
 ----------------------------------------------------------------------
