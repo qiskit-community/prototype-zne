@@ -3,18 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+#########################################
 Welcome to Prototype ZNE's documentation!
-=========================================
+#########################################
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+
+   Overview <self>
+   tutorials/index
+   how_tos/index
+   API Reference <apidocs/zne>
+   explanations/index
+   GitHub <https://github.com/qiskit-community/prototype-zne>
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. Hiding - Indices and tables
+   :ref:`genindex`
+   :ref:`modindex`
+   :ref:`search`
