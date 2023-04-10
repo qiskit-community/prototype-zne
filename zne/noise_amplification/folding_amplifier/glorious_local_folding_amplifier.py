@@ -19,7 +19,7 @@ from qiskit.circuit import Operation
 from qiskit.circuit.library import Barrier, standard_gates
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
 
-from .glorious_folding_amplifier import GloriousFoldingAmplifier
+from .glorious_folding_amplifier import Folding, GloriousFoldingAmplifier
 
 
 class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
@@ -33,9 +33,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
             `<https://ieeexplore.ieee.org/document/9259940>`
     """
 
-    def __init__(
-        self, gates_to_fold: Set[Union[str, int]] | int | str | None, barriers: bool = True
-    ) -> None:
+    def __init__(self, gates_to_fold: Set[Union[str, int]], barriers: bool = True) -> None:
         self.gates_to_fold = self._validate_gates_to_fold(gates_to_fold)
         self.barriers = barriers
 
@@ -45,15 +43,15 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
     def amplify_dag_noise(  # pylint: disable=arguments-differ
         self, dag: DAGCircuit, noise_factor: float
     ) -> DAGCircuit:
-        num_foldings = self._compute_num_foldings(noise_factor)  # function for partial folding mask
         if not self.gates_to_fold:
             return dag
+        # TODO: find number of nodes
+        num_foldable_nodes = self._compute_foldable_nodes(dag, self.gates_to_fold)
+        folding_nums = self._compute_folding_nums(noise_factor, num_foldable_nodes)
+        num_foldings = self._compute_folding_mask(folding_nums, dag, self.gates_to_fold)
         noisy_dag = dag.copy_empty_like()
-        for node in dag.topological_op_nodes():
-            if node.name in self.gates_to_fold or node.op.num_qubits in self.gates_to_fold:
-                noisy_dag = self._apply_folded_operation_back(noisy_dag, node, num_foldings)
-            else:
-                noisy_dag.apply_operation_back(node.op, qargs=node.qargs, cargs=node.cargs)
+        for node, num in zip(dag.topological_op_nodes(), num_foldings):
+            noisy_dag = self._apply_folded_operation_back(noisy_dag, node, num)
         return noisy_dag
 
     ################################################################################
@@ -69,11 +67,15 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
 
         Args:
             dag: The original dag circuit without foldings.
+            node: The DAGOpNode to apply folded.
             num_foldings: Number of times the circuit should be folded.
 
         Returns:
             DAGCircuit: The noise amplified DAG circuit.
         """
+        if num_foldings == 0:
+            dag.apply_operation_back(node.op)
+            return dag
         original_op = node.op
         inverted_op = original_op.inverse()
         if self.barriers:
@@ -98,12 +100,45 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
             dag.apply_operation_back(barrier, qargs)
         return dag
 
+    def _compute_foldable_nodes(self, dag: DAGCircuit, gates_to_fold: Set[Union[str, int]]) -> int:
+        num_foldable_nodes = 0
+        for node in dag.topological_op_nodes():
+            if node.op.num_qubits in gates_to_fold:
+                num_foldable_nodes += 1
+            if node.name in gates_to_fold:
+                num_foldable_nodes += 1
+        return num_foldable_nodes
+
+    def _compute_folding_mask(
+        self,
+        folding_nums: Folding,
+        dag: DAGCircuit,
+        gates_to_fold: Set[Union[str, int]],
+    ) -> list:
+        partial_folding_mask = []
+        counter = folding_nums.partial
+        for node in dag.topological_op_nodes():
+            print(node.op)
+            if node.name in gates_to_fold:
+                if counter != 0:
+                    partial_folding_mask.append(folding_nums.full + 1)
+                    counter -= 1
+                else:
+                    partial_folding_mask.append(folding_nums.full)
+            elif node.op.num_qubits in gates_to_fold and counter != 0:
+                if counter != 0:
+                    partial_folding_mask.append(folding_nums.full + 1)
+                    counter -= 1
+                else:
+                    partial_folding_mask.append(folding_nums.full)
+            else:
+                partial_folding_mask.append(0)
+        return partial_folding_mask
+
     ################################################################################
     ## VALIDATION
     ################################################################################
-    def _validate_gates_to_fold(
-        self, gates_to_fold: Set[Union[str, int]] | int | str | None
-    ) -> set[int | str]:
+    def _validate_gates_to_fold(self, gates_to_fold: Set[Union[str, int]]) -> set[int | str]:
         """Validates if gates_to_fold is valid.
 
         Args:
