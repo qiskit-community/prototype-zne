@@ -101,6 +101,15 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         return dag
 
     def _compute_foldable_nodes(self, dag: DAGCircuit, gates_to_fold: Set[Union[str, int]]) -> int:
+        """Computes number of foldable gates from gates_to_fold supplied by user
+
+        Args:
+            dag: The original dag circuit without foldings.
+            gates_to_fold: Set of gates to fold supplied by user
+
+        Returns:
+            int: Number of effective gates to fold
+        """
         num_foldable_nodes = 0
         for node in dag.topological_op_nodes():
             if node.op.num_qubits in gates_to_fold:
@@ -115,6 +124,16 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         dag: DAGCircuit,
         gates_to_fold: Set[Union[str, int]],
     ) -> list:
+        """Computes folding mask based on folding_nums and gates_to_fold
+
+        Args:
+            folding_nums: namedTuple with full foldings, partial gates and effective_noise_factor
+            dag: The original dag circuit without foldings.
+            gates_to_fold: Set of gates to fold supplied by user
+
+        Returns:
+            list: list mask with number of foldings per node
+        """
         partial_folding_mask = []
         counter = folding_nums.partial
         for node in dag.topological_op_nodes():

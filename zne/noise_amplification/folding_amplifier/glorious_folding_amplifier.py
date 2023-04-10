@@ -57,6 +57,16 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         # [full + b for b in partial_mask]
 
     def _compute_best_estimate(self, num_partial_gates: float, partial_foldings: float) -> float:
+        """Computes best estimates from possible candidates for number of partial folded gates
+
+        Args:
+            num_partial_gates: Original float of calculated partial gates
+            partial_foldings: Extra foldings required
+
+        Returns:
+            float: returns closest estimated number of gates required to be partially folded
+            to achieve the user expected noise_factor
+        """
         possible_estimates = [math.floor(num_partial_gates), math.ceil(num_partial_gates)]
         if abs(possible_estimates[0] - partial_foldings) < abs(
             possible_estimates[1] - partial_foldings
