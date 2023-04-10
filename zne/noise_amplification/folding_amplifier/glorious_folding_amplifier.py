@@ -50,12 +50,6 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         ) / num_nodes
         return Folding(full, partial, effective_noise_factor)
 
-        # full foldings: Number of times to fold every gate
-        # partial foldings: Number of gates that need to have an extra folding
-        # effective_noise_factor: approximate effective noise_factor
-        # TODO: Revisit names later
-        # [full + b for b in partial_mask]
-
     def _compute_best_estimate(self, num_partial_gates: float, partial_foldings: float) -> float:
         """Computes best estimates from possible candidates for number of partial folded gates
 
