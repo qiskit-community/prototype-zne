@@ -38,7 +38,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         self.barriers = barriers
 
     ################################################################################
-    ## INTERFACE IMPLEMENTATION
+    # INTERFACE IMPLEMENTATION
     ################################################################################
     def amplify_dag_noise(  # pylint: disable=arguments-differ
         self, dag: DAGCircuit, noise_factor: float
@@ -55,7 +55,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         return noisy_dag
 
     ################################################################################
-    ## AUXILIARY
+    # AUXILIARY
     ################################################################################
     def _apply_folded_operation_back(
         self,
@@ -122,7 +122,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         self,
         folding_nums: Folding,
         dag: DAGCircuit,
-        gates_to_fold: Set[Union[str, int]],
+        gates_to_fold: Set[Union[str, int] | None],
     ) -> list:
         """Computes folding mask based on folding_nums and gates_to_fold
 
@@ -136,8 +136,15 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         """
         partial_folding_mask = []
         counter = folding_nums.partial
+        if gates_to_fold is None:
+            for node in dag.topological_op_nodes():
+                if counter != 0:
+                    partial_folding_mask.append(folding_nums.full + 1)
+                    counter -= 1
+                else:
+                    partial_folding_mask.append(folding_nums.full)
+            return partial_folding_mask
         for node in dag.topological_op_nodes():
-            print(node.op)
             if node.name in gates_to_fold:
                 if counter != 0:
                     partial_folding_mask.append(folding_nums.full + 1)
@@ -155,7 +162,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         return partial_folding_mask
 
     ################################################################################
-    ## VALIDATION
+    # VALIDATION
     ################################################################################
     def _validate_gates_to_fold(self, gates_to_fold: Set[Union[str, int]]) -> set[int | str]:
         """Validates if gates_to_fold is valid.
