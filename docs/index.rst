@@ -11,7 +11,7 @@ Welcome to Prototype ZNE's documentation!
    :maxdepth: 2
    :hidden:
 
-   Overview <self>
+   Documentation Home <self>
    tutorials/index
    how_tos/index
    API Reference <apidocs/zne>
