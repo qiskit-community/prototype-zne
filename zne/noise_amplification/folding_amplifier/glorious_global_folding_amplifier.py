@@ -18,7 +18,7 @@ from typing import Tuple
 from qiskit.circuit.library import Barrier
 from qiskit.dagcircuit import DAGCircuit
 
-from .glorious_folding_amplifier import GloriousFoldingAmplifier
+from .glorious_folding_amplifier import Folding, GloriousFoldingAmplifier
 
 
 class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
@@ -33,11 +33,12 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
 
     def __init__(self, barriers: bool = True) -> None:
         self._set_barriers(barriers)
+        self.gates_to_fold = None
 
     ################################################################################
     ## PROPERTIES
     ################################################################################
-    @property
+    @property  # pylint:disable-next=duplicate-code
     def barriers(self) -> bool:
         """Barriers setter"""
         return self._barriers
@@ -52,8 +53,9 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
     def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
         """Applies global folding to input DAGCircuit and returns amplified circuit"""
         num_nodes = dag.size()
-        num_foldings = self._compute_folding_nums(noise_factor, num_nodes)
-        return self._apply_full_folding(dag, num_foldings)  # type: ignore[arg-type]
+        folding_nums = self._compute_folding_nums(noise_factor, num_nodes)
+        num_foldings = self._compute_folding_mask(folding_nums, dag, self.gates_to_fold)
+        return self._apply_full_folding(dag, folding_nums, num_foldings)
 
     ################################################################################
     ## AUXILIARY
@@ -61,7 +63,8 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
     def _apply_full_folding(
         self,
         dag: DAGCircuit,
-        num_foldings: int,
+        folding_nums: Folding,
+        num_foldings: list,
     ) -> DAGCircuit:
         """Fully folds the original DAG circuit a number of ``num_foldings`` times.
 
@@ -78,9 +81,11 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
             barrier = Barrier(noisy_dag.num_qubits())
             noisy_dag.apply_operation_back(barrier, noisy_dag.qubits)
         self._compose(noisy_dag, dag, noisy_dag.qubits)
-        for _ in range(num_foldings):
+        for _ in range(folding_nums.full):
             self._compose(noisy_dag, inverse_dag, noisy_dag.qubits)
             self._compose(noisy_dag, dag, noisy_dag.qubits)
+        for node, num in zip(dag.topological_op_nodes(), num_foldings):
+            noisy_dag = self._apply_folded_operation_back(noisy_dag, node, num)
         return noisy_dag
 
     def _compose(
