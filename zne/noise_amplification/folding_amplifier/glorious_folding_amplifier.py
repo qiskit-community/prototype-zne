@@ -32,6 +32,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
 
     def _compute_folding_nums(self, noise_factor: float, num_nodes: int) -> Folding:
         """Compute number of foldings.
+        
         Args:
             noise_factor: The original noise_factor input.
             num_nodes: total number of foldable nodes for input DAG
