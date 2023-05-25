@@ -19,7 +19,7 @@ from .noise_amplification import NOISE_AMPLIFIER_LIBRARY
 from .zne_strategy import ZNEStrategy
 
 __copyright__ = "(C) Copyright IBM 2022"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 
 __all__ = [

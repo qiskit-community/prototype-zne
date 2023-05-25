@@ -1,3 +1,26 @@
+## 1.1.0 (2023-05-25)
+
+### Feat
+
+- **extrapolator**: add exponential extrapolators (#44)
+- **extrapolator**: add OLS extrapolator interface (#43)
+- **extrapolation**: new polynomial extrapolator with std errors (#41)
+- **utils**: add normalize_array typing util (#42)
+- **utils**: add strategy class decorator (#34)
+- **utils**: add classconstant descriptor (#32)
+- **unset**: add string representation (#31)
+- **unset**: add repr
+
+### Refactor
+
+- discontinue using isint from typing utils module (#40)
+- **utils**: remove dict_library module (#39)
+- **cls**: update class through type call in zne function
+
+### Perf
+
+- **folding_amplifier**: remove unnecessary barriers in folded circuits (#37)
+
 ## 1.0.0 (2022-11-08)
 
 ### Fix
