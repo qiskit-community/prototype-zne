@@ -32,21 +32,35 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
             `<https://ieeexplore.ieee.org/document/9259940>`
     """
 
-    def __init__(self, gates_to_fold: Set[Union[str, int] | None], barriers: bool = True) -> None:
-        self.gates_to_fold = self._validate_gates_to_fold(gates_to_fold)
-        self._set_barriers(barriers)
+    def __init__(
+        self,
+        gates_to_fold: Set[Union[str, int] | None],
+        custom_gates: bool = True,
+    ) -> None:
+        super().__init__()
+        self._set_custom_gates(custom_gates)
+        self._set_gates_to_fold(gates_to_fold)
 
     ################################################################################
-    # ## PROPERTIES
+    ## PROPERTIES
     ################################################################################
-    @property  # pylint:disable-next=duplicate-code
-    def barriers(self) -> bool:
-        """Barriers setter"""
-        return self._barriers
+    @property
+    def gates_to_fold(self) -> Set[Union[str, int]]:
+        """Gates_to_fold setter"""
+        return self._gates_to_fold
 
-    def _set_barriers(self, barriers: bool) -> None:
-        """Set barriers property"""
-        self._barriers = bool(barriers)
+    def _set_gates_to_fold(self, gates_to_fold: Set[Union[str, int]]) -> None:
+        """Set gates_to_fold property"""
+        self._gates_to_fold = self._validate_gates_to_fold(gates_to_fold)
+
+    @property
+    def custom_gates(self) -> bool:
+        """Custom_gates flag setter"""
+        return self._custom_gates
+
+    def _set_custom_gates(self, custom_gates: bool) -> None:
+        """Set gates_to_fold property"""
+        self._custom_gates = bool(custom_gates)
 
     ################################################################################
     ## INTERFACE IMPLEMENTATION
@@ -54,6 +68,7 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
     def amplify_dag_noise(  # pylint: disable=arguments-differ
         self, dag: DAGCircuit, noise_factor: float
     ) -> DAGCircuit:
+        noise_factor = self._validate_noise_factor(noise_factor)
         if not self.gates_to_fold:
             return dag
         # TODO: find number of nodes
@@ -98,11 +113,16 @@ class GloriousLocalFoldingAmplifier(GloriousFoldingAmplifier):
         """
         if gates_to_fold is None:
             return set()
+
         if isinstance(gates_to_fold, (int, str)):
             gates_to_fold = {gates_to_fold}
         VALID_GATES = set(  # pylint: disable=invalid-name
             standard_gates.get_standard_gate_name_mapping().keys()
         )
+        if self.custom_gates:
+            pass
+            # TODO: Append valid custom_gate_names to VALID_GATES
+
         for value in gates_to_fold:
             bad_int = isinstance(value, int) and value <= 0
             bad_str = isinstance(value, str) and value not in VALID_GATES

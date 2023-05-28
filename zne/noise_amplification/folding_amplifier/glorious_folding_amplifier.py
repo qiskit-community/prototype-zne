@@ -12,11 +12,12 @@
 
 """Glorious Global Folding Noise Amplfiier (Temporary)"""
 
-import math
 from collections import namedtuple
 from collections.abc import Set
+from math import ceil, floor
 from typing import Tuple, Union
 
+from numpy import isclose
 from qiskit.circuit import Operation
 from qiskit.circuit.library import Barrier
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
@@ -30,9 +31,37 @@ Folding = namedtuple("Folding", ("full", "partial", "effective_noise_factor"))
 class GloriousFoldingAmplifier(DAGNoiseAmplifier):
     """Interface for folding amplifier strategies."""
 
+    def __init__(self, barriers: bool = True, tolerance: float = 0.05) -> None:
+        self._set_barriers(barriers)
+        self._set_tolerance(tolerance)
+
+    ################################################################################
+    ## PROPERTIES
+    ################################################################################
+    @property
+    def barriers(self) -> bool:
+        """Barriers setter"""
+        return self._barriers
+
+    def _set_barriers(self, barriers: bool) -> None:
+        """Set barriers property"""
+        self._barriers = bool(barriers)
+
+    @property
+    def tolerance(self) -> float:
+        """Tolerance setter"""
+        return self._tolerance
+
+    def _set_tolerance(self, tolerance: float) -> None:
+        """Set Tolerance property"""
+        self._tolerance = float(tolerance)
+
+    ################################################################################
+    # AUXILIARY
+    ################################################################################
     def _compute_folding_nums(self, noise_factor: float, num_nodes: int) -> Folding:
         """Compute number of foldings.
-        
+
         Args:
             noise_factor: The original noise_factor input.
             num_nodes: total number of foldable nodes for input DAG
@@ -41,17 +70,17 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             Folding: named tuple containing full foldings, number of gates to partially fold and
             effective noise factor of the operation
         """
-        noise_factor = self._validate_noise_factor(noise_factor)
 
         foldings = (noise_factor - 1) / 2
-        full = int(foldings)
-        partial_foldings = foldings - full
-        partial = self._compute_best_estimate(num_nodes, partial_foldings)
+        full_foldings = int(foldings)
+        partial_foldings = foldings - full_foldings
 
-        effective_foldings = full + partial / num_nodes
+        gates_to_partial_fold = self._compute_best_estimated_gates(num_nodes, partial_foldings)
+
+        effective_foldings = full_foldings + gates_to_partial_fold / num_nodes
         effective_noise_factor = 2 * effective_foldings + 1
 
-        if effective_noise_factor != noise_factor:
+        if isclose(effective_noise_factor, noise_factor, atol=self.tolerance, equal_nan=False):
             print("Warning!!!")
         print(
             "Folding with effective noise factor of",
@@ -61,9 +90,9 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             ". Effective folding accuracy:",
             effective_noise_factor / noise_factor * 100,
         )
-        return Folding(full, partial, effective_noise_factor)
+        return Folding(full_foldings, gates_to_partial_fold, effective_noise_factor)
 
-    def _compute_best_estimate(self, num_nodes: float, partial_foldings: float) -> float:
+    def _compute_best_estimated_gates(self, num_nodes: float, partial_foldings: float) -> float:
         """Computes best estimates from possible candidates for number of partial folded gates
 
         Args:
@@ -74,15 +103,13 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             float: returns closest estimated number of gates required to be partially folded
             to achieve the user expected noise_factor
         """
-        possible_estimates = [
-            math.floor(num_nodes * partial_foldings),
-            math.ceil(num_nodes * partial_foldings),
-        ]
-        if abs(possible_estimates[0] - partial_foldings) < abs(
-            possible_estimates[1] - partial_foldings
-        ):
-            return possible_estimates[0]
-        return possible_estimates[1]
+        lower_estimate = floor(num_nodes * partial_foldings)
+        lower_diff = abs(lower_estimate - partial_foldings)
+        upper_estimate = ceil(num_nodes * partial_foldings)
+        upper_diff = abs(upper_estimate - partial_foldings)
+        if lower_diff < upper_diff:
+            return lower_estimate
+        return upper_estimate
 
     def _compute_folding_mask(
         self,
@@ -148,7 +175,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             return dag
         original_op = node.op
         inverted_op = original_op.inverse()
-        if self.barriers:  # type: ignore[attr-defined] # pylint:disable=no-member
+        if self.barriers:
             barrier = Barrier(original_op.num_qubits)
             dag.apply_operation_back(barrier, qargs=node.qargs)
         self._apply_operation_back(dag, original_op, node.qargs, node.cargs)
@@ -165,7 +192,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
         cargs: Tuple = (),
     ) -> DAGCircuit:
         dag.apply_operation_back(dag_op, qargs, cargs)
-        if self.barriers:  # type: ignore[attr-defined] # pylint:disable=no-member
+        if self.barriers:
             barrier = Barrier(dag_op.num_qubits)
             dag.apply_operation_back(barrier, qargs)
         return dag
@@ -191,7 +218,7 @@ class GloriousFoldingAmplifier(DAGNoiseAmplifier):
             )
         except TypeError:
             raise TypeError(  # pylint: disable=raise-missing-from
-                f"Expected positive float value, received {noise_factor} instead."
+                f"Expected positive float, received {type(noise_factor)} instead."
             )
         if noise_factor < 1:
             raise ValueError(

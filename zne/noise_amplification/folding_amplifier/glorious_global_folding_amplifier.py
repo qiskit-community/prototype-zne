@@ -31,27 +31,16 @@ class GloriousGlobalFoldingAmplifier(GloriousFoldingAmplifier):
             `<https://ieeexplore.ieee.org/document/9259940>`
     """
 
-    def __init__(self, barriers: bool = True) -> None:
-        self._set_barriers(barriers)
+    def __init__(self) -> None:
+        super().__init__()
         self.gates_to_fold = None
-
-    ################################################################################
-    ## PROPERTIES
-    ################################################################################
-    @property  # pylint:disable-next=duplicate-code
-    def barriers(self) -> bool:
-        """Barriers setter"""
-        return self._barriers
-
-    def _set_barriers(self, barriers: bool) -> None:
-        """Set barriers property"""
-        self._barriers = bool(barriers)
 
     ################################################################################
     ## INTERFACE IMPLEMENTATION
     ################################################################################
     def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
         """Applies global folding to input DAGCircuit and returns amplified circuit"""
+        noise_factor = self._validate_noise_factor(noise_factor)
         num_nodes = dag.size()
         folding_nums = self._compute_folding_nums(noise_factor, num_nodes)
         num_foldings = self._compute_folding_mask(folding_nums, dag, self.gates_to_fold)
