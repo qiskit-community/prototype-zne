@@ -17,6 +17,7 @@ from __future__ import annotations
 from warnings import warn
 
 from numpy.random import Generator, default_rng
+from qiskit import QuantumCircuit
 
 from ...utils.typing import isreal
 from ..noise_amplifier import CircuitNoiseAmplifier
@@ -25,9 +26,10 @@ from ..noise_amplifier import CircuitNoiseAmplifier
 class FoldingAmplifier(CircuitNoiseAmplifier):
     """Interface for folding amplifier strategies."""
 
-    def __init__(  # pylint: disable=super-init-not-called, duplicate-code
+    def __init__(  # pylint: disable=super-init-not-called, duplicate-code, too-many-arguments
         self,
         sub_folding_option: str = "from_first",
+        barriers: bool = True,
         random_seed: int | None = None,
         noise_factor_relative_tolerance: float = 1e-2,
         warn_user: bool = True,
@@ -37,6 +39,7 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
             sub_folding_option: Specifies which gates are used for sub folding when
                 ``noise_factor`` is not an odd integer. Can either be "from_last", "from_first", or
                 "random".
+            barriers: If True applies barriers when folding (e.g. to avoid simplification).
             random_seed: Random seed used for performing random sub-gate-folding.
             noise_factor_relative_tolerance: Relative allowed tolerance interval between
                 ``noise_factor`` input and actual noise factor that was used for the amplification.
@@ -45,6 +48,7 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
         """
         self.warn_user: bool = warn_user
         self._set_sub_folding_option(sub_folding_option)
+        self._set_barriers(barriers)
         self._prepare_rng(random_seed)
         self._set_noise_factor_relative_tolerance(noise_factor_relative_tolerance)
 
@@ -83,12 +87,21 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
             )
         self._sub_folding_option: str = sub_folding_option
 
+    @property
+    def barriers(self) -> bool:
+        """Option for whether to apply barriers when folding."""
+        return self._barriers
+
+    def _set_barriers(self, barriers: bool) -> None:
+        self._barriers = bool(barriers)
+
     def _prepare_rng(self, seed: int | None = None) -> None:
         """Sets random number generator with seed."""
         if not isinstance(seed, (type(None), int)):
             raise TypeError("Random seed must be an integer or None.")
         self._rng: Generator = default_rng(seed)
 
+    # TODO: add property getter
     def _set_noise_factor_relative_tolerance(self, tolerance: float) -> None:
         """Sets noise factor relative tolerance."""
         if not isreal(tolerance):
@@ -126,6 +139,12 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
                 f"{self.name} expects a positive float noise_factor >= 1."
                 f"Received {noise_factor} instead."
             )
+
+    def _apply_barrier(self, circuit: QuantumCircuit, *registers) -> QuantumCircuit:
+        """Apply barrier to specified registers if option is set."""
+        if self._barriers:
+            circuit.barrier(*registers)
+        return circuit
 
     def _compute_folding_nums(self, noise_factor: float, num_instructions: int) -> tuple[int, int]:
         """Returns required number of full foldings and sub foldings.

@@ -10,11 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from test import BOOL, NO_INTS, NO_REAL, TYPES
+from test import NO_INTS, NO_REAL, TYPES
 from unittest.mock import Mock, patch
 
 from numpy.random import Generator, default_rng
 from pytest import fixture, mark, raises, warns
+from qiskit import QuantumCircuit
 
 from zne.noise_amplification.folding_amplifier.global_folding_amplifier import (
     GlobalFoldingAmplifier,
@@ -44,6 +45,7 @@ class TestFoldingAmplifier:
     def setter_mocks(self):
         mocks = {
             "_set_sub_folding_option": Mock(),
+            "_set_barriers": Mock(),
             "_prepare_rng": Mock(),
             "_set_noise_factor_relative_tolerance": Mock(),
         }
@@ -59,6 +61,7 @@ class TestFoldingAmplifier:
         with patch_amplifier_with_multiple_mocks(**setter_mocks):
             NoiseAmplifier()
         setter_mocks["_set_sub_folding_option"].assert_called_once_with("from_first")
+        setter_mocks["_set_barriers"].assert_called_once_with(True)
         setter_mocks["_prepare_rng"].assert_called_once_with(None)
         setter_mocks["_set_noise_factor_relative_tolerance"].assert_called_once_with(1e-2)
 
@@ -67,9 +70,13 @@ class TestFoldingAmplifier:
     ):
         with patch_amplifier_with_multiple_mocks(**setter_mocks):
             NoiseAmplifier(
-                sub_folding_option="random", random_seed=1, noise_factor_relative_tolerance=1e-1
+                sub_folding_option="random",
+                barriers=False,
+                random_seed=1,
+                noise_factor_relative_tolerance=1e-1,
             )
         setter_mocks["_set_sub_folding_option"].assert_called_once_with("random")
+        setter_mocks["_set_barriers"].assert_called_once_with(False)
         setter_mocks["_prepare_rng"].assert_called_once_with(1)
         setter_mocks["_set_noise_factor_relative_tolerance"].assert_called_once_with(1e-1)
 
@@ -138,13 +145,21 @@ class TestFoldingAmplifier:
 
     @mark.parametrize(
         "warn_user",
-        cases := [t for t in TYPES if type(t) != type(BOOL)],
+        cases := [t for t in TYPES if not isinstance(t, bool)],
         ids=[str(type(c).__name__) for c in cases],
     )
     def test_set_warn_user_type_error(self, NoiseAmplifier, warn_user):
         noise_amplifier = NoiseAmplifier()
         with raises(TypeError):
             noise_amplifier.warn_user = warn_user
+
+    @mark.parametrize(
+        "barriers", cases := [True, False, 1, 0, "", "|"], ids=[f"{c}" for c in cases]
+    )
+    def test_set_barriers(self, NoiseAmplifier, barriers):
+        noise_amplifier = NoiseAmplifier()
+        noise_amplifier._set_barriers(barriers)
+        assert noise_amplifier.barriers is bool(barriers)
 
     ################################################################################
     ## TESTS
@@ -220,3 +235,23 @@ class TestFoldingAmplifier:
     def test_compute_folding_no_foldings(self, NoiseAmplifier):
         with warns(UserWarning):
             assert NoiseAmplifier()._compute_folding_nums(3, 0) == (0, 0)
+
+    @mark.parametrize("registers", [(), (0,), (1,), (0, 1)])
+    def test_apply_barrier_true(self, NoiseAmplifier, registers):
+        circuit = QuantumCircuit(2)
+        original = circuit.copy()
+        noise_amplifier = NoiseAmplifier(barriers=True)
+        circuit = noise_amplifier._apply_barrier(circuit, *registers)
+        last_instruction = circuit.data.pop()
+        assert last_instruction.operation.name == "barrier"
+        registers = [circuit.qubits[r] for r in registers] or circuit.qubits
+        assert last_instruction.qubits == tuple(registers)
+        assert circuit == original
+
+    @mark.parametrize("registers", [(), (0,), (1,), (0, 1)])
+    def test_apply_barrier_false(self, NoiseAmplifier, registers):
+        circuit = QuantumCircuit(2)
+        original = circuit.copy()
+        noise_amplifier = NoiseAmplifier(barriers=False)
+        circuit = noise_amplifier._apply_barrier(circuit, *registers)
+        assert circuit == original
