@@ -284,6 +284,7 @@ class CxAmplifier(LocalFoldingAmplifier):
     def __init__(  # pylint: disable=too-many-arguments,duplicate-code
         self,
         sub_folding_option: str = "from_first",
+        barriers: bool = True,
         random_seed: int | None = None,
         noise_factor_relative_tolerance: float = 1e-2,
         warn_user: bool = True,
@@ -291,6 +292,7 @@ class CxAmplifier(LocalFoldingAmplifier):
         super().__init__(
             gates_to_fold="cx",
             sub_folding_option=sub_folding_option,
+            barriers=barriers,
             random_seed=random_seed,
             noise_factor_relative_tolerance=noise_factor_relative_tolerance,
             warn_user=warn_user,
@@ -307,6 +309,7 @@ class TwoQubitAmplifier(LocalFoldingAmplifier):
     def __init__(  # pylint: disable=too-many-arguments,duplicate-code
         self,
         sub_folding_option: str = "from_first",
+        barriers: bool = True,
         random_seed: int | None = None,
         noise_factor_relative_tolerance: float = 1e-2,
         warn_user: bool = True,
@@ -314,6 +317,7 @@ class TwoQubitAmplifier(LocalFoldingAmplifier):
         super().__init__(
             gates_to_fold=2,
             sub_folding_option=sub_folding_option,
+            barriers=barriers,
             random_seed=random_seed,
             noise_factor_relative_tolerance=noise_factor_relative_tolerance,
             warn_user=warn_user,
