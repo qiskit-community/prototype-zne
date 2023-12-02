@@ -1,3 +1,9 @@
+## 1.2.0 (2023-12-02)
+
+### Feat
+
+- **folding_amplifier**: add setting to control barrier insertion (#52)
+
 ## 1.1.0 (2023-05-25)
 
 ### Feat
