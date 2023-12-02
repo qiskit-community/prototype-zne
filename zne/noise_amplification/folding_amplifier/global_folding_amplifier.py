@@ -68,7 +68,7 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
                 noisy_circuit.compose(original_circuit, inplace=True)
             else:
                 noisy_circuit.compose(original_circuit.inverse(), inplace=True)
-            noisy_circuit.barrier()
+            noisy_circuit = self._apply_barrier(noisy_circuit)
         return noisy_circuit
 
     def _apply_sub_folding(
@@ -110,6 +110,6 @@ class GlobalFoldingAmplifier(FoldingAmplifier):
             instruction_idxs = sorted(self._rng.choice(len(circuit), size=size, replace=False))
             sub_data = [circuit.data[i] for i in instruction_idxs]
         for instruction, qargs, cargs in sub_data:
-            # sub_circuit.barrier(qargs)  # Note: sub-folded gates may simplify
+            # sub_circuit.barrier(qargs)  # TODO: avoid sub-folded gates simplification
             sub_circuit.append(instruction, qargs, cargs)
         return sub_circuit

@@ -55,6 +55,7 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         self,
         gates_to_fold: Sequence[int | str] | str | int | None = None,
         sub_folding_option: str = "from_first",
+        barriers: bool = True,
         random_seed: int | None = None,
         noise_factor_relative_tolerance: float = 1e-2,
         warn_user: bool = True,
@@ -63,11 +64,13 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         self._set_gates_to_fold(gates_to_fold)  # TODO move to super eventually
         super().__init__(
             sub_folding_option=sub_folding_option,
+            barriers=barriers,
             random_seed=random_seed,
             noise_factor_relative_tolerance=noise_factor_relative_tolerance,
             warn_user=warn_user,
         )
 
+    # TODO: remove `insert_into_docstring`
     __init__.__doc__ = insert_into_docstring(
         FoldingAmplifier.__init__.__doc__,
         [
@@ -242,13 +245,13 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         # TODO: CircuitInstruction.inverse()
         self._validate_num_foldings(num_foldings)
         instruction, qargs, cargs = operation
-        noisy_circuit.barrier(qargs)
+        noisy_circuit = self._apply_barrier(noisy_circuit, qargs)
         noisy_circuit.append(instruction, qargs, cargs)
         if num_foldings > 0:
-            noisy_circuit.barrier(qargs)
+            noisy_circuit = self._apply_barrier(noisy_circuit, qargs)
             noisy_circuit.append(instruction.inverse(), qargs, cargs)
             return self._append_folded(noisy_circuit, operation, num_foldings - 1)
-        noisy_circuit.barrier(qargs)
+        noisy_circuit = self._apply_barrier(noisy_circuit, qargs)
         return noisy_circuit
 
     @staticmethod
