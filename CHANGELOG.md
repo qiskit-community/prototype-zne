@@ -1,3 +1,9 @@
+## 1.2.1 (2023-12-02)
+
+### Fix
+
+- **folding_amplifier**: add missing barriers setting to facades
+
 ## 1.2.0 (2023-12-02)
 
 ### Feat
