@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from test import BOOL, NO_INTS, NO_REAL, TYPES
+from test import NO_INTS, NO_REAL, TYPES
 from unittest.mock import Mock, patch
 
 from numpy.random import Generator, default_rng
@@ -145,7 +145,7 @@ class TestFoldingAmplifier:
 
     @mark.parametrize(
         "warn_user",
-        cases := [t for t in TYPES if type(t) != type(BOOL)],
+        cases := [t for t in TYPES if not isinstance(t, bool)],
         ids=[str(type(c).__name__) for c in cases],
     )
     def test_set_warn_user_type_error(self, NoiseAmplifier, warn_user):
