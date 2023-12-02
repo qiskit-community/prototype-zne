@@ -42,7 +42,7 @@ classifiers = [
 dynamic = ["version", "description"]
 requires-python = ">=3.8"
 dependencies = [
-    "qiskit-terra >= 0.22.2",
+    "qiskit >= 0.45.1",
 ]
 
 [project.optional-dependencies]
@@ -55,7 +55,7 @@ test = [
     "pytest >= 7.1.2",
     "pytest-cov >= 3.0.0",
     "pytest-randomly >= 3.12.0",
-    "qiskit-aer >= 0.11.0",
+    "qiskit-aer >= 0.13.1",
 ]
 lint = [
     "autoflake >= 1.7.6",
@@ -75,8 +75,8 @@ docs = [
 notebook = [
     "jupyter >= 1.0.0",
     "notebook >= 6.4.12",
-    "qiskit-terra[visualization] >= 0.22.2",
-    "qiskit-aer >= 0.11.0",
+    "qiskit[visualization] >= 0.45.1",
+    "qiskit-aer >= 0.13.1",
     "nbqa >= 1.3.1",
     "treon >= 0.1.3",
 ]
