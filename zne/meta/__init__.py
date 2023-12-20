@@ -10,10 +10,22 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""ZNE meta programming capabilities.
+"""
+######################
+Meta (:mod:`zne.meta`)
+######################
 
-Enables injecting error mitigation functionility to classes implementing the
+ZNE meta programming capabilities.
+
+Enables injecting error mitigation functionality to classes implementing the
 :class:`qiskit.primitives.BaseEstimator` interface.
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    zne
+    ZNEJob
 """
 
 from zne.meta.cls import zne

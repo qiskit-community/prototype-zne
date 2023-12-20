@@ -10,7 +10,37 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Noise amplification library."""
+"""
+####################################################
+Noise amplification (:mod:`zne.noise_amplification`)
+####################################################
+
+Noise amplification library.
+
+Noise amplifiers
+================
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    CircuitNoiseAmplifier
+    DAGNoiseAmplifier
+    NoiseAmplifier
+
+Folding amplifiers
+==================
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    CxAmplifier
+    GlobalFoldingAmplifier
+    LocalFoldingAmplifier
+    TwoQubitAmplifier
+
+"""
 
 from .folding_amplifier import (
     CxAmplifier,
