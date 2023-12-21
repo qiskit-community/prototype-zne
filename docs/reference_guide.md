@@ -118,16 +118,19 @@ EstimatorResult: {
 ```
 
 ### Custom ZNE strategies
-This prototype has been devised specifically to allow users to create their custom noise amplification and extrapolation techniques. This can be easily done through custom implementations of the `CircuitNoiseAmplifier` and `Extrapolator` abstract classes respectively:
+This prototype has been devised specifically to allow users to create their custom noise amplification and extrapolation techniques. This can be easily done through custom implementations of the `NoiseAmplifier` and `Extrapolator` abstract classes respectively:
 ```python
 from zne.extrapolation import Extrapolator, ReckoningResult
-from zne.noise_amplification import CircuitNoiseAmplifier
+from zne.noise_amplification import NoiseAmplifier
 
 
 ############################  NOISE AMPLIFIER  ############################
-class CustomAmplifier(CircuitNoiseAmplifier):
+class CustomAmplifier(NoiseAmplifier):
     def amplify_circuit_noise(self, circuit, noise_factor):
         return circuit.copy()  # Dummy, nonperforming
+
+    def amplify_dag_noise(self, dag, noise_factor):
+      return super().amplify_dag_noise(dag, noise_factor)
 
 
 ############################  EXTRAPOLATOR  ############################
@@ -143,7 +146,7 @@ class CustomExtrapolator(Extrapolator):
         return ReckoningResult(value, std_error, metadata)  # Dummy, nonperforming
 ```
 where we only need to implement a number of (performing) methods with the appropriate [function signature](https://stackoverflow.com/a/72789014/12942875):
-- __[CircuitNoiseAmplifier]__ Amplify circuit noise:
+- __[NoiseAmplifier]__ Amplify circuit noise:
     ```python
     @abstractmethod
     def amplify_circuit_noise(self, circuit: QuantumCircuit, noise_factor: float) -> QuantumCircuit:
@@ -155,6 +158,19 @@ where we only need to implement a number of (performing) methods with the approp
 
         Returns:
             The noise amplified circuit
+        """
+    ```
+- __[NoiseAmplifier]__ Amplify circuit noise:
+    ```python
+    def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
+        """Noise amplification strategy over :class:`~qiskit.dagcircuit.DAGCircuit`.
+
+        Args:
+            dag: The original dag circuit.
+            noise_factor: The noise amplification factor by which to amplify the circuit noise.
+
+        Returns:
+            The noise amplified dag circuit
         """
     ```
 - __[Extrapolator]__ Minimum data points necessary for extrapolation:
@@ -188,6 +204,10 @@ where we only need to implement a number of (performing) methods with the approp
             A ReckoningResult object with the extrapolated value, std error, and metadata.
         """
     ```
+
+If only one of `NoiseAmplifier.amplify_circuit_noise` or `NoiseAmplifier.amplify_dag_noise`
+is implemented, delegating the implementation of the other to the parent class 
+(i.e. `super()`) will default to executing the first with the appropriate type conversion.
 
 Finally, we simply pass instances of these to the constructor through the `ZNEStrategy` object:
 ```python

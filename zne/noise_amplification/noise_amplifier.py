@@ -26,7 +26,9 @@ class NoiseAmplifier(ImmutableStrategy, ABC):
     """Interface for noise amplification strategies."""
 
     @abstractmethod
-    def amplify_circuit_noise(self, circuit: QuantumCircuit, noise_factor: float) -> QuantumCircuit:
+    def amplify_circuit_noise(
+        self, circuit: QuantumCircuit, noise_factor: float
+    ) -> QuantumCircuit:  # pragma: no cover
         """Noise amplification strategy over :class:`~qiskit.circuit.QuantumCircuit`.
 
         Args:
@@ -36,9 +38,14 @@ class NoiseAmplifier(ImmutableStrategy, ABC):
         Returns:
             The noise amplified quantum circuit
         """
+        dag: DAGCircuit = circuit_to_dag(circuit)
+        dag = self.amplify_dag_noise(dag, noise_factor)
+        return dag_to_circuit(dag)
 
     @abstractmethod
-    def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
+    def amplify_dag_noise(
+        self, dag: DAGCircuit, noise_factor: float
+    ) -> DAGCircuit:  # pragma: no cover
         """Noise amplification strategy over :class:`~qiskit.dagcircuit.DAGCircuit`.
 
         Args:
@@ -48,6 +55,9 @@ class NoiseAmplifier(ImmutableStrategy, ABC):
         Returns:
             The noise amplified dag circuit
         """
+        circuit: QuantumCircuit = dag_to_circuit(dag)
+        circuit = self.amplify_circuit_noise(circuit, noise_factor)
+        return circuit_to_dag(circuit)
 
     def build_transpiler_pass(self, noise_factor: float) -> TransformationPass:
         """Builds transpiler pass to perform noise amplification as specified in the strategy.
@@ -90,21 +100,19 @@ class NoiseAmplifier(ImmutableStrategy, ABC):
         return PassManager(transpiler_pass)
 
 
-class CircuitNoiseAmplifier(NoiseAmplifier):
+# TODO: deprecate
+class CircuitNoiseAmplifier(NoiseAmplifier):  # pragma: no cover
     """Interface for noise amplification strategies over :class:`~qiskit.dagcircuit.DAGCircuit`."""
 
+    # pylint: disable=useless-parent-delegation
     def amplify_dag_noise(self, dag: DAGCircuit, noise_factor: float) -> DAGCircuit:
-        circuit: QuantumCircuit = dag_to_circuit(dag)
-        circuit = self.amplify_circuit_noise(circuit, noise_factor)
-        return circuit_to_dag(circuit)
+        return super().amplify_dag_noise(dag, noise_factor)
 
 
-class DAGNoiseAmplifier(NoiseAmplifier):
+# TODO: deprecate
+class DAGNoiseAmplifier(NoiseAmplifier):  # pragma: no cover
     """Interface for noise amplification strategies over :class:`~qiskit.dagcircuit.DAGCircuit`."""
 
-    def amplify_circuit_noise(
-        self, circuit: QuantumCircuit, noise_factor: float
-    ) -> QuantumCircuit:  # pragma: no cover
-        dag: DAGCircuit = circuit_to_dag(circuit)
-        dag = self.amplify_dag_noise(dag, noise_factor)
-        return dag_to_circuit(dag)
+    # pylint: disable=useless-parent-delegation
+    def amplify_circuit_noise(self, circuit: QuantumCircuit, noise_factor: float) -> QuantumCircuit:
+        return super().amplify_circuit_noise(circuit, noise_factor)

@@ -18,12 +18,13 @@ from warnings import warn
 
 from numpy.random import Generator, default_rng
 from qiskit import QuantumCircuit
+from qiskit.dagcircuit import DAGCircuit
 
 from ...utils.typing import isreal
-from ..noise_amplifier import CircuitNoiseAmplifier
+from ..noise_amplifier import NoiseAmplifier
 
 
-class FoldingAmplifier(CircuitNoiseAmplifier):
+class FoldingAmplifier(NoiseAmplifier):
     """Interface for folding amplifier strategies."""
 
     def __init__(  # pylint: disable=super-init-not-called, duplicate-code, too-many-arguments
@@ -52,6 +53,9 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
         self._prepare_rng(random_seed)
         self._set_noise_factor_relative_tolerance(noise_factor_relative_tolerance)
 
+    ################################################################################
+    ## PROPERTIES
+    ################################################################################
     @property
     def options(self) -> dict:
         """Strategy options."""
@@ -108,6 +112,9 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
             raise TypeError("Noise factor relative tolerance must be real valued.")
         self._noise_factor_relative_tolerance: float = tolerance
 
+    ################################################################################
+    ## FOLDING METHODS
+    ################################################################################
     @staticmethod
     def folding_to_noise_factor(folding: float) -> float:
         """Converts number of foldings to noise factor.
@@ -171,3 +178,12 @@ class FoldingAmplifier(CircuitNoiseAmplifier):
             )
         num_full_foldings, num_sub_foldings = divmod(num_foldings, num_instructions)
         return num_full_foldings, num_sub_foldings
+
+    ################################################################################
+    ## IMPLEMENTATION
+    ################################################################################
+    # pylint: disable=useless-parent-delegation
+    def amplify_dag_noise(
+        self, dag: DAGCircuit, noise_factor: float
+    ) -> DAGCircuit:  # pragma: no cover
+        return super().amplify_dag_noise(dag, noise_factor)

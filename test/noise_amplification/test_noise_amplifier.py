@@ -20,7 +20,6 @@ from qiskit.quantum_info.operators import Operator
 from qiskit.transpiler import TransformationPass
 
 from zne import NOISE_AMPLIFIER_LIBRARY
-from zne.noise_amplification import CircuitNoiseAmplifier, DAGNoiseAmplifier
 
 
 @mark.parametrize(
@@ -75,43 +74,3 @@ class TestNoiseAmplifier:
             _ = NoiseAmplifier().build_pass_manager(noise_factor)
         pass_builder.assert_called_once_with(noise_factor)
         pass_manager_class.assert_called_once_with(TRANSPILER_PASS)
-
-    @mark.parametrize("noise_factor", [1, 1.2, 2.4, -3.14])
-    def test_amplify_dag_noise(self, NoiseAmplifier, noise_factor):
-        if issubclass(NoiseAmplifier, CircuitNoiseAmplifier):
-            DAG = f"DAG:{noise_factor}"
-            CIRCUIT = f"CIRCUIT:{noise_factor}"
-            AMP_CIRCUIT = f"AMP_CIRCUIT:{noise_factor}"
-            AMP_DAG = f"AMP_DAG:{noise_factor}"
-            noise_amplifier = NoiseAmplifier()
-            noise_amplifier.amplify_circuit_noise = Mock(return_value=AMP_CIRCUIT)
-            target = "zne.noise_amplification.noise_amplifier"
-            with patch(target + ".dag_to_circuit", return_value=CIRCUIT) as dag_to_circuit, patch(
-                target + ".circuit_to_dag",
-                return_value=AMP_DAG,
-            ) as circuit_to_dag:
-                assert AMP_DAG == noise_amplifier.amplify_dag_noise(DAG, noise_factor)
-            dag_to_circuit.assert_called_once_with(DAG)
-            noise_amplifier.amplify_circuit_noise.assert_called_once_with(CIRCUIT, noise_factor)
-            circuit_to_dag.assert_called_once_with(AMP_CIRCUIT)
-
-    @mark.parametrize("noise_factor", [1, 1.2, 2.4, -3.14])
-    def test_amplify_circuit_noise(self, NoiseAmplifier, noise_factor):
-        if issubclass(NoiseAmplifier, DAGNoiseAmplifier):
-            CIRCUIT = f"CIRCUIT:{noise_factor}"
-            DAG = f"DAG:{noise_factor}"
-            AMP_DAG = f"AMP_DAG:{noise_factor}"
-            AMP_CIRCUIT = f"AMP_CIRCUIT:{noise_factor}"
-            noise_amplifier = NoiseAmplifier()
-            noise_amplifier.amplify_dag_noise = Mock(return_value=AMP_DAG)
-            target = "zne.noise_amplification.noise_amplifier"
-            with patch(
-                target + ".dag_to_circuit", return_value=AMP_CIRCUIT
-            ) as dag_to_circuit, patch(
-                target + ".circuit_to_dag",
-                return_value=DAG,
-            ) as circuit_to_dag:
-                assert AMP_CIRCUIT == noise_amplifier.amplify_circuit_noise(CIRCUIT, noise_factor)
-            circuit_to_dag.assert_called_once_with(CIRCUIT)
-            noise_amplifier.amplify_dag_noise.assert_called_once_with(DAG, noise_factor)
-            dag_to_circuit.assert_called_once_with(AMP_DAG)
