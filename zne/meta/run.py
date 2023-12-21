@@ -19,7 +19,6 @@ from functools import wraps
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import JobV1 as Job
-from qiskit.quantum_info import SparsePauliOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 
 from ..zne_strategy import ZNEStrategy
