@@ -154,7 +154,10 @@ class LocalFoldingAmplifier(FoldingAmplifier):
         foldings: list[int] = self._build_foldings_per_gate(circuit, noise_factor)
         noisy_circuit = circuit.copy_empty_like()
         for operation, num_foldings in zip(circuit, foldings):
-            noisy_circuit = self._append_folded(noisy_circuit, operation, num_foldings)
+            if num_foldings == 0:
+                noisy_circuit.append(*operation)
+            else:
+                noisy_circuit = self._append_folded(noisy_circuit, operation, num_foldings)
         return noisy_circuit
 
     def _build_foldings_per_gate(self, circuit: QuantumCircuit, noise_factor: float) -> list[int]:
