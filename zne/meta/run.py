@@ -36,7 +36,7 @@ def zne_run(run: Callable) -> Callable:
     def _zne_run(
         self,
         circuits: tuple[QuantumCircuit, ...],
-        observables: tuple[BaseOperator | SparsePauliOp, ...],
+        observables: tuple[BaseOperator, ...],
         parameter_values: tuple[tuple[float, ...], ...],
         zne_strategy: ZNEStrategy | None = ...,  # type: ignore
         **run_options,
