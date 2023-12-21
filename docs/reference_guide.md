@@ -32,14 +32,14 @@ This guide is for those who just want to use the package. If you want to extend 
 
 ## Using the module
 
-This module works by injecting _zero noise extrapolation_ (ZNE) capabilities in any given implementation of the _Estimator_ primitive (i.e. implementing the official `BaseEstimator` interface from Qiskit Terra). Once this functionality is in place, it can be controlled through a `ZNEStrategy` object that encapsulates all necessary information for customizing the error mitigation process. Therefore, by design, the resulting `ZNEEstimator` is used in an identical way as the one it is based on, except for declaring the ZNE configuration options.
+This module works by injecting _zero noise extrapolation_ (ZNE) capabilities in any given implementation of the _Estimator_ primitive (i.e. implementing the official `BaseEstimator` interface from Qiskit). Once this functionality is in place, it can be controlled through a `ZNEStrategy` object that encapsulates all necessary information for customizing the error mitigation process. Therefore, by design, the resulting `ZNEEstimator` is used in an identical way as the one it is based on, except for declaring the ZNE configuration options.
 
 For an introduction and instructions to the _Estimator_ primitive, refer to the [this tutorial](/docs/tutorials/0-estimator.ipynb). For information on how to use it on real quantum hardware visit the[Qiskit IBM Runtime documentation](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/) and the [Qiskit IBM Runtime repo](https://github.com/Qiskit/qiskit-ibm-runtime) on GitHub. Other demo [tutorials](/docs/tutorials) are also available in the present repo.
 
 For a more detailed, hands-on, explanation of the functionalities in this module consult [this tutorial](./tutorials/1-zne.ipynb).
 
 ### Compatibility
-To inject the ZNE functionality into a pre-existing `Estimator` class following the official _Estimator_ specification (i.e. Qiskit Terra's `BaseEstimator`), simply do the following:
+To inject the ZNE functionality into a pre-existing `Estimator` class following the official _Estimator_ specification (i.e. Qiskit's `BaseEstimator`), simply do the following:
 ```python
 from zne import zne
 

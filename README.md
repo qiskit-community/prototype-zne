@@ -3,7 +3,7 @@
 
   ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-informational)
   [![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-informational)](https://www.python.org/)
-  [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.2-6133BD)](https://github.com/Qiskit/qiskit-terra)
+  [![Qiskit](https://img.shields.io/badge/Qiskit-%E2%89%A5%200.45.1-6133BD)](https://github.com/Qiskit/qiskit)
 <br />
   [![Tests](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml/badge.svg)](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml)
   [![Coverage](https://coveralls.io/repos/github/qiskit-community/prototype-zne/badge.svg?branch=main)](https://coveralls.io/github/qiskit-community/prototype-zne?branch=main)
@@ -64,7 +64,7 @@ This module builds on top of the [_Estimator_ primitive official specification](
 1. [Amplifying the noise](https://github.com/qiskit-community/prototype-zne/blob/main/docs/tutorials/2-noise_amplification.ipynb) introduced by the gates of input circuits.
 2. Extrapolating the returned expectation values to the zero noise limit.
 
-In principle, this prototype is compatible with any `Estimator` class as long as it implements the [`qiskit.primitives.BaseEstimator` interface](https://github.com/Qiskit/qiskit-terra/tree/main/qiskit/primitives) (e.g. `qiskit.primitives.Estimator`, `qiskit.primitives.BackendEstimator`, `qiskit_ibm_runtime.Estimator`). Notice, however, that error mitigation techniques only make sense in the context of noisy computations; therefore using ZNE on noisless platforms (e.g. simulators), although technically possible, will not produce better results.
+In principle, this prototype is compatible with any `Estimator` class as long as it implements the [`qiskit.primitives.BaseEstimator` interface](https://github.com/Qiskit/qiskit/tree/main/qiskit/primitives) (e.g. `qiskit.primitives.Estimator`, `qiskit.primitives.BackendEstimator`, `qiskit_ibm_runtime.Estimator`). Notice, however, that error mitigation techniques only make sense in the context of noisy computations; therefore using ZNE on noisless platforms (e.g. simulators), although technically possible, will not produce better results.
 
 Furthermore, the software architecture has been devised specifically to allow users to create their custom noise amplification and extrapolation techniques, and to plug them into the overall ZNE workflow seamlessly. Libraries of pre-implemented strategies for both of these tasks are provided in the module, and external packages can easily be made to work with this tool by providing [implementations of well defined interfaces](https://github.com/qiskit-community/prototype-zne/blob/main/docs/reference_guide.md#custom-zne-strategies) for these tasks.
 
