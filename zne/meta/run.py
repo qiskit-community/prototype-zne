@@ -18,7 +18,6 @@ from collections.abc import Callable
 from functools import wraps
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.opflow import PauliSumOp
 from qiskit.providers import JobV1 as Job
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 
@@ -36,7 +35,7 @@ def zne_run(run: Callable) -> Callable:
     def _zne_run(
         self,
         circuits: tuple[QuantumCircuit, ...],
-        observables: tuple[BaseOperator | PauliSumOp, ...],
+        observables: tuple[BaseOperator, ...],
         parameter_values: tuple[tuple[float, ...], ...],
         zne_strategy: ZNEStrategy | None = ...,  # type: ignore
         **run_options,
