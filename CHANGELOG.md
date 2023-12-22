@@ -1,3 +1,13 @@
+## 1.2.2 (2023-12-22)
+
+### Fix
+
+- **folding_amplifier**: avoid insertion of unnecessary barriers
+
+### Refactor
+
+- **noise_amplifier**: stop using Circuit and DAG amplifier classes
+
 ## 1.2.1 (2023-12-02)
 
 ### Fix
