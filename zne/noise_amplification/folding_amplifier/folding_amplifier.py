@@ -174,7 +174,7 @@ class FoldingAmplifier(NoiseAmplifier):
                 "Rounding of noise factor: Foldings are performed with noise factor "
                 f"{closest_noise_factor:.2f} instead of specified noise factor "
                 f"{noise_factor:.2f} which amounts to a relative error of "
-                f"{relative_error*100:.2f}%."
+                f"{relative_error * 100:.2f}%."
             )
         num_full_foldings, num_sub_foldings = divmod(num_foldings, num_instructions)
         return num_full_foldings, num_sub_foldings

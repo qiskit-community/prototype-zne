@@ -129,7 +129,8 @@ class Extrapolator(ABC):
         if len(sizes) != 1:
             raise ValueError(
                 "Invalid data, all inputs should be of the same size: "
-                f"{len(x_data) = }, {len(y_data) = }, {len(sigma_x) = }, {len(sigma_y) = }."
+                f"{len(x_data) = }, {len(y_data) = }, "  # noqa: E251,E202
+                f"{len(sigma_x) = }, {len(sigma_y) = }."  # noqa: E251,E202
             )
 
     def _validate_min_points(
