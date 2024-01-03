@@ -31,6 +31,9 @@ jobs:
     - os: windows
       python: "3.11"
       env: TOXENV=py311
+    - os: windows
+      python: "3.12"
+      env: TOXENV=py312
 
     - os: osx
       python: "3.8"
@@ -44,6 +47,9 @@ jobs:
     - os: osx
       python: "3.11"
       env: TOXENV=py311
+    - os: osx
+      python: "3.12"
+      env: TOXENV=py312
 
     - os: linux
       python: "3.8"
@@ -57,12 +63,15 @@ jobs:
     - os: linux
       python: "3.11"
       env: TOXENV=py311
+    - os: linux
+      python: "3.12"
+      env: TOXENV=py312
 
     - os: linux
-      python: "3.11"
+      python: "3.12"
       env: TOXENV=lint
     - os: linux
-      python: "3.11"
+      python: "3.12"
       env: TOXENV=coverage
 
     - name: "Minimum version tests"
@@ -73,7 +82,7 @@ jobs:
         - STRATEGY=min
     - name: "Development version tests"
       os: linux
-      python: "3.11"
+      python: "3.12"
       env:
-        - TOXENV=py311
+        - TOXENV=py312
         - STRATEGY=dev

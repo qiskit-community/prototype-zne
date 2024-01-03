@@ -2,7 +2,7 @@
 <div align="left">
 
   ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-informational)
-  [![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-informational)](https://www.python.org/)
+  [![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-informational)](https://www.python.org/)
   [![Qiskit](https://img.shields.io/badge/Qiskit-%E2%89%A5%200.45.1-6133BD)](https://github.com/Qiskit/qiskit)
 <br />
   [![Tests](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml/badge.svg)](https://github.com/qiskit-community/prototype-zne/actions/workflows/test.yml)
