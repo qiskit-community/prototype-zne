@@ -13,7 +13,7 @@ if [ "$STRATEGY" == "min" ]; then
 fi
 
 if [ "$STRATEGY" == "dev" ]; then
-    # Install Rust, which we'll need to build Qiskit Terra
+    # Install Rust, which we'll need to build Qiskit
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 fi
 

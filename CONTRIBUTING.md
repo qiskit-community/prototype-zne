@@ -146,7 +146,7 @@ Alternatively, you can choose to run a particular batch of tests individually:
     ```
     tox -e {env}
     ```
-    where you replace `{env}` with (for instance) `py38`, `py39`, `py310` or `py311` depending on which version of python you have (to check python version, type `python --version` in the terminal).
+    where you replace `{env}` with (for instance) `py38`, `py39`, `py310`, `py311` or `py312` depending on which version of python you have (to check python version, type `python --version` in the terminal).
 - To run lint checks (checks formatting/style/syntax):
     ```
     tox -e lint
