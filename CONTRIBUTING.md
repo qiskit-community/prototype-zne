@@ -38,7 +38,6 @@ Other than submitting new source code, users can contribute in a number of meani
 
 - _Opening an issue_ in the repository for reporting bugs, enhancements, or requesting new features.
 - _Starting a conversation on GitHub Discussions_ and engaging with researchers, developers, and other users regarding this project.
-- Filling out our [survey](https://airtable.com/shr7sMAKUAjuIRpv7).
 
 
 ## Initial set-up
@@ -90,11 +89,11 @@ tox -e style
 We adhere to the [google docstring guide](https://docs.idmod.org/projects/doc-guidance/en/latest/docstrings.html). If you make any changes to the code, remember updating the docstring wherever relevant.
 
 ### Copyright notice
-All source files in the repository must begin with the appropriate copyright notice. For instance, for the year 2023:
+All source files in the repository must begin with the appropriate copyright notice. For instance, for the year 2024:
 ```python
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2024.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
