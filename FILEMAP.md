@@ -3,27 +3,29 @@
 ## Guidelines
 
 - [`CITATION.bib`](CITATION.bib) --
-  BibTeX file including the bibliographic reference to cite the software package.
+  BibTeX file including the bibliographic reference to cite the software.
 - [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) --
   participation in the repository is subject to these conduct guidelines.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) --
   guidelines to contribute to the repository.
+- [`DEPRECATION.md`](DEPRECATION.md) --
+  deprecation policy.
 - [`FILEMAP.md`](FILEMAP.md) --
   a summary of the repository structure and explanations of the different files and folders.
 - [`INSTALL.md`](INSTALL.md) --
-  guidelines to install the software package contained in this repo.
-- [`LICENSE.md`](LICENSE.md) --
+  guidelines to install the software contained in this repo.
+- [`LICENSE.txt`](LICENSE.txt) --
   one of the [standard legal requirements](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) for an open source project. There are different types of [licenses for software](https://en.wikipedia.org/wiki/Software_license), some of the most popular being [open source](https://opensource.org/licenses).
 - [`README.md`](README.md) -- 
   main readme for repository.
 
 
-## Software package
+## Software package/library
 
 - `<pyproject_qiskit>` -- 
-  it will have a different name for each repository using the [`pyproject-qiskit` template](https://github.com/pedrorrivero/pyproject-qiskit), and it holds the source code for the software package. This name will determine how the package is imported after installation (e.g. `from <pyproject_qiskit> import __version__`).
+  it will have a different name for each repository using the [`pyproject-qiskit` template](https://github.com/pedrorrivero/pyproject-qiskit), and it holds the source code for the software. This name will determine how the software is imported after installation (e.g. `from <pyproject_qiskit> import __version__`).
 - [`CHANGELOG.md`](CHANGELOG.md) --
-  file that logs all the changes made to the software package on each new version release.
+  file that logs all the changes made to the software on each new version release.
 - [`docs`](docs) -- 
   documentation for the repository (e.g. tutorials, API docs, reference guide).
 - [`test`](test) -- 
@@ -37,7 +39,11 @@
   - [`unit`](test/unit/) -- 
     folder for [unit tests](https://en.wikipedia.org/wiki/Unit_testing).
 - [`pyproject.toml`](pyproject.toml) --
-  file containing the [build and package configurations](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/) for the python project. This file also contains configurations for [Black](https://black.readthedocs.io/), a tool for automatic code formatting.
+  file containing the [build and package configurations](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/) for the python project. This file also contains configurations for:
+  - [Black](https://black.readthedocs.io/) --
+    a tool for automatic code formatting.
+  - [Autoflake](https://github.com/PyCQA/autoflake) -- 
+    a tool for removing unused imports and variables.
 
 
 ## CI/CD
@@ -89,6 +95,6 @@
 - [`.pylintrc`](.pylintrc) --
   configuration for [Pylint](https://pylint.readthedocs.io/), a tool for static code analysis (e.g. lint errors).
 - [`pytest.ini`](pytest.ini) --
-  configuration for the [PyTest framework](https://pytest.org) used for testing the software package.
+  configuration for the [PyTest framework](https://pytest.org) used for testing the software.
 - [`tox.ini`](tox.ini) -- 
   configuration file for [tox](https://tox.readthedocs.io/en/latest/) framework that aims to automate and standardize testing in Python. Eases the packaging, testing and release process of Python software.
