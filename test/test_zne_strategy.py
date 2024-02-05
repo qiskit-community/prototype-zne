@@ -22,7 +22,7 @@ from qiskit.primitives import EstimatorResult
 
 from zne.extrapolation import Extrapolator, LinearExtrapolator
 from zne.noise_amplification import NoiseAmplifier
-from zne.noise_amplification.folding_amplifier import TwoQubitAmplifier
+from zne.noise_amplification.folding_amplifier import MultiQubitAmplifier
 from zne.zne_strategy import ZNEStrategy
 
 from . import NO_ITERS_NONE, NO_NONE
@@ -68,7 +68,7 @@ class TestInit:
 
     def test_defaults(self):
         """Test default configuration."""
-        assert ZNEStrategy().noise_amplifier == TwoQubitAmplifier()
+        assert ZNEStrategy().noise_amplifier == MultiQubitAmplifier()
         assert ZNEStrategy().noise_factors == (1,)
         assert ZNEStrategy().extrapolator == LinearExtrapolator()
 
@@ -277,7 +277,7 @@ class TestNoiseAmplifier:
     def test_default(self):
         zne_strategy = ZNEStrategy()
         zne_strategy.noise_amplifier = None
-        assert zne_strategy.noise_amplifier == TwoQubitAmplifier()
+        assert zne_strategy.noise_amplifier == MultiQubitAmplifier()
 
     @mark.parametrize(
         "noise_amplifier",

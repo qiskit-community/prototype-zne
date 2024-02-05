@@ -24,7 +24,7 @@ from qiskit import QuantumCircuit
 from qiskit.primitives import EstimatorResult
 
 from .extrapolation import Extrapolator, LinearExtrapolator
-from .noise_amplification import NoiseAmplifier, TwoQubitAmplifier
+from .noise_amplification import MultiQubitAmplifier, NoiseAmplifier
 from .types import EstimatorResultData, Metadata  # noqa: F401
 from .utils.grouping import from_common_key, group_elements_gen, merge_dicts
 from .utils.typing import isreal, normalize_array
@@ -120,7 +120,7 @@ class ZNEStrategy:
 
         return noise_factors
 
-    @quality(default=TwoQubitAmplifier())
+    @quality(default=MultiQubitAmplifier())
     def noise_amplifier(self, noise_amplifier: NoiseAmplifier) -> NoiseAmplifier:
         """Noise amplifier strategy for ZNE.
 
