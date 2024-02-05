@@ -18,8 +18,9 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from collections.abc import Sequence
 
+from numpy import array
 from numpy import float_ as npfloat
-from numpy import mean, ndarray
+from numpy import isclose, mean, ndarray, ones
 
 from zne.types import Metadata
 from zne.utils.strategy import strategy
@@ -161,6 +162,21 @@ class OLSExtrapolator(Extrapolator):
     ################################################################################
     ## AUXILIARY
     ################################################################################
+    def _compute_sigma(
+        self,
+        y_data: tuple[float, ...],
+        sigma_y: tuple[float, ...],
+    ) -> ndarray:
+        """Compute sensible sigma values for curve fitting.
+
+        This implementation bypasses zero effective variance which would
+        lead to numerical errors in the curve fitting procedure.
+        """
+        values = array(y_data)
+        errors = array(sigma_y)
+        relative_errors = errors / values
+        return ones(errors.shape) if any(isclose(relative_errors, 0)) else errors
+
     def _build_metadata(
         self,
         x_data: ndarray,

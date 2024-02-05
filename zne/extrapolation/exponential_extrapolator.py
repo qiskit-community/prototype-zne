@@ -139,7 +139,7 @@ class MultiExponentialExtrapolator(OLSExtrapolator):
             self._model,
             x_data,
             y_data,
-            sigma=sigma_y,
+            sigma=self._compute_sigma(y_data, sigma_y),
             absolute_sigma=True,
             p0=[2 ** (-i) for i in range(self.num_terms * 2 + 1)],
             bounds=([-inf] + [-inf, 0] * self.num_terms, inf),  # Note: only decay considered
