@@ -325,3 +325,35 @@ class TwoQubitAmplifier(LocalFoldingAmplifier):
             noise_factor_relative_tolerance=noise_factor_relative_tolerance,
             warn_user=warn_user,
         )
+
+
+class MultiQubitAmplifier(LocalFoldingAmplifier):
+    """
+    Digital noise amplifier acting on multi-qubit gates exclusively.
+
+    Replaces each multi-qubit gate locally with as many gates as indicated by the noise_factor.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments,duplicate-code
+        self,
+        sub_folding_option: str = "from_first",
+        barriers: bool = True,
+        random_seed: int | None = None,
+        noise_factor_relative_tolerance: float = 1e-2,
+        warn_user: bool = True,
+    ) -> None:
+        super().__init__(
+            gates_to_fold=None,
+            sub_folding_option=sub_folding_option,
+            barriers=barriers,
+            random_seed=random_seed,
+            noise_factor_relative_tolerance=noise_factor_relative_tolerance,
+            warn_user=warn_user,
+        )
+
+    def _check_gate_folds(self, operation: CircuitInstruction) -> bool:
+        instruction, qargs, _ = operation
+        if instruction.name in {"barrier", "measure"}:
+            return False
+        num_qubits = len(qargs)
+        return num_qubits > 1

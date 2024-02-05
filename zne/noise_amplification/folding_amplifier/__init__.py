@@ -16,6 +16,7 @@ from .global_folding_amplifier import GlobalFoldingAmplifier
 from .local_folding_amplifier import (
     CxAmplifier,
     LocalFoldingAmplifier,
+    MultiQubitAmplifier,
     TwoQubitAmplifier,
 )
 
@@ -24,4 +25,5 @@ __all__ = [
     "LocalFoldingAmplifier",
     "CxAmplifier",
     "TwoQubitAmplifier",
+    "MultiQubitAmplifier",
 ]
