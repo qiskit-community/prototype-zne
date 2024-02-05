@@ -49,7 +49,7 @@ repos:
     name: pylint
     description: "Static code analysis"
     stages: [commit]
-    entry: pylint -rn -d import-error
+    entry: pylint --reports=no --disable=import-error
     language: python
     files: .*\.py
     exclude: (tools|test|docs)/.*
@@ -84,5 +84,5 @@ repos:
   hooks:
   - id: gitlint
     name: gitlint
-    description: "Enforce extra commiting rules"
+    description: "Enforce extra committing rules"
     stages: [commit-msg]

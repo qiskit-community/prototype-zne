@@ -7,7 +7,7 @@
 # Contributing
 __We appreciate all kinds of help, so thank you!__
 
-This guide is for those who want to extend the module or documentation. If you just want to use the package, read [this other guide](./docs/reference_guide.md) instead.
+This guide is for those who want to extend the module or documentation. If you just want to use the software, read [this other guide](./docs/reference_guide.md) instead.
 
 
 ## Table of contents
@@ -43,7 +43,7 @@ Other than submitting new source code, users can contribute in a number of meani
 ## Initial set-up
 
 ### Installing dependencies
-In order to contribute, you will need to [install the module from source](/INSTALL.md#installation-from-source) with developer dependencies (i.e. `dev` bundle) and, optionally, in editable mode. We recommend using the latest version of python available despite the fact that this package maintains support for legacy versions, as some of the developer tools require newer functionality to work (e.g. type annotation format introduced in python 3.10).
+In order to contribute, you will need to [install the module from source](/INSTALL.md#installation-from-source) with developer dependencies (i.e. `dev` bundle) and, optionally, in editable mode. We recommend using the latest version of python available despite the fact that this software maintains support for legacy versions, as some of the developer tools require newer functionality to work (e.g. type annotation format introduced in python 3.10).
 
 If you do not have write permissions to the original repository, you will need to open a fork in your personal account first, and submit all pull requests (PR) from there. Even if you have write permissions, forking the repository should always work provided that this functionality is enabled, so this is the recommended approach.
 
