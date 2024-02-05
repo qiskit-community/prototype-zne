@@ -95,7 +95,7 @@ class PolynomialExtrapolator(OLSExtrapolator):
             self._model,
             regression_data.x_data,
             regression_data.y_data,
-            sigma=regression_data.sigma_y,
+            sigma=self._compute_sigma(regression_data.y_data, regression_data.sigma_y),
             absolute_sigma=True,
             p0=zeros(self.degree + 1),  # Note: Initial point determines number of d.o.f.
         )
