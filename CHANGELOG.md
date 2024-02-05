@@ -1,3 +1,14 @@
+## 1.3.0 (2024-02-05)
+
+### Feat
+
+- **folding_amplifier**: add multi-qubit amplifier facade (#61)
+
+### Fix
+
+- **zne_estrategy**: update default amplifier to multi-qubit (#62)
+- **extrapolation**: support zero variance inputs (#60)
+
 ## 1.2.2 (2023-12-22)
 
 ### Fix
