@@ -26,6 +26,7 @@ from qiskit.transpiler.passes import RemoveBarriers
 from zne.noise_amplification import (
     CxAmplifier,
     LocalFoldingAmplifier,
+    MultiQubitAmplifier,
     TwoQubitAmplifier,
 )
 
@@ -460,8 +461,27 @@ class TestFacades:
             (TwoQubitAmplifier, {"gates_to_fold": 2}),
         ],
     )
-    def test_two_qubit_amplifier(self, cls, configs):
+    def test_amplifier_facade(self, cls, configs):
         amplifier = cls()
         assert isinstance(amplifier, LocalFoldingAmplifier)
         for key, value in configs.items():
             assert getattr(amplifier, key) == frozenset([value])
+
+    def test_multi_qubit_amplifier(self):
+        amplifier = MultiQubitAmplifier()
+        assert isinstance(amplifier, LocalFoldingAmplifier)
+        assert amplifier.gates_to_fold is None
+        circuit = QuantumCircuit(4)
+        circuit.h(0)
+        circuit.z(3)
+        circuit.cx(0, 1)
+        circuit.x(1)
+        circuit.ccx(0, 1, 2)
+        circuit.y(2)
+        circuit.ecr(2, 3)
+        circuit.measure_all()
+        for operation in circuit.data:
+            instruction = operation[0]
+            skipped_instructions = {"barrier", "measure"}
+            expected = instruction.num_qubits > 1 and instruction.name not in skipped_instructions
+            assert amplifier._check_gate_folds(operation) == expected

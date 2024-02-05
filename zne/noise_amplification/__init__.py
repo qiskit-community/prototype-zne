@@ -16,6 +16,7 @@ from .folding_amplifier import (
     CxAmplifier,
     GlobalFoldingAmplifier,
     LocalFoldingAmplifier,
+    MultiQubitAmplifier,
     TwoQubitAmplifier,
 )
 from .noise_amplifier import CircuitNoiseAmplifier, DAGNoiseAmplifier, NoiseAmplifier
@@ -27,6 +28,7 @@ NOISE_AMPLIFIER_LIBRARY = {
         LocalFoldingAmplifier,
         CxAmplifier,
         TwoQubitAmplifier,
+        MultiQubitAmplifier,
     )
 }
 
