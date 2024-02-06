@@ -273,7 +273,10 @@ class ZNEStrategy:
         if len(noisy_result.values) % self.num_noise_factors != 0:
             raise ValueError("Inconsistent number of noisy experiments and noise factors.")
         for group in group_elements_gen(
-            [{'values': v, 'metadata': m} for v, m in zip(noisy_result.values, noisy_result.metadata)], 
+            [
+                {"values": v, "metadata": m}
+                for v, m in zip(noisy_result.values, noisy_result.metadata)
+            ],
             group_size=self.num_noise_factors,
         ):  # type: tuple[EstimatorResultData, ...]
             values, metadata = zip(*[data.values() for data in group])
