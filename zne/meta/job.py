@@ -61,7 +61,7 @@ class ZNEJob(Job):
         result: EstimatorResult = self.base_job.result()
         if self.zne_strategy.performs_zne:
             result = self.zne_strategy.mitigate_noisy_result(result)
-        if result.num_experiments != self.target_num_experiments:
+        if len(result.values) != self.target_num_experiments:
             # TODO: consider warning instead -> should be in integration tests
             raise RuntimeError(
                 "Number of experiments in EstimatorResult object does not match "

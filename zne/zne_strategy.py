@@ -267,13 +267,17 @@ class ZNEStrategy:
             but same circuit-observable combinations.
 
         Raises:
-            ValueError: If the number of performed experiments is not an integer mutliple of
+            ValueError: If the number of performed experiments is not an integer multiple of
                 the number of noise factors.
         """
-        if noisy_result.num_experiments % self.num_noise_factors != 0:
+        if len(noisy_result.values) % self.num_noise_factors != 0:
             raise ValueError("Inconsistent number of noisy experiments and noise factors.")
         for group in group_elements_gen(
-            noisy_result.experiments, group_size=self.num_noise_factors
+            [
+                {"values": v, "metadata": m}
+                for v, m in zip(noisy_result.values, noisy_result.metadata)
+            ],
+            group_size=self.num_noise_factors,
         ):  # type: tuple[EstimatorResultData, ...]
             values, metadata = zip(*[data.values() for data in group])
             yield EstimatorResult(values=array(values), metadata=list(metadata))
@@ -290,7 +294,7 @@ class ZNEStrategy:
         Returns:
             Regression data
         """
-        if result_group.num_experiments != self.num_noise_factors:
+        if len(result_group.values) != self.num_noise_factors:
             raise ValueError("Inconsistent number of noisy experiments and noise factors.")
         x_data = list(self.noise_factors)  # TODO: get actual noise factors achieved
         y_data = result_group.values.tolist()
@@ -316,7 +320,7 @@ class ZNEStrategy:
         """
         if extrapolation is None:
             extrapolation = {}
-        if result_group.num_experiments != self.num_noise_factors:
+        if len(result_group.values) != self.num_noise_factors:
             raise ValueError("Inconsistent number of noisy experiments and noise factors.")
         noise_amplification: Metadata = {
             "noise_amplifier": self.noise_amplifier,
