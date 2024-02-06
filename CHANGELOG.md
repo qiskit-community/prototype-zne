@@ -1,3 +1,9 @@
+## 1.3.1 (2024-02-06)
+
+### Refactor
+
+- drop BasePrimitiveResult.experiments and BasePrimitiveResult.num_experiments (#63)
+
 ## 1.3.0 (2024-02-05)
 
 ### Feat
