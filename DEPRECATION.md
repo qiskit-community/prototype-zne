@@ -9,7 +9,7 @@ To avoid dependency issues, exact version specification is encouraged if no upco
 
 Following [Python's naming conventions](https://realpython.com/python-double-underscore/) as outlined by [PEP8](https://peps.python.org/pep-0008/), any module, variable, function, or class whose name starts with a leading underscore `_` will be considered _internal_ and not part of this library's supported _application programming interface_ (API).
 
-Some capabilities may be pre-released before reaching a stable state. These will not adhere to the deprecation policies in place and will actively warn users of their unstable, pre-release, condition until they are deemed otherwise.
+Some capabilities may be pre-released before reaching a mature, stable state. These will not adhere to the deprecation policies in place and will actively warn users of their _experimental_, unstable state until otherwise deemed.
 
 Every other piece of source code conforms the _public-facing_ API of this library and will therefore be subject to the rules outlined in this document.
 
@@ -25,11 +25,11 @@ Said deprecation process will last for at least three months, and will not begin
 
 This library follows [semantic versioning](https://semver.org/) (i.e. `MAJOR.MINOR.PATCH`).
 
-In most cases, functionality will not be changed or removed without displaying active warnings for a sufficiently long period of time. During this period, we will keep old interfaces and mark them as _deprecated_. Deprecations, changes and removals are considered API modifications, and can only occur in _minor_ releases, not _patch_ releases.
+In most cases, functionality will not be changed or removed without displaying active warnings for a sufficiently long period of time. During this period, we will keep old interfaces and mark them as _deprecated_. Deprecations can only occur in _minor_ releases, not _patch_ releases.
 
-We may occasionally introduce breaking changes (i.e. backwards incompatible) in order to bring new functionality to users more rapidly, simplify existing tooling, or facilitate maintenance. These changes will only be included in _major_ releases.
+We may occasionally introduce breaking changes (i.e. backwards incompatible) in order to bring new functionality to users more rapidly, simplify existing tooling, or facilitate maintenance. These will only occur in _major_ releases, not _minor_ or _patch_ releases. Changes and removals are considered API modifications, and therefore breaking changes. Major version zero (i.e. `0.X.Y`) may include breaking changes in minor releases.
 
-Major version zero (i.e. `0.X.Y`) may include breaking changes in minor releases.
+No support for old versions will be provided.
 
 
 ## Documenting changes
