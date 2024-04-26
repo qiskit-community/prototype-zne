@@ -10,7 +10,51 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Extrapolation library."""
+"""
+########################################
+Extrapolation (:mod:`zne.extrapolation`)
+########################################
+
+Extrapolation library.
+
+.. currentmodule:: zne.extrapolation
+
+Extrapolator
+============
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    Extrapolator
+    OLSExtrapolator
+
+Exponential extrapolators
+=========================
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    BiExponentialExtrapolator
+    ExponentialExtrapolator
+    MonoExponentialExtrapolator
+    MultiExponentialExtrapolator
+
+Polynomial extrapolators
+========================
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    CubicExtrapolator
+    LinearExtrapolator
+    PolynomialExtrapolator
+    QuadraticExtrapolator
+    QuarticExtrapolator
+    
+"""
 
 from .exponential_extrapolator import (
     BiExponentialExtrapolator,
