@@ -19,7 +19,7 @@ from collections import namedtuple
 from collections.abc import Sequence
 
 from numpy import array
-from numpy import float_ as npfloat
+from numpy import float64 as npfloat
 from numpy import isclose, mean, ndarray, ones
 
 from zne.types import Metadata
