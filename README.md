@@ -12,6 +12,13 @@
   [![License](https://img.shields.io/github/license/qiskit-community/prototype-zne?label=License)](LICENSE.txt)
 
 </div>
+
+---
+
+⚠️ **Warning:** `prototype-zne` is currently **not maintained**. Use at your own risk.
+
+---
+
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
